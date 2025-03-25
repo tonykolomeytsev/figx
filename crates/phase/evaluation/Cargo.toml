@@ -1,0 +1,26 @@
+[package]
+name = "phase_evaluation"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+phase_loading.workspace = true
+lib_figma.workspace = true
+lib_label.workspace = true
+lib_pretty.workspace = true
+lib_cache.workspace = true
+lib_graph_exec.workspace = true
+lib_svg2compose.workspace = true
+
+rayon.workspace = true
+log.workspace = true
+serde.workspace = true
+bincode.workspace = true
+dashmap.workspace = true
+webp = "0.3"
+image = "0.25"
+xxhash-rust.workspace = true
+
+
+[dev-dependencies]
+tempfile = "3.19.1"

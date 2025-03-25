@@ -1,0 +1,10 @@
+[package]
+name = "lib_graph_exec"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+rayon.workspace = true
+dashmap.workspace = true
+ordermap.workspace = true
+log.workspace = true

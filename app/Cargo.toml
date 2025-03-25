@@ -1,0 +1,30 @@
+[package]
+name = "figmagic"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Internal
+command_info.workspace = true
+command_query.workspace = true
+command_aquery.workspace = true
+command_fetch.workspace = true
+command_import.workspace = true
+command_clean.workspace = true
+
+phase_loading.workspace = true
+phase_evaluation.workspace = true
+
+lib_graph_exec.workspace = true
+lib_label.workspace = true
+lib_pretty.workspace = true
+lib_svg2compose.workspace = true
+
+# External
+clap.workspace = true
+log.workspace = true
+env_logger.workspace = true
+serde.workspace = true
+derive_more.workspace = true
+owo-colors.workspace = true
+ureq.workspace = true

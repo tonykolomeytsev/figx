@@ -1,0 +1,8 @@
+[package]
+name = "lib_svg2compose"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+usvg = "0.45.1"
+log.workspace = true

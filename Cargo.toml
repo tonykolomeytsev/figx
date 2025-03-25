@@ -1,0 +1,57 @@
+[workspace]
+members = ["app"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+rust-version = "1.85.0"
+edition = "2024"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[workspace.dependencies]
+# Internal Crates
+## First phase
+phase_loading = { path = "crates/phase/loading" }
+## Second phase
+phase_evaluation = { path = "crates/phase/evaluation" }
+## User commands
+command_info = { path = "crates/command/info" }
+command_query = { path = "crates/command/query" }
+command_aquery = { path = "crates/command/aquery" }
+command_fetch = { path = "crates/command/fetch" }
+command_import = { path = "crates/command/import" }
+command_clean = { path = "crates/command/clean" }
+## Common code
+lib_graph_exec = { path = "crates/lib/graph_exec" }
+lib_figma = { path = "crates/lib/figma" }
+lib_label = { path = "crates/lib/label" }
+lib_pretty = { path = "crates/lib/pretty" }
+lib_cache = { path = "crates/lib/cache" }
+lib_svg2compose = { path = "crates/lib/svg2compose" }
+
+# External Deps
+toml = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+glob = "0.3"
+log = "0.4"
+derive_more = { version = "2.0", features = ["from"] }
+clap = { version = "4.5", features = ["derive"] }
+rayon = "1.10"
+owo-colors = "4"
+fast-glob = "0.4.5"
+bytes = "1.10"
+surrealkv = "0.9"
+env_logger = "0.11"
+dashmap = "6.1"
+bincode = { version = "2.0", features = ["serde"] }
+xxhash-rust = { version = "0.8", features = ["xxh64"] }
+ureq = { version = "3.0", default-features = false, features = [
+    "rustls",
+    "gzip",
+    "json",
+] }
+ordermap = "0.5.7"

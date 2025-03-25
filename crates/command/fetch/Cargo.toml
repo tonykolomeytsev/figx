@@ -1,0 +1,9 @@
+[package]
+name = "command_fetch"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+phase_loading.workspace = true
+phase_evaluation.workspace = true
+lib_label.workspace = true

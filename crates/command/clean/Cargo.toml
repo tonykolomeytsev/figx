@@ -1,0 +1,8 @@
+[package]
+name = "command_clean"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+phase_loading.workspace = true
+log.workspace = true
