@@ -67,10 +67,11 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         targets: ${{ matrix.target }}
+        components: rust-std, clippy
     - name: Test
       run: cargo test --target ${{ matrix.target }}
     - name: Build release binary
-      run: cargo build --target ${{ matrix.target }} --verbose --release --bin app
+      run: cargo build --target ${{ matrix.target }} --verbose --release --bin figmagic
     - name: Build archive
       shell: bash
       run: |
@@ -97,18 +98,3 @@ jobs:
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream
-  publish-release:
-    # Publish the release to crates.io
-    name: publish-release
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
-    - name: Publish to crates.io
-      run: cargo publish --token ${{ secrets.CARGO_TOKEN }}
