@@ -312,7 +312,7 @@ mod test {
             "pdf".to_string() => Arc::new(Profile::Pdf(PdfProfile::default())),
             "webp".to_string() => Arc::new(Profile::Webp(WebpProfile::default())),
             "compose".to_string() => Arc::new(Profile::Compose(ComposeProfile::default())),
-            "android-webp".to_string() => Arc::new(Profile::Compose(ComposeProfile::default())),
+            "android-webp".to_string() => Arc::new(Profile::AndroidWebp(AndroidWebpProfile::default())),
         };
 
         // When
@@ -348,7 +348,7 @@ mod test {
             "pdf".to_string() => Arc::new(Profile::Pdf(PdfProfile::default())),
             "webp".to_string() => Arc::new(Profile::Webp(WebpProfile::default())),
             "compose".to_string() => Arc::new(Profile::Compose(ComposeProfile::default())),
-            "android-webp".to_string() => Arc::new(Profile::Compose(ComposeProfile::default())),
+            "android-webp".to_string() => Arc::new(Profile::AndroidWebp(AndroidWebpProfile::default())),
         };
 
         // When
@@ -373,7 +373,7 @@ mod test {
             "pdf".to_string() => Arc::new(Profile::Pdf(PdfProfile::default())),
             "webp".to_string() => Arc::new(Profile::Webp(WebpProfile::default())),
             "compose".to_string() => Arc::new(Profile::Compose(ComposeProfile::default())),
-            "android-webp".to_string() => Arc::new(Profile::Compose(ComposeProfile::default())),
+            "android-webp".to_string() => Arc::new(Profile::AndroidWebp(AndroidWebpProfile::default())),
             "illustrations".to_string() => Arc::new(Profile::Webp(WebpProfile {
                 remote_id: "features".to_string(),
                 quality: 90.0,
