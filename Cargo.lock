@@ -356,7 +356,7 @@ checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 
 [[package]]
 name = "command_aquery"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "lib_graph_exec",
  "lib_label",
@@ -367,7 +367,7 @@ dependencies = [
 
 [[package]]
 name = "command_clean"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "log",
  "phase_loading",
@@ -375,7 +375,7 @@ dependencies = [
 
 [[package]]
 name = "command_fetch"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "lib_label",
  "phase_evaluation",
@@ -384,7 +384,7 @@ dependencies = [
 
 [[package]]
 name = "command_import"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "lib_figma",
  "lib_label",
@@ -394,14 +394,14 @@ dependencies = [
 
 [[package]]
 name = "command_info"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "phase_loading",
 ]
 
 [[package]]
 name = "command_query"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "lib_label",
  "line-numbers",
@@ -691,7 +691,7 @@ dependencies = [
 
 [[package]]
 name = "figmagic"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "clap",
  "command_aquery",
@@ -1206,7 +1206,7 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "lib_cache"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bincode",
  "bytes",
@@ -1216,7 +1216,7 @@ dependencies = [
 
 [[package]]
 name = "lib_figma"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bytes",
  "serde",
@@ -1227,7 +1227,7 @@ dependencies = [
 
 [[package]]
 name = "lib_graph_exec"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "dashmap",
  "log",
@@ -1237,14 +1237,14 @@ dependencies = [
 
 [[package]]
 name = "lib_label"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "fast-glob",
 ]
 
 [[package]]
 name = "lib_pretty"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "crossterm",
  "ordermap",
@@ -1252,7 +1252,7 @@ dependencies = [
 
 [[package]]
 name = "lib_svg2compose"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "log",
  "usvg",
@@ -1260,7 +1260,7 @@ dependencies = [
 
 [[package]]
 name = "lib_webp"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "image",
  "libwebp-sys2 0.2.0",
@@ -1562,7 +1562,7 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "phase_evaluation"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bincode",
  "dashmap",
@@ -1584,7 +1584,7 @@ dependencies = [
 
 [[package]]
 name = "phase_loading"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "derive_more",
  "ignore",
