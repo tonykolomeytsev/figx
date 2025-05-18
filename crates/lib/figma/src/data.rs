@@ -76,7 +76,7 @@ impl FigmaApi {
             .call()?
             .body_mut()
             .with_config()
-            .limit(mb(10))
+            .limit(mb(100))
             .read_json::<GetFileResponse>()?)
     }
 
@@ -103,7 +103,7 @@ impl FigmaApi {
             .call()?
             .body_mut()
             .with_config()
-            .limit(mb(10))
+            .limit(mb(100))
             .read_json::<GetFileNodesResponse>()?)
     }
 
@@ -135,7 +135,7 @@ impl FigmaApi {
             .call()?
             .body_mut()
             .with_config()
-            .limit(mb(10))
+            .limit(mb(50))
             .read_json::<GetImageResponse>()?)
     }
 
