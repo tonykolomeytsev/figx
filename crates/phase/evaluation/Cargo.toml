@@ -11,13 +11,13 @@ lib_pretty.workspace = true
 lib_cache.workspace = true
 lib_graph_exec.workspace = true
 lib_svg2compose.workspace = true
+lib_webp.workspace = true
 
 rayon.workspace = true
 log.workspace = true
 serde.workspace = true
 bincode.workspace = true
 dashmap.workspace = true
-webp = "0.3"
 image = "0.25"
 xxhash-rust.workspace = true
 

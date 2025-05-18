@@ -1,3 +1,5 @@
+use std::io::Cursor;
+
 use super::ExecutionContextExt;
 use super::stable_action;
 use crate::Error;
@@ -50,9 +52,11 @@ impl ConvertToWebpAction {
         debug!("Transforming PNG to WEBP: {download_img_cache_key:?} => {stable_cache_key:?}");
         let png_bytes = state.cache.require_bytes(download_img_cache_key)?;
         let img = image::load_from_memory_with_format(&png_bytes, image::ImageFormat::Png)?;
-        let encoder = webp::Encoder::from_image(&img).map_err(|_| Error::WebpCreate)?; // fails if img is not RBG8 or RBGA8
-        let webp = encoder.encode(*quality);
-        state.cache.put_slice(&stable_cache_key, webp.as_bytes())?;
+        // let encoder = lib_webp::webp_write_rgba() ::from_image(&img).map_err(|_| Error::WebpCreate)?; // fails if img is not RBG8 or RBGA8
+        // let webp = encoder.encode(*quality);
+        let mut buf = Vec::new();
+        lib_webp::webp_write(&img, &mut Cursor::new(&mut buf), *quality)?;
+        state.cache.put_slice(&stable_cache_key, buf.as_bytes())?;
 
         Ok(())
     }
