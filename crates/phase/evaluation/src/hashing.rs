@@ -2,7 +2,6 @@ use std::{
     fs::File,
     hash::Hasher,
     io::{BufReader, Read},
-    os::unix::ffi::OsStrExt,
     path::Path,
     time::UNIX_EPOCH,
 };
@@ -45,7 +44,7 @@ pub fn get_file_fingerprint(path: &Path) -> std::io::Result<u64> {
         .as_millis();
     // Generate CacheKey for this file
     let mut hasher = xxhash_rust::xxh64::Xxh64::default();
-    hasher.write(path.as_os_str().as_bytes());
+    hasher.write(path.to_string_lossy().as_bytes());
     hasher.write_u64(metadata.len());
     hasher.write_u128(last_modified);
     Ok(hasher.finish())
