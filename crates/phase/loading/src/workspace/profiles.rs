@@ -101,7 +101,7 @@ pub(super) struct AndroidWebpProfileDto {
 }
 
 #[derive(Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "lowercase")]
 pub(super) enum AndroidDensity {
     LDPI,
     MDPI,
