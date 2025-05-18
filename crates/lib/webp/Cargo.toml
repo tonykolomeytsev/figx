@@ -4,5 +4,5 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-libwebp-sys2 = { version = "0.2.0", features = ["static"] }
+libwebp-sys2 = { version = "0.2.0", features = ["static", "1_4"] }
 image = "0.25"

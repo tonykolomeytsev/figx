@@ -55,7 +55,11 @@ impl ConvertToWebpAction {
         // let encoder = lib_webp::webp_write_rgba() ::from_image(&img).map_err(|_| Error::WebpCreate)?; // fails if img is not RBG8 or RBGA8
         // let webp = encoder.encode(*quality);
         let mut buf = Vec::new();
-        lib_webp::webp_write(&img, &mut Cursor::new(&mut buf), *quality)?;
+        if *quality == 100.0 {
+            lib_webp::webp_write_lossless(&img, &mut Cursor::new(&mut buf))?;
+        } else {
+            lib_webp::webp_write(&img, &mut Cursor::new(&mut buf), *quality)?;
+        }
         state.cache.put_slice(&stable_cache_key, buf.as_bytes())?;
 
         Ok(())
