@@ -356,7 +356,7 @@ checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 
 [[package]]
 name = "command_aquery"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "lib_graph_exec",
  "lib_label",
@@ -367,7 +367,7 @@ dependencies = [
 
 [[package]]
 name = "command_clean"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "log",
  "phase_loading",
@@ -375,7 +375,7 @@ dependencies = [
 
 [[package]]
 name = "command_fetch"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "lib_label",
  "phase_evaluation",
@@ -384,7 +384,7 @@ dependencies = [
 
 [[package]]
 name = "command_import"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "lib_figma",
  "lib_label",
@@ -394,14 +394,14 @@ dependencies = [
 
 [[package]]
 name = "command_info"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "phase_loading",
 ]
 
 [[package]]
 name = "command_query"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "lib_label",
  "line-numbers",
@@ -691,7 +691,7 @@ dependencies = [
 
 [[package]]
 name = "figmagic"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "clap",
  "command_aquery",
@@ -808,6 +808,12 @@ dependencies = [
  "color_quant",
  "weezl",
 ]
+
+[[package]]
+name = "glob"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8d1add55171497b4705a648c6b583acafb01d58050a51727785f0b2c8e0a2b2"
 
 [[package]]
 name = "globset"
@@ -1206,7 +1212,7 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "lib_cache"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bincode",
  "bytes",
@@ -1216,7 +1222,7 @@ dependencies = [
 
 [[package]]
 name = "lib_figma"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bytes",
  "serde",
@@ -1227,7 +1233,7 @@ dependencies = [
 
 [[package]]
 name = "lib_graph_exec"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "dashmap",
  "log",
@@ -1237,14 +1243,14 @@ dependencies = [
 
 [[package]]
 name = "lib_label"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "fast-glob",
 ]
 
 [[package]]
 name = "lib_pretty"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "crossterm",
  "ordermap",
@@ -1252,18 +1258,10 @@ dependencies = [
 
 [[package]]
 name = "lib_svg2compose"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "log",
  "usvg",
-]
-
-[[package]]
-name = "lib_webp"
-version = "0.2.2"
-dependencies = [
- "image",
- "libwebp-sys2 0.2.0",
 ]
 
 [[package]]
@@ -1289,30 +1287,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a25169bd5913a4b437588a7e3d127cd6e90127b60e0ffbd834a38f1599e016b8"
 
 [[package]]
-name = "libwebp-sys2"
-version = "0.1.11"
+name = "libwebp-sys"
+version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4790186411a6843ecc0a141c8948c8e623a0bb5e886834b1b6c90f3dfa85bb99"
+checksum = "54cd30df7c7165ce74a456e4ca9732c603e8dc5e60784558c1c6dc047f876733"
 dependencies = [
  "cc",
- "cfg-if",
- "libc",
- "pkg-config",
- "vcpkg",
-]
-
-[[package]]
-name = "libwebp-sys2"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6dc3d00aeaa1d6bf4f35f3003bc1835135e0fb41f2fc19082a3f98d619792505"
-dependencies = [
- "cc",
- "cfg-if",
- "libc",
- "libwebp-sys2 0.1.11",
- "pkg-config",
- "vcpkg",
+ "glob",
 ]
 
 [[package]]
@@ -1562,7 +1543,7 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "phase_evaluation"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bincode",
  "dashmap",
@@ -1573,18 +1554,18 @@ dependencies = [
  "lib_label",
  "lib_pretty",
  "lib_svg2compose",
- "lib_webp",
  "log",
  "phase_loading",
  "rayon",
  "serde",
  "tempfile",
+ "webp",
  "xxhash-rust",
 ]
 
 [[package]]
 name = "phase_loading"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "derive_more",
  "ignore",
@@ -2549,12 +2530,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03dccea250abfe68c00eee55f95af111e041b75bc11796cb83d1c05c5029efd9"
 
 [[package]]
-name = "vcpkg"
-version = "0.2.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
-
-[[package]]
 name = "version-compare"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2653,6 +2628,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a05d73b933a847d6cccdda8f838a22ff101ad9bf93e33684f39c1f5f0eece3d"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "webp"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f53152f51fb5af0c08484c33d16cca96175881d1f3dec068c23b31a158c2d99"
+dependencies = [
+ "image",
+ "libwebp-sys",
 ]
 
 [[package]]

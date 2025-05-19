@@ -23,7 +23,7 @@ impl Action<CacheKey, Error, EvalState> for ConvertToWebpAction {
             .write_str(&self.quality.to_string())
             .build();
 
-        stable_action(&ctx.state.cache, stable_cache_key, false, |cache_key| {
+        stable_action(&ctx.state.cache, stable_cache_key, true, |cache_key| {
             self.convert_to_webp_impl(download_img_cache_key, cache_key, &ctx.state)
         })
     }
@@ -51,7 +51,11 @@ impl ConvertToWebpAction {
         let png_bytes = state.cache.require_bytes(download_img_cache_key)?;
         let img = image::load_from_memory_with_format(&png_bytes, image::ImageFormat::Png)?;
         let encoder = webp::Encoder::from_image(&img).map_err(|_| Error::WebpCreate)?; // fails if img is not RBG8 or RBGA8
-        let webp = encoder.encode(*quality);
+        let webp = if *quality == 100.0 {
+            encoder.encode_lossless()
+        } else {
+            encoder.encode(*quality)
+        };
         state.cache.put_slice(&stable_cache_key, webp.as_bytes())?;
 
         Ok(())
