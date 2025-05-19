@@ -139,7 +139,7 @@ impl Default for WebpProfile {
         Self {
             remote_id: String::new(),
             scale: 1.0,
-            quality: 85.0,
+            quality: 100.0,
             output_dir: PathBuf::new(),
         }
     }
@@ -180,7 +180,7 @@ impl Default for AndroidWebpProfile {
         Self {
             remote_id: String::new(),
             android_res_dir: PathBuf::from("src/main/res"),
-            quality: 85.0,
+            quality: 100.0,
             scales: vec![MDPI, HDPI, XHDPI, XXHDPI, XXXHDPI],
         }
     }

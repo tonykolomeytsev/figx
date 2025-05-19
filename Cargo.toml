@@ -3,7 +3,7 @@ members = ["app"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.1"
+version = "0.2.2"
 rust-version = "1.85.0"
 edition = "2024"
 
@@ -31,6 +31,7 @@ lib_label = { path = "crates/lib/label" }
 lib_pretty = { path = "crates/lib/pretty" }
 lib_cache = { path = "crates/lib/cache" }
 lib_svg2compose = { path = "crates/lib/svg2compose" }
+lib_webp = { path = "crates/lib/webp" }
 
 # External Deps
 toml = "0.8"
