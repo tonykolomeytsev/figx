@@ -22,6 +22,16 @@ impl Action<CacheKey, Error, EvalState> for ScalePngAction {
             .set_tag(Self::TAG)
             .write(download_img_cache_key.as_ref())
             .write_str(&self.factor.to_string())
+            .write_i8({
+                use phase_loading::DownscaleFilter::*;
+                match self.downscale_filter {
+                    Nearest => 1,
+                    Triangle => 2,
+                    CatmullRom => 3,
+                    Gaussian => 4,
+                    Lanczos3 => 5,
+                }
+            })
             .build();
 
         stable_action(&ctx.state.cache, stable_cache_key, false, |cache_key| {

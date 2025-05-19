@@ -6,10 +6,10 @@ mod find_node;
 mod get_kotlin_package;
 mod materialize_img;
 mod no_op;
-mod svg_to_compose;
 mod scale_png;
+mod svg_to_compose;
 
-use crate::{EvalState, Result, get_file_digest, get_file_fingerprint};
+use crate::{EvalState, Result};
 pub use convert_to_webp::*;
 pub use download_img::*;
 pub use export_img::*;
@@ -18,13 +18,13 @@ pub use find_node::*;
 pub use get_kotlin_package::*;
 use lib_cache::{Cache, CacheKey};
 use lib_graph_exec::action::ExecutionContext;
-use log::{debug, trace};
+use log::trace;
 pub use materialize_img::*;
 pub use no_op::*;
 use phase_loading::RemoteSource;
+pub use scale_png::*;
 use std::path::Path;
 pub use svg_to_compose::*;
-pub use scale_png::*;
 
 /// Runs a volatile action with persistent caching based on a stable key.
 ///
@@ -133,46 +133,12 @@ pub fn stable_action(
 
 /// Runs action and returns the same `stable_cache_key`.
 pub fn fs_output_action(
-    cache: &Cache,
+    _cache: &Cache,
     stable_cache_key: CacheKey,
-    output_file: &Path,
+    _output_file: &Path,
     action_impl: impl Fn(CacheKey) -> Result<()>,
 ) -> Result<CacheKey> {
-    let fingerprint_cache_key = CacheKey::builder()
-        .write(stable_cache_key.as_ref())
-        .write_str("fingerprint")
-        .build();
-    let digest_cache_key = CacheKey::builder()
-        .write(stable_cache_key.as_ref())
-        .write_str("digest")
-        .build();
-
-    if !output_file.exists() {
-        action_impl(stable_cache_key.clone())?;
-    } else {
-        match (
-            cache.get::<u64>(&fingerprint_cache_key)?,
-            cache.get::<u64>(&digest_cache_key)?,
-        ) {
-            (Some(fingerprint), Some(digest)) => {
-                if get_file_fingerprint(output_file)? == fingerprint {
-                    debug!("{} fingerprint has not changed", output_file.display());
-                    return Ok(stable_cache_key.clone());
-                }
-                if get_file_digest(output_file)? == digest {
-                    cache
-                        .put::<u64>(&fingerprint_cache_key, &get_file_fingerprint(output_file)?)?;
-                    debug!("{} digest has not changed", output_file.display(),);
-                    return Ok(stable_cache_key.clone());
-                }
-            }
-            _ => (),
-        }
-        action_impl(stable_cache_key.clone())?;
-    }
-
-    cache.put::<u64>(&fingerprint_cache_key, &get_file_fingerprint(output_file)?)?;
-    cache.put::<u64>(&digest_cache_key, &get_file_digest(output_file)?)?;
+    action_impl(stable_cache_key.clone())?;
     Ok(stable_cache_key)
 }
 
