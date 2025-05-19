@@ -156,6 +156,7 @@ impl<'a> EvalBuilder<'a> {
                     for scale in p.scales.iter() {
                         let scale_png = self.inner.add_action(ScalePngAction {
                             factor: scale_factor(scale),
+                            downscale_filter: p.downscale_filter.clone(),
                             density: density_name(scale).to_string(),
                         });
                         let png_to_webp = self

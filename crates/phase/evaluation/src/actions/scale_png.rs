@@ -3,6 +3,7 @@ use std::io::Cursor;
 use lib_cache::CacheKey;
 use lib_graph_exec::action::{Action, ActionDiagnostics, ExecutionContext};
 use log::debug;
+use phase_loading::DownscaleFilter;
 
 use crate::{Error, EvalState, Result};
 
@@ -10,6 +11,7 @@ use super::{ExecutionContextExt, stable_action};
 
 pub struct ScalePngAction {
     pub factor: f32,
+    pub downscale_filter: DownscaleFilter,
     pub density: String,
 }
 
@@ -47,7 +49,11 @@ impl ScalePngAction {
         stable_cache_key: CacheKey,
         state: &EvalState,
     ) -> Result<()> {
-        let ScalePngAction { factor, .. } = self;
+        let ScalePngAction {
+            factor,
+            downscale_filter,
+            ..
+        } = self;
         debug!("Scaling image: {download_img_cache_key:?} => {stable_cache_key:?}");
         let png_bytes = state.cache.require_bytes(download_img_cache_key)?;
         let img = image::load_from_memory_with_format(&png_bytes, image::ImageFormat::Png)?;
@@ -57,7 +63,15 @@ impl ScalePngAction {
             scale => {
                 let new_width = (img.width() as f32 * scale).round() as u32;
                 let new_height = (img.height() as f32 * scale).round() as u32;
-                img.resize(new_width, new_height, image::imageops::FilterType::Lanczos3)
+                use image::imageops::FilterType::*;
+                let filter = match downscale_filter {
+                    DownscaleFilter::Nearest => Nearest,
+                    DownscaleFilter::Triangle => Triangle,
+                    DownscaleFilter::CatmullRom => CatmullRom,
+                    DownscaleFilter::Gaussian => Gaussian,
+                    DownscaleFilter::Lanczos3 => Lanczos3,
+                };
+                img.resize(new_width, new_height, filter)
             }
         };
 

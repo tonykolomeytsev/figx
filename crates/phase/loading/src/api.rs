@@ -172,6 +172,7 @@ pub struct AndroidWebpProfile {
     pub android_res_dir: PathBuf,
     pub quality: f32,
     pub scales: Vec<AndroidDensity>,
+    pub downscale_filter: DownscaleFilter,
 }
 
 impl Default for AndroidWebpProfile {
@@ -182,6 +183,7 @@ impl Default for AndroidWebpProfile {
             android_res_dir: PathBuf::from("src/main/res"),
             quality: 100.0,
             scales: vec![MDPI, HDPI, XHDPI, XXHDPI, XXXHDPI],
+            downscale_filter: DownscaleFilter::Nearest,
         }
     }
 }
@@ -196,6 +198,22 @@ pub enum AndroidDensity {
     XXHDPI,
     XXXHDPI,
 }
+
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
+pub enum DownscaleFilter {
+    /// Nearest Neighbor
+    Nearest,
+    /// Linear Filter
+    Triangle,
+    /// Cubic Filter
+    CatmullRom,
+    /// Gaussian Filter
+    Gaussian,
+    /// Lanczos with window 3
+    Lanczos3,
+}
+
 
 pub struct Package {
     pub label: PackageLabel,

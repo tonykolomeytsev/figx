@@ -23,7 +23,7 @@ pub(super) struct ProfilesDto {
 struct BuiltInProfiles {
     #[serde(default = "Default::default")]
     png: PngProfileDto,
-    
+
     #[serde(default = "Default::default")]
     svg: SvgProfileDto,
 
@@ -98,6 +98,7 @@ pub(super) struct AndroidWebpProfileDto {
     pub android_res_dir: Option<PathBuf>,
     pub quality: Option<f32>,
     pub scales: Option<BTreeSet<AndroidDensity>>,
+    pub downscale_filter: Option<DownscaleFilter>,
 }
 
 #[derive(Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -109,6 +110,21 @@ pub(super) enum AndroidDensity {
     XHDPI,
     XXHDPI,
     XXXHDPI,
+}
+
+#[derive(Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum DownscaleFilter {
+    /// Nearest Neighbor
+    Nearest,
+    /// Linear Filter
+    Triangle,
+    /// Cubic Filter
+    CatmullRom,
+    /// Gaussian Filter
+    Gaussian,
+    /// Lanczos with window 3
+    Lanczos3,
 }
 
 pub(super) fn parse_profiles(
@@ -275,6 +291,10 @@ impl CanBeExtendedBy<AndroidWebpProfileDto> for AndroidWebpProfile {
                 .scales
                 .map(|set| set.into_iter().map(Into::into).collect())
                 .unwrap_or_else(|| self.scales.clone()),
+            downscale_filter: another
+                .downscale_filter
+                .map(Into::into)
+                .unwrap_or(self.downscale_filter.clone()),
         }
     }
 }
@@ -289,6 +309,19 @@ impl From<AndroidDensity> for crate::AndroidDensity {
             AndroidDensity::XHDPI => XHDPI,
             AndroidDensity::XXHDPI => XXHDPI,
             AndroidDensity::XXXHDPI => XXXHDPI,
+        }
+    }
+}
+
+impl From<DownscaleFilter> for crate::DownscaleFilter {
+    fn from(value: DownscaleFilter) -> Self {
+        use crate::DownscaleFilter::*;
+        match value {
+            DownscaleFilter::Nearest => Nearest,
+            DownscaleFilter::Triangle => Triangle,
+            DownscaleFilter::CatmullRom => CatmullRom,
+            DownscaleFilter::Gaussian => Gaussian,
+            DownscaleFilter::Lanczos3 => Lanczos3,
         }
     }
 }
