@@ -43,11 +43,13 @@
 //! graph_deps! { graph, first_node => second_node => third_node };
 //! ```
 
+use dashmap::DashMap;
 use log::debug;
 use ordermap::{OrderMap, OrderSet};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fmt::{Debug, Display},
+    hash::Hash,
     sync::Arc,
 };
 
@@ -98,8 +100,8 @@ use crate::{
 /// graph_deps! { graph, first_node => second_node => third_node };
 /// ```
 #[cfg_attr(test, derive(Debug))]
-pub struct UnconfiguredExecutionGraph<T: Send + Sync> {
-    nodes: HashMap<NodeId, T>,
+pub struct UnconfiguredExecutionGraph<T: Send + Sync + Eq + Hash> {
+    nodes: OrderSet<T>,
     direct_deps: HashMap<NodeId, HashSet<NodeId>>,
     invert_deps: HashMap<NodeId, HashSet<NodeId>>,
 
@@ -108,7 +110,7 @@ pub struct UnconfiguredExecutionGraph<T: Send + Sync> {
     out_degree: OrderMap<NodeId, Degree>,
 }
 
-impl<T: Send + Sync> Default for UnconfiguredExecutionGraph<T> {
+impl<T: Send + Sync + Eq + Hash> Default for UnconfiguredExecutionGraph<T> {
     fn default() -> Self {
         Self {
             nodes: Default::default(),
@@ -157,7 +159,7 @@ impl Display for UnconfiguredExecutionGraphError {
 
 // endregion: Error handling
 
-impl<T: Send + Sync> UnconfiguredExecutionGraph<T> {
+impl<T: Send + Sync + Eq + Hash> UnconfiguredExecutionGraph<T> {
     /// Adds a new node to the unconfigured execution graph and returns its unique identifier.
     ///
     /// This method adds a new `node` containing the data node of type `T` to the
@@ -179,8 +181,8 @@ impl<T: Send + Sync> UnconfiguredExecutionGraph<T> {
     /// let third_node = graph.add_node(3);
     /// ```
     pub fn add_node(&mut self, node: T) -> NodeId {
-        let id = NodeId(self.nodes.len());
-        self.nodes.insert(id, node);
+        let (idx, _) = self.nodes.insert_full(node);
+        let id = NodeId(idx);
         self.in_degree.entry(id).or_insert(0);
         self.out_degree.entry(id).or_insert(0);
         id
@@ -234,19 +236,18 @@ impl<T: Send + Sync> UnconfiguredExecutionGraph<T> {
     ///
     /// This method consumes the `UnconfiguredExecutionGraph`, meaning it cannot be used after a successful
     /// configuration unless the graph is recreated.
-    pub fn configure(mut self) -> Result<ConfiguredExecutionGraph<T>> {
+    pub fn configure(self) -> Result<ConfiguredExecutionGraph<T>> {
         debug!("Configuring executable node...");
-        let ids = self.topological_sort()?;
-        let nodes = ids
+        self.topological_sort()?;
+        let nodes = self
+            .nodes
             .into_iter()
-            .map(|id| {
-                let node = self
-                    .nodes
-                    .remove(&id)
-                    .expect("ids from toposort always matches to self.nodes");
-                (id, Node { id, data: node })
+            .enumerate()
+            .map(|(idx, data)| {
+                let id = NodeId(idx);
+                (id, Node { id, data })
             })
-            .collect();
+            .collect::<DashMap<NodeId, _>>();
         let dependents = self
             .invert_deps
             .into_iter()
