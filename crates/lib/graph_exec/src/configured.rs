@@ -37,7 +37,6 @@ use crate::NodeId;
 use dashmap::{DashMap, DashSet};
 use log::{debug, trace};
 use ordermap::OrderMap;
-use rayon::ThreadPoolBuilder;
 use std::{
     collections::HashMap,
     sync::{
@@ -45,8 +44,6 @@ use std::{
         mpsc::{Receiver, Sender, channel},
     },
 };
-
-static NUM_THREADS: usize = 5;
 
 /// A validated, executable action graph with deterministic, dependency-respecting parallel execution.
 ///
@@ -150,8 +147,6 @@ impl<T: Send + Sync> ConfiguredExecutionGraph<T> {
         self,
         exec: impl Fn(NodeId, T) -> std::result::Result<(), E> + Send + Sync,
     ) -> Result<(), E> {
-        configure_rayon_concurrency();
-
         let remaining_deps = Arc::new(Mutex::new(self.incoming_edge_counts.clone()));
         let error = Arc::new(Mutex::new(None));
         let exec = Arc::new(exec);
@@ -234,13 +229,6 @@ impl<T: Send + Sync> ConfiguredExecutionGraph<T> {
 
         error.lock().unwrap().take().map(Err).unwrap_or(Ok(()))
     }
-}
-
-fn configure_rayon_concurrency() {
-    debug!("Setting up rayon thread pool...");
-    let _ = ThreadPoolBuilder::new()
-        .num_threads(NUM_THREADS)
-        .build_global();
 }
 
 #[cfg(test)]
