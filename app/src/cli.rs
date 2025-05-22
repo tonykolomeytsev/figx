@@ -84,6 +84,10 @@ pub struct CommandFetchArgs {
 pub struct CommandImportArgs {
     /// A label pattern describing the resources affected by a command
     pub pattern: Vec<String>,
+
+    /// Run fetch even if already have cached remote metadata
+    #[arg(long)]
+    pub refetch: bool,
 }
 
 fn get_styles() -> Styles {

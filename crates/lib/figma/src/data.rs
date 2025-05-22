@@ -214,11 +214,11 @@ impl<'de> Deserialize<'de> for Node {
 // region: GET file
 
 #[derive(Default)]
-pub struct GetFileQueryParameters {
-    pub ids: Option<Vec<String>>,
+pub struct GetFileQueryParameters<'a> {
+    pub ids: Option<&'a [&'a str]>,
     pub depth: Option<i32>,
-    pub geometry: Option<String>,
-    pub version: Option<String>,
+    pub geometry: Option<&'a str>,
+    pub version: Option<&'a str>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -231,11 +231,11 @@ pub struct GetFileResponse {
 // region: GET file nodes
 
 #[derive(Default)]
-pub struct GetFileNodesQueryParameters {
-    pub ids: Option<Vec<String>>,
+pub struct GetFileNodesQueryParameters<'a> {
+    pub ids: Option<&'a [String]>,
     pub depth: Option<i32>,
-    pub geometry: Option<String>,
-    pub version: Option<String>,
+    pub geometry: Option<&'a str>,
+    pub version: Option<&'a str>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -253,16 +253,16 @@ pub struct IdentifiedNodeDto {
 // region: GET image
 
 #[derive(Default)]
-pub struct GetImageQueryParameters {
-    pub ids: Option<Vec<String>>,
+pub struct GetImageQueryParameters<'a> {
+    pub ids: Option<&'a [String]>,
     pub scale: Option<f32>,
-    pub format: Option<String>,
+    pub format: Option<&'a str>,
     pub svg_outline_text: Option<bool>,
     pub svg_include_id: Option<bool>,
     pub svg_simplify_stroke: Option<bool>,
     pub contents_only: Option<bool>,
     pub use_absolute_bounds: Option<bool>,
-    pub version: Option<String>,
+    pub version: Option<&'a str>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -98,7 +98,6 @@ pub(super) struct AndroidWebpProfileDto {
     pub android_res_dir: Option<PathBuf>,
     pub quality: Option<f32>,
     pub scales: Option<BTreeSet<AndroidDensity>>,
-    pub downscale_filter: Option<DownscaleFilter>,
 }
 
 #[derive(Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -110,21 +109,6 @@ pub(super) enum AndroidDensity {
     XHDPI,
     XXHDPI,
     XXXHDPI,
-}
-
-#[derive(Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(rename_all = "snake_case")]
-pub enum DownscaleFilter {
-    /// Nearest Neighbor
-    Nearest,
-    /// Linear Filter
-    Triangle,
-    /// Cubic Filter
-    CatmullRom,
-    /// Gaussian Filter
-    Gaussian,
-    /// Lanczos with window 3
-    Lanczos3,
 }
 
 pub(super) fn parse_profiles(
@@ -271,7 +255,7 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
             remote_id: another.remote_id.unwrap_or(self.remote_id.clone()),
             scale: another.scale.unwrap_or(self.scale),
             src_dir: another.src_dir.unwrap_or(self.src_dir.clone()),
-            package: another.package.unwrap_or(self.package.clone()),
+            package: another.package.or(self.package.clone()),
             kotlin_explicit_api: another
                 .kotlin_explicit_api
                 .unwrap_or(self.kotlin_explicit_api),
@@ -291,10 +275,6 @@ impl CanBeExtendedBy<AndroidWebpProfileDto> for AndroidWebpProfile {
                 .scales
                 .map(|set| set.into_iter().map(Into::into).collect())
                 .unwrap_or_else(|| self.scales.clone()),
-            downscale_filter: another
-                .downscale_filter
-                .map(Into::into)
-                .unwrap_or(self.downscale_filter.clone()),
         }
     }
 }
@@ -309,19 +289,6 @@ impl From<AndroidDensity> for crate::AndroidDensity {
             AndroidDensity::XHDPI => XHDPI,
             AndroidDensity::XXHDPI => XXHDPI,
             AndroidDensity::XXXHDPI => XXXHDPI,
-        }
-    }
-}
-
-impl From<DownscaleFilter> for crate::DownscaleFilter {
-    fn from(value: DownscaleFilter) -> Self {
-        use crate::DownscaleFilter::*;
-        match value {
-            DownscaleFilter::Nearest => Nearest,
-            DownscaleFilter::Triangle => Triangle,
-            DownscaleFilter::CatmullRom => CatmullRom,
-            DownscaleFilter::Gaussian => Gaussian,
-            DownscaleFilter::Lanczos3 => Lanczos3,
         }
     }
 }

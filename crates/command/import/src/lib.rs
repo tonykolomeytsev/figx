@@ -1,24 +1,25 @@
 use lib_label::LabelPattern;
-use phase_evaluation::builder::EvalBuilder;
 
 mod error;
 pub use error::*;
+use phase_evaluation::EvalArgs;
 
 pub struct FeatureImportOptions {
     pub pattern: Vec<String>,
+    pub refetch: bool,
 }
 
 pub fn import(opts: FeatureImportOptions) -> Result<()> {
     let pattern = LabelPattern::try_from(opts.pattern)?;
     let ws = phase_loading::load_workspace(pattern)?;
     {
-        let graph = EvalBuilder::from_workspace(&ws)
-            .fetch_remotes(false)
-            .fetch_resources()
-            .transform_resources()
-            .materialize_resources()
-            .build()?;
-        phase_evaluation::evaluate(ws, graph)?;
+        phase_evaluation::evaluate(
+            ws,
+            EvalArgs {
+                refetch: opts.refetch,
+                ..Default::default()
+            },
+        )?;
     }
     Ok(())
 }

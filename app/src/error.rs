@@ -304,10 +304,6 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
             err_label = "error:".red().bold(),
             tip_label = "  tip:".green(),
         ),
-        GraphConfiguration(err) => eprintln!(
-            "{err_label} action graph configuration error: {err}",
-            err_label = "error:".red().bold(),
-        ),
         WebpCreate => eprintln!(
             "{err_label} while converting PNG to WEBP\n\n\
             {tip_label} only RGB8 and ARGB8 profiles are supported\n",
@@ -349,6 +345,9 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
         ),
         SvgToCompose(err) => {
             eprintln!("{err_label} {err:?}", err_label = "error:".red().bold());
+        }
+        Interrupted(err) => {
+            eprintln!("{err_label} {err}", err_label = "error:".red().bold());
         }
     }
 }

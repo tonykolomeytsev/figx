@@ -6,7 +6,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     IO(std::io::Error),
     Cache(lib_cache::Error),
-    GraphConfiguration(lib_graph_exec::unconfigured::Error),
     WebpCreate,
     ImageDecode(image::ImageError),
     FigmaApiNetwork(lib_figma::Error),
@@ -15,6 +14,7 @@ pub enum Error {
     ActionSingleInputAbsent,
     ActionTaggedInputAbsent,
     SvgToCompose(lib_svg2compose::Error),
+    Interrupted(String),
 }
 
 impl Display for Error {
@@ -36,12 +36,6 @@ impl From<lib_cache::Error> for Error {
     }
 }
 
-impl From<lib_graph_exec::unconfigured::Error> for Error {
-    fn from(value: lib_graph_exec::unconfigured::Error) -> Self {
-        Self::GraphConfiguration(value)
-    }
-}
-
 impl From<image::ImageError> for Error {
     fn from(value: image::ImageError) -> Self {
         Self::ImageDecode(value)
@@ -57,5 +51,11 @@ impl From<lib_figma::Error> for Error {
 impl From<lib_svg2compose::Error> for Error {
     fn from(value: lib_svg2compose::Error) -> Self {
         Self::SvgToCompose(value)
+    }
+}
+
+impl From<std::sync::mpsc::RecvError> for Error {
+    fn from(value: std::sync::mpsc::RecvError) -> Self {
+        Self::Interrupted(format!("channel unexpectedly closed: {value}"))
     }
 }

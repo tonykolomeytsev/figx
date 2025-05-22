@@ -64,8 +64,8 @@ fn run_app() -> Result<()> {
             command_fetch::fetch(FeatureFetchOptions { pattern })?
         }
 
-        CliSubcommand::Import(CommandImportArgs { pattern }) => {
-            command_import::import(FeatureImportOptions { pattern })?
+        CliSubcommand::Import(CommandImportArgs { pattern, refetch }) => {
+            command_import::import(FeatureImportOptions { pattern, refetch })?
         }
 
         CliSubcommand::Clean => command_clean::clean(FeatureCleanOptions)?,

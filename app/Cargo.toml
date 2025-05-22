@@ -23,7 +23,7 @@ lib_svg2compose.workspace = true
 # External
 clap.workspace = true
 log.workspace = true
-env_logger.workspace = true
+fern.workspace = true
 serde.workspace = true
 derive_more.workspace = true
 owo-colors.workspace = true

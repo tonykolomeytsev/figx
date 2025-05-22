@@ -46,7 +46,7 @@ owo-colors = "4"
 fast-glob = "0.4.5"
 bytes = "1.10"
 surrealkv = "0.9"
-env_logger = "0.11"
+fern = "0.7.1"
 dashmap = "6.1"
 bincode = { version = "2.0", features = ["serde"] }
 xxhash-rust = { version = "0.8", features = ["xxh64"] }
