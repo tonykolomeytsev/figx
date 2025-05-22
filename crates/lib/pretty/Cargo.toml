@@ -1,8 +1,0 @@
-[package]
-name = "lib_pretty"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-crossterm = "0.29"
-ordermap.workspace = true

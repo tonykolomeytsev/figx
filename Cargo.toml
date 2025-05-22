@@ -13,9 +13,7 @@ lto = true
 
 [workspace.dependencies]
 # Internal Crates
-## First phase
 phase_loading = { path = "crates/phase/loading" }
-## Second phase
 phase_evaluation = { path = "crates/phase/evaluation" }
 ## User commands
 command_info = { path = "crates/command/info" }
@@ -25,13 +23,10 @@ command_fetch = { path = "crates/command/fetch" }
 command_import = { path = "crates/command/import" }
 command_clean = { path = "crates/command/clean" }
 ## Common code
-lib_graph_exec = { path = "crates/lib/graph_exec" }
 lib_figma = { path = "crates/lib/figma" }
 lib_label = { path = "crates/lib/label" }
-lib_pretty = { path = "crates/lib/pretty" }
 lib_cache = { path = "crates/lib/cache" }
 lib_svg2compose = { path = "crates/lib/svg2compose" }
-lib_webp = { path = "crates/lib/webp" }
 
 # External Deps
 toml = "0.8"

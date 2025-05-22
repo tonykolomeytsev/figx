@@ -15,9 +15,7 @@ command_clean.workspace = true
 phase_loading.workspace = true
 phase_evaluation.workspace = true
 
-lib_graph_exec.workspace = true
 lib_label.workspace = true
-lib_pretty.workspace = true
 lib_svg2compose.workspace = true
 
 # External
