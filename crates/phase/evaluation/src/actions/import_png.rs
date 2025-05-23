@@ -9,7 +9,7 @@ use super::{
 };
 
 pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
-    debug!("importing png: {}", args.attrs.label.name);
+    debug!(target: "Import", "png: {}", args.attrs.label.name);
     let png = &get_remote_image(
         ctx,
         GetRemoteImageArgs {

@@ -1,20 +1,20 @@
 use super::{NodeMetadata, RemoteMetadata};
 use crate::{Error, Result};
-use dashmap::DashMap;
+use key_mutex::KeyMutex;
 use lib_cache::{Cache, CacheKey};
 use lib_figma::{FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, Node};
 use phase_loading::RemoteSource;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use std::{
     collections::{HashMap, VecDeque},
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
 #[derive(Clone)]
 pub struct FigmaRepository {
     api: FigmaApi,
     cache: Cache,
-    locks: Arc<DashMap<String, Mutex<()>>>,
+    locks: KeyMutex<String, ()>,
     io_pool: Arc<ThreadPool>,
 }
 
@@ -47,10 +47,15 @@ impl FigmaRepository {
             .write_str(&remote.container_node_ids.join(","))
             .build();
 
+        // return cached value if it exists
+        if !refetch {
+            if let Some(metadata) = self.cache.get::<RemoteMetadata>(&cache_key)? {
+                return Ok(metadata);
+            }
+        }
+
         // this section will be accessed by only one thread for one remote
-        // could be abused by user creating billions of remotes :)
-        let mutex = self.locks.entry(remote.id.clone()).or_default();
-        let _guard = mutex.lock().unwrap();
+        let _lock = self.locks.lock(remote.id.clone()).unwrap();
 
         // return cached value if it exists
         if !refetch {
@@ -108,10 +113,13 @@ impl FigmaRepository {
             .write_str(&scale.to_string())
             .build();
 
+        // return cached value if it exists
+        if let Some(url) = self.cache.get::<DownloadUrl>(&cache_key)? {
+            return Ok(url);
+        }
+
         // this section will be accessed by only one thread for one node
-        // could be abused by user creating billions of remotes :)
-        let mutex = self.locks.entry(node.id.clone()).or_default();
-        let _guard = mutex.lock().unwrap();
+        let _lock = self.locks.lock(format!("{cache_key:?}")).unwrap();
 
         // return cached value if it exists
         if let Some(url) = self.cache.get::<DownloadUrl>(&cache_key)? {
@@ -165,21 +173,20 @@ impl FigmaRepository {
         Ok(url)
     }
 
-    pub fn download(
-        &self,
-        remote: &RemoteSource,
-        url: &str,
-    ) -> Result<Vec<u8>> {
+    pub fn download(&self, remote: &RemoteSource, url: &str) -> Result<Vec<u8>> {
         // construct unique cache key
         let cache_key = CacheKey::builder()
             .set_tag(Self::DOWNLOADED_IMAGE_TAG)
             .write_str(&url)
             .build();
 
+        // return cached value if it exists
+        if let Some(image) = self.cache.get_bytes(&cache_key)? {
+            return Ok(image);
+        }
+
         // this section will be accessed by only one thread for one node
-        // could be abused by user creating billions of remotes :)
-        let mutex = self.locks.entry(url.to_owned()).or_default();
-        let _guard = mutex.lock().unwrap();
+        let _lock = self.locks.lock(url.to_owned()).unwrap();
 
         // return cached value if it exists
         if let Some(image) = self.cache.get_bytes(&cache_key)? {

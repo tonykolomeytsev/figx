@@ -1,5 +1,6 @@
 use crate::Result;
 use bytes::Bytes;
+use log::debug;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 use std::{collections::HashMap, hash::Hasher, sync::Arc, time::Duration};
@@ -15,6 +16,8 @@ impl Default for FigmaApi {
             client: Arc::new(
                 ureq::Agent::config_builder()
                     .timeout_connect(Some(Duration::from_secs(5)))
+                    .max_idle_connections(100)
+                    .max_idle_connections_per_host(100)
                     .build()
                     .into(),
             ),
@@ -59,6 +62,7 @@ impl FigmaApi {
         file_key: &str,
         query: GetFileQueryParameters,
     ) -> Result<GetFileResponse> {
+        debug!(target: "Figma API", "get_file called for: {file_key}");
         let mut request = self
             .client
             .get(format!(
@@ -72,6 +76,7 @@ impl FigmaApi {
         set_query_if_needed!(txt: request, "geometry" => &query.geometry);
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
+        debug!(target: "Figma API", "get_file done for: {file_key}");
         Ok(request
             .call()?
             .body_mut()
@@ -86,6 +91,7 @@ impl FigmaApi {
         file_key: &str,
         query: GetFileNodesQueryParameters,
     ) -> Result<GetFileNodesResponse> {
+        debug!(target: "Figma API", "get_file_nodes called for: {file_key}");
         let mut request = self
             .client
             .get(format!(
@@ -99,12 +105,14 @@ impl FigmaApi {
         set_query_if_needed!(txt: request, "geometry" => &query.geometry);
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
-        Ok(request
+        let response = request
             .call()?
             .body_mut()
             .with_config()
             .limit(mb(100))
-            .read_json::<GetFileNodesResponse>()?)
+            .read_json::<GetFileNodesResponse>()?;
+        debug!(target: "Figma API", "get_file_nodes done for: {file_key}");
+        Ok(response)
     }
 
     pub fn get_image(
@@ -113,6 +121,7 @@ impl FigmaApi {
         file_key: &str,
         query: GetImageQueryParameters,
     ) -> Result<GetImageResponse> {
+        debug!(target: "Figma API", "get_image called for: {file_key}/{:?}", query.ids);
         let mut request = self
             .client
             .get(format!(
@@ -131,15 +140,18 @@ impl FigmaApi {
         set_query_if_needed!(bln: request, "use_absolute_bounds" => &query.use_absolute_bounds);
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
-        Ok(request
+        let response = request
             .call()?
             .body_mut()
             .with_config()
             .limit(mb(50))
-            .read_json::<GetImageResponse>()?)
+            .read_json::<GetImageResponse>()?;
+        debug!(target: "Figma API", "get_image done for: {file_key}/{:?}", query.ids);
+        Ok(response)
     }
 
     pub fn download_resource(&self, access_token: &str, url: &str) -> Result<Bytes> {
+        debug!(target: "Figma API", "download_resource called for: {url}");
         let request = self
             .client
             .get(url)
@@ -150,6 +162,7 @@ impl FigmaApi {
             .with_config()
             .limit(mb(50))
             .read_to_vec()?;
+        debug!(target: "Figma API", "download_resource done for: {url}");
         Ok(bytes::Bytes::from(buf))
     }
 }

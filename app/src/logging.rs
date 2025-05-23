@@ -35,6 +35,9 @@ pub fn init_log_impl(verbosity: u8) {
                 })
                 // accept info messages from the current crate too
                 .level_for("ureq", log::LevelFilter::Off)
+                .level_for("ureq_proto", log::LevelFilter::Off)
+                .level_for("rustls", log::LevelFilter::Off)
+                .level_for("ignore", log::LevelFilter::Off)
                 .chain(std::io::stderr()),
         )
         .apply()

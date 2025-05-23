@@ -28,7 +28,6 @@ pub fn materialize(
         .output_dir
         .join(args.file_name)
         .with_extension(args.file_extension);
-    debug!("materializing: {}", output_file.display());
 
     // check if file already materialized
     if output_file.exists() {
@@ -50,6 +49,7 @@ pub fn materialize(
     }
 
     on_execute();
+    debug!(target: "Materialize", "{}", output_file.display());
     std::fs::create_dir_all(args.output_dir)?;
     std::fs::write(&output_file, args.bytes)?;
 

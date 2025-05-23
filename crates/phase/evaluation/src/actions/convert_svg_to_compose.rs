@@ -1,13 +1,27 @@
 use crate::EvalContext;
 use crate::Result;
+use lib_cache::CacheKey;
 use lib_svg2compose::SvgToComposeOptions;
 use log::debug;
 
-pub fn convert_svg_to_compose(
-    _ctx: &EvalContext,
-    args: ConvertSvgToComposeArgs,
-) -> Result<Vec<u8>> {
-    debug!("transforming: svg to compose (name={})", args.name);
+const COMPOSE_TRANSFORM_TAG: u8 = 0x03;
+
+pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) -> Result<Vec<u8>> {
+    // construct unique cache key
+    let cache_key = CacheKey::builder()
+        .set_tag(COMPOSE_TRANSFORM_TAG)
+        .write(args.svg)
+        .write_str(&args.package)
+        .write_bool(args.kotlin_explicit_api)
+        .build();
+
+    // return cached value if it exists
+    if let Some(compose) = ctx.cache.get_bytes(&cache_key)? {
+        return Ok(compose);
+    }
+
+    // otherwise, do transform
+    debug!(target: "Transform", "svg to compose (name={})", args.name);
     let compose = lib_svg2compose::transform_svg_to_compose(
         args.svg,
         SvgToComposeOptions {
@@ -16,6 +30,9 @@ pub fn convert_svg_to_compose(
             kotlin_explicit_api: args.kotlin_explicit_api,
         },
     )?;
+
+    // remember result to cache
+    ctx.cache.put_slice(&cache_key, &compose)?;
     Ok(compose)
 }
 

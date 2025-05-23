@@ -9,7 +9,7 @@ use super::{
 };
 
 pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
-    debug!("importing svg: {}", args.attrs.label.name);
+    debug!(target: "Import", "svg: {}", args.attrs.label.name);
     let svg = get_remote_image(
         ctx,
         GetRemoteImageArgs {

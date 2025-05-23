@@ -17,7 +17,8 @@ use crate::actions::materialize::materialize;
 
 pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Result<()> {
     debug!(
-        "importing android-webp: {} ({})",
+        target: "Import",
+        "android-webp: {} ({})",
         args.attrs.label.name,
         args.profile
             .scales
@@ -49,6 +50,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 ConvertPngToWebpArgs {
                     quality: args.profile.quality,
                     bytes: &png,
+                    label: &args.attrs.label,
                 },
             )?;
             drop(png);

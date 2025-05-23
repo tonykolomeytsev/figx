@@ -1,7 +1,9 @@
-use lib_label::Label;
-use log::info;
-use phase_loading::RemoteSource;
-
+use super::{
+    download_image::DownloadImageArgs,
+    export_image::{ExportImageArgs, export_image},
+    fetch_remote::FetchRemoteArgs,
+    find_node_by_name::FindNodeByNameArgs,
+};
 use crate::{
     EvalContext, Result,
     actions::{
@@ -9,19 +11,12 @@ use crate::{
         find_node_by_name::find_node_by_name,
     },
 };
-
-use super::{
-    download_image::DownloadImageArgs,
-    export_image::{ExportImageArgs, export_image},
-    fetch_remote::FetchRemoteArgs,
-    find_node_by_name::FindNodeByNameArgs,
-};
+use lib_label::Label;
+use log::info;
+use phase_loading::RemoteSource;
 
 /// Shortcut action
-pub fn get_remote_image(
-    ctx: &EvalContext,
-    args: GetRemoteImageArgs,
-) -> Result<Vec<u8>> {
+pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<Vec<u8>> {
     download_image(
         ctx,
         DownloadImageArgs {
@@ -43,7 +38,7 @@ pub fn get_remote_image(
                         )?,
                     })?,
                 },
-                || info!(target: "Downloading", "{} of scale {} for `{}`", args.format, args.scale, args.label.truncated_display(40)),
+                || info!(target: "Downloading", "{} of scale {} for `{}`", args.format, args.scale, args.label.truncated_display(50)),
             )?,
         },
     )

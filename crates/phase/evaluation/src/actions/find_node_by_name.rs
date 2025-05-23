@@ -1,9 +1,9 @@
-use log::debug;
-
-use crate::{figma::{NodeMetadata, RemoteMetadata}, Error, Result};
+use crate::{
+    Error, Result,
+    figma::{NodeMetadata, RemoteMetadata},
+};
 
 pub fn find_node_by_name(args: FindNodeByNameArgs) -> Result<&NodeMetadata> {
-    debug!("seeking node: '{}'", args.name);
     let node = args
         .remote
         .name_to_node

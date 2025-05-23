@@ -11,7 +11,7 @@ use phase_loading::{ComposeProfile, ResourceAttrs};
 use std::path::{Path, PathBuf};
 
 pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> {
-    debug!("importing compose: {}", args.attrs.label.name);
+    debug!(target: "Import", "compose: {}", args.attrs.label.name);
     let output_dir = get_output_dir_for_compose_profile(args.profile, &args.attrs.package_dir);
     let package = get_kotlin_package(&output_dir).unwrap_or_default();
 

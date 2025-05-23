@@ -7,7 +7,7 @@ use log::{debug, info};
 use phase_loading::{PdfProfile, ResourceAttrs};
 
 pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
-    debug!("importing pdf: {}", args.attrs.label.name);
+    debug!(target: "Import", "pdf: {}", args.attrs.label.name);
     let pdf = &get_remote_image(
         ctx,
         GetRemoteImageArgs {

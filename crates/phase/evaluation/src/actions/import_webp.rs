@@ -10,7 +10,7 @@ use log::{debug, info};
 use phase_loading::{ResourceAttrs, WebpProfile};
 
 pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
-    debug!("importing webp: {}", args.attrs.label.name);
+    debug!(target: "Import", "webp: {}", args.attrs.label.name);
 
     let png = &get_remote_image(
         ctx,
@@ -27,6 +27,7 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
         ConvertPngToWebpArgs {
             quality: args.profile.quality,
             bytes: &png,
+            label: &args.attrs.label,
         },
     )?;
     materialize(
