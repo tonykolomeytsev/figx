@@ -57,7 +57,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 .package_dir
                 .join(&args.profile.android_res_dir)
                 .join(&format!("drawable-{density_name}"));
-            
+
             materialize(
                 ctx,
                 MaterializeArgs {
@@ -84,7 +84,7 @@ impl<'a> ImportAndroidWebpArgs<'a> {
     }
 }
 
-fn scale_factor(d: &AndroidDensity) -> f32 {
+pub fn scale_factor(d: &AndroidDensity) -> f32 {
     use AndroidDensity::*;
     let density = match d {
         LDPI => 0.75,
@@ -97,7 +97,7 @@ fn scale_factor(d: &AndroidDensity) -> f32 {
     density
 }
 
-fn density_name(d: &AndroidDensity) -> &str {
+pub fn density_name(d: &AndroidDensity) -> &str {
     use AndroidDensity::*;
     match d {
         LDPI => "ldpi",

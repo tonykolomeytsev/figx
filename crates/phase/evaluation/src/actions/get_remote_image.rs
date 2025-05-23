@@ -43,10 +43,9 @@ pub fn get_remote_image(
                         )?,
                     })?,
                 },
-                || info!(target: "Exporting", "{} of scale {} for `{}`", args.format, args.scale, args.label.truncated_display(40)),
+                || info!(target: "Downloading", "{} of scale {} for `{}`", args.format, args.scale, args.label.truncated_display(40)),
             )?,
         },
-        || info!(target: "Downloading", "{} of scale {} for `{}`", args.format, args.scale, args.label.truncated_display(40)),
     )
 }
 

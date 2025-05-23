@@ -67,7 +67,7 @@ impl<'a> ImportComposeArgs<'a> {
     }
 }
 
-fn get_output_dir_for_compose_profile(p: &ComposeProfile, abs_package_dir: &Path) -> PathBuf {
+pub fn get_output_dir_for_compose_profile(p: &ComposeProfile, abs_package_dir: &Path) -> PathBuf {
     let kt_src_dir = &p.src_dir;
     let kt_package = match &p.package {
         Some(package) => package.replace('.', "/"),
@@ -77,7 +77,7 @@ fn get_output_dir_for_compose_profile(p: &ComposeProfile, abs_package_dir: &Path
     abs_package_dir.join(kt_src_dir).join(kt_package)
 }
 
-fn get_kotlin_package(output_dir: &Path) -> Option<String> {
+pub fn get_kotlin_package(output_dir: &Path) -> Option<String> {
     let mut current_dir = output_dir.to_path_buf();
 
     // Step 2: Traverse upwards to find source root

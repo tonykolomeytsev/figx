@@ -169,7 +169,6 @@ impl FigmaRepository {
         &self,
         remote: &RemoteSource,
         url: &str,
-        on_download_start: impl FnOnce(),
     ) -> Result<Vec<u8>> {
         // construct unique cache key
         let cache_key = CacheKey::builder()
@@ -188,7 +187,6 @@ impl FigmaRepository {
         }
 
         // otherwise, request value from remote
-        on_download_start();
         let response = self
             .io_pool
             .install(|| self.api.download_resource(&remote.access_token, &url));

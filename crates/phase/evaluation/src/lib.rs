@@ -18,7 +18,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-// mod actions_old;
 pub mod actions;
 mod error;
 pub mod figma;
