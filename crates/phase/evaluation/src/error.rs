@@ -59,3 +59,9 @@ impl From<std::sync::mpsc::RecvError> for Error {
         Self::Interrupted(format!("channel unexpectedly closed: {value}"))
     }
 }
+
+impl From<retry::Error<lib_figma::Error>> for Error {
+    fn from(value: retry::Error<lib_figma::Error>) -> Self {
+        value.error.into()
+    }
+}

@@ -3,8 +3,13 @@ use crate::{Error, Result};
 use key_mutex::KeyMutex;
 use lib_cache::{Cache, CacheKey};
 use lib_figma::{FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, Node};
+use log::debug;
 use phase_loading::RemoteSource;
+use retry::OperationResult;
+use retry::delay::Exponential;
+use retry::retry_with_index;
 use std::collections::{HashMap, VecDeque};
+use ureq::Error::StatusCode;
 
 #[derive(Clone)]
 pub struct FigmaRepository {
@@ -120,16 +125,31 @@ impl FigmaRepository {
 
         // otherwise, request value from remote
         on_export_start();
-        let response = self.api.get_image(
-            &remote.access_token,
-            &remote.file_key,
-            GetImageQueryParameters {
-                ids: Some(&vec![node.id.to_owned()]),
-                scale: Some(scale),
-                format: Some(format),
-                ..Default::default()
-            },
-        );
+        let response =
+            retry_with_index(Exponential::from_millis_with_factor(5000, 2.0), |attempt| {
+                if attempt > 1 {
+                    debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
+                };
+                match self.api.get_image(
+                    &remote.access_token,
+                    &remote.file_key,
+                    GetImageQueryParameters {
+                        ids: Some(&vec![node.id.to_owned()]),
+                        scale: Some(scale),
+                        format: Some(format),
+                        ..Default::default()
+                    },
+                ) {
+                    Ok(result) => OperationResult::Ok(result),
+                    Err(e) => match e.0 {
+                        StatusCode(code) if code == 429 => {
+                            debug!(target: "FigmaRepository", "rate limit encountered");
+                            OperationResult::Retry(e)
+                        }
+                        _ => OperationResult::Err(e),
+                    },
+                }
+            });
 
         let node_id = node.id.as_str();
         let url = {
