@@ -321,6 +321,10 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
                     "{err_label} while requesting Figma API: invalid access token",
                     err_label = "error:".red().bold(),
                 ),
+                StatusCode(code) if code == 429 => eprintln!(
+                    "{err_label} too many requests to Figma API",
+                    err_label = "error:".red().bold(),
+                ),
                 err => eprintln!(
                     "{err_label} while requesting Figma API: {err}",
                     err_label = "error:".red().bold(),

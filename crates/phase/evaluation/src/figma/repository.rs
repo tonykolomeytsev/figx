@@ -4,18 +4,13 @@ use key_mutex::KeyMutex;
 use lib_cache::{Cache, CacheKey};
 use lib_figma::{FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, Node};
 use phase_loading::RemoteSource;
-use rayon::{ThreadPool, ThreadPoolBuilder};
-use std::{
-    collections::{HashMap, VecDeque},
-    sync::Arc,
-};
+use std::collections::{HashMap, VecDeque};
 
 #[derive(Clone)]
 pub struct FigmaRepository {
     api: FigmaApi,
     cache: Cache,
-    locks: KeyMutex<String, ()>,
-    io_pool: Arc<ThreadPool>,
+    locks: KeyMutex<CacheKey, ()>,
 }
 
 pub type DownloadUrl = String;
@@ -29,8 +24,7 @@ impl FigmaRepository {
         Self {
             api,
             cache,
-            locks: Default::default(),
-            io_pool: Arc::new(ThreadPoolBuilder::new().build().unwrap()),
+            locks: KeyMutex::new(),
         }
     }
 
@@ -55,7 +49,7 @@ impl FigmaRepository {
         }
 
         // this section will be accessed by only one thread for one remote
-        let _lock = self.locks.lock(remote.id.clone()).unwrap();
+        let _lock = self.locks.lock(cache_key.clone()).unwrap();
 
         // return cached value if it exists
         if !refetch {
@@ -66,17 +60,15 @@ impl FigmaRepository {
 
         // otherwise, request value from remote
         on_fetch_start();
-        let response = self.io_pool.install(|| {
-            self.api.get_file_nodes(
-                &remote.access_token,
-                &remote.file_key,
-                GetFileNodesQueryParameters {
-                    ids: Some(&remote.container_node_ids),
-                    geometry: Some("paths"),
-                    ..Default::default()
-                },
-            )
-        });
+        let response = self.api.get_file_nodes(
+            &remote.access_token,
+            &remote.file_key,
+            GetFileNodesQueryParameters {
+                ids: Some(&remote.container_node_ids),
+                geometry: Some("paths"),
+                ..Default::default()
+            },
+        );
 
         let metadata = {
             let response = response?;
@@ -119,7 +111,7 @@ impl FigmaRepository {
         }
 
         // this section will be accessed by only one thread for one node
-        let _lock = self.locks.lock(format!("{cache_key:?}")).unwrap();
+        let _lock = self.locks.lock(cache_key.clone()).unwrap();
 
         // return cached value if it exists
         if let Some(url) = self.cache.get::<DownloadUrl>(&cache_key)? {
@@ -128,18 +120,16 @@ impl FigmaRepository {
 
         // otherwise, request value from remote
         on_export_start();
-        let response = self.io_pool.install(|| {
-            self.api.get_image(
-                &remote.access_token,
-                &remote.file_key,
-                GetImageQueryParameters {
-                    ids: Some(&vec![node.id.to_owned()]),
-                    scale: Some(scale),
-                    format: Some(format),
-                    ..Default::default()
-                },
-            )
-        });
+        let response = self.api.get_image(
+            &remote.access_token,
+            &remote.file_key,
+            GetImageQueryParameters {
+                ids: Some(&vec![node.id.to_owned()]),
+                scale: Some(scale),
+                format: Some(format),
+                ..Default::default()
+            },
+        );
 
         let node_id = node.id.as_str();
         let url = {
@@ -186,7 +176,7 @@ impl FigmaRepository {
         }
 
         // this section will be accessed by only one thread for one node
-        let _lock = self.locks.lock(url.to_owned()).unwrap();
+        let _lock = self.locks.lock(cache_key.clone()).unwrap();
 
         // return cached value if it exists
         if let Some(image) = self.cache.get_bytes(&cache_key)? {
@@ -194,9 +184,7 @@ impl FigmaRepository {
         }
 
         // otherwise, request value from remote
-        let response = self
-            .io_pool
-            .install(|| self.api.download_resource(&remote.access_token, &url));
+        let response = self.api.download_resource(&remote.access_token, &url);
         let bytes = response?;
 
         // remember result to cache

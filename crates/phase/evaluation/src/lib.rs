@@ -47,15 +47,20 @@ impl Default for EvalArgs {
     }
 }
 
+const DEFAULT_NUM_THREADS: usize = 5;
+
 pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     let instant = Instant::now();
     let ctx = init_eval_context(&ws, args)?;
+    let _ = rayon::ThreadPoolBuilder::new()
+        .num_threads(DEFAULT_NUM_THREADS)
+        .build_global();
 
     // region: exec
     let result = ws
         .packages
         .par_iter()
-        .flat_map_iter(|it| &it.resources)
+        .flat_map(|it| &it.resources)
         .map(|res| {
             use phase_loading::Profile::*;
             match res.profile.as_ref() {
@@ -76,15 +81,16 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         })
         .collect::<Result<()>>();
     // endregion: exec
-
     let elapsed = instant.elapsed();
-    let res_count = ws.packages.iter().flat_map(|it| &it.resources).count();
-    info!(target: "Finished", "{res_count} resource(s) in {}", format_duration(elapsed));
 
     // Извлекаем ошибку, если она была
     match result {
         Err(e) => Err(e),
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            let res_count = ws.packages.iter().flat_map(|it| &it.resources).count();
+            info!(target: "Finished", "{res_count} resource(s) in {}", format_duration(elapsed));
+            Ok(())
+        }
     }
 }
 

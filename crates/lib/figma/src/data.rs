@@ -16,8 +16,8 @@ impl Default for FigmaApi {
             client: Arc::new(
                 ureq::Agent::config_builder()
                     .timeout_connect(Some(Duration::from_secs(5)))
-                    .max_idle_connections(100)
-                    .max_idle_connections_per_host(100)
+                    .max_idle_connections(10)
+                    .max_idle_connections_per_host(3)
                     .build()
                     .into(),
             ),

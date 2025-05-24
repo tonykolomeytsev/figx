@@ -4,7 +4,7 @@ use bincode::{BorrowDecode, Decode, Encode};
 use bytes::Bytes;
 use xxhash_rust::xxh64::Xxh64;
 
-#[derive(Clone)]
+#[derive(Clone, Hash, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct CacheKey {
     hash: Bytes,
