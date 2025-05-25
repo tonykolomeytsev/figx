@@ -33,7 +33,7 @@ pub enum CliSubcommand {
     Import(CommandImportArgs),
 
     /// Clean up application cache
-    Clean,
+    Clean(CommandCleanArgs),
 }
 
 #[derive(Args, Debug)]
@@ -88,6 +88,13 @@ pub struct CommandImportArgs {
     /// Run fetch even if already have cached remote metadata
     #[arg(long)]
     pub refetch: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct CommandCleanArgs {
+    /// Remove all metadata about remotes and all downloaded images
+    #[arg(long)]
+    pub all: bool
 }
 
 fn get_styles() -> Styles {

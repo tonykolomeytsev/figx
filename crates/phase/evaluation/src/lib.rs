@@ -9,12 +9,18 @@ use actions::{
 use figma::FigmaRepository;
 use lib_cache::Cache;
 use lib_figma::FigmaApi;
+use lib_progress_bar::{set_progress_bar_maximum, set_progress_bar_visible};
 use log::{debug, info, trace};
 use phase_loading::Workspace;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::{
+    cmp::min,
+    collections::HashSet,
     path::Path,
-    sync::Arc,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
     time::{Duration, Instant},
 };
 
@@ -47,14 +53,25 @@ impl Default for EvalArgs {
     }
 }
 
-const DEFAULT_NUM_THREADS: usize = 5;
+const MAX_NUM_THREADS: usize = 6;
 
 pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     let instant = Instant::now();
     let ctx = init_eval_context(&ws, args)?;
-    let _ = rayon::ThreadPoolBuilder::new()
-        .num_threads(DEFAULT_NUM_THREADS)
-        .build_global();
+    // setup rayon thread pool
+    fun_name();
+    set_progress_bar_visible(true);
+    let requested_resources = ws.packages.iter().map(|pkg| pkg.resources.len()).sum();
+    let processed_resources: Arc<AtomicUsize> = Default::default();
+    let requested_remotes = ws
+        .packages
+        .iter()
+        .flat_map(|pkg| &pkg.resources)
+        .map(|res| &res.attrs.remote)
+        .collect::<HashSet<_>>()
+        .len();
+    set_progress_bar_maximum(requested_resources);
+    info!(target: "Requested", "{requested_resources} resource(s) from {requested_remotes} remote(s)");
 
     // region: exec
     let result = ws
@@ -63,7 +80,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .flat_map(|it| &it.resources)
         .map(|res| {
             use phase_loading::Profile::*;
-            match res.profile.as_ref() {
+            let result = match res.profile.as_ref() {
                 Png(png_profile) => import_png(&ctx, ImportPngArgs::new(&res.attrs, &png_profile)),
                 Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(&res.attrs, &svg_profile)),
                 Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(&res.attrs, pdf_profile)),
@@ -77,24 +94,41 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
                     &ctx,
                     ImportAndroidWebpArgs::new(&res.attrs, android_webp_profile),
                 ),
-            }
+            };
+            processed_resources.fetch_add(1, Ordering::Relaxed);
+            lib_progress_bar::set_progress_bar_progress(
+                processed_resources.load(Ordering::Relaxed),
+            );
+            result
         })
         .collect::<Result<()>>();
     // endregion: exec
     let elapsed = instant.elapsed();
+    set_progress_bar_visible(false);
 
     // Извлекаем ошибку, если она была
     match result {
         Err(e) => Err(e),
         Ok(_) => {
-            let res_count = ws.packages.iter().flat_map(|it| &it.resources).count();
-            info!(target: "Finished", "{res_count} resource(s) in {}", format_duration(elapsed));
+            info!(
+                target: "Finished", "{res_num} resource(s) in {time}",
+                res_num = processed_resources.load(Ordering::Relaxed),
+                time = format_duration(elapsed),
+            );
             Ok(())
         }
     }
 }
 
-fn setup_cache(dir: &Path) -> Result<Cache> {
+fn fun_name() {
+    let num_threads = min(num_cpus::get(), MAX_NUM_THREADS);
+    debug!(target: "Setup", "set rayon concurrency to {num_threads}");
+    let _ = rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build_global();
+}
+
+pub fn setup_cache(dir: &Path) -> Result<Cache> {
     trace!("Ensuring all dirs to cache DB exists...");
     std::fs::create_dir_all(dir)?;
     debug!("Loading cache...");

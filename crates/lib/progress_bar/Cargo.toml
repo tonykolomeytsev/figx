@@ -4,5 +4,4 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-owo-colors.workspace = true
-# crossterm = "0.29"
+crossterm.workspace = true

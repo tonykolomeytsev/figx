@@ -1,5 +1,5 @@
+use crossterm::style::Stylize;
 use derive_more::From;
-use owo_colors::OwoColorize;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -90,6 +90,7 @@ fn handle_cmd_clean_error(err: command_clean::Error) {
             "{err_label} unable to delete cache directory: {err}",
             err_label = "error:".red().bold(),
         ),
+        Evaluation(err) => handle_evaluation_error(err),
     }
 }
 

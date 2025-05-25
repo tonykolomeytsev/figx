@@ -5,4 +5,6 @@ edition.workspace = true
 
 [dependencies]
 phase_loading.workspace = true
+phase_evaluation.workspace = true
+lib_cache.workspace = true
 log.workspace = true

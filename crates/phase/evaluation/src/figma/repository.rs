@@ -3,13 +3,20 @@ use crate::{Error, Result};
 use key_mutex::KeyMutex;
 use lib_cache::{Cache, CacheKey};
 use lib_figma::{FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, Node};
-use log::debug;
+use log::{debug, warn};
 use phase_loading::RemoteSource;
 use retry::OperationResult;
 use retry::delay::Exponential;
 use retry::retry_with_index;
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::LazyLock,
+};
 use ureq::Error::StatusCode;
+
+static RATE_LIMIT_NOTIFICATION: LazyLock<()> = LazyLock::new(
+    || warn!(target: "FigmaRepository", "REST API rate limit has been hit. Subsequent requests will be throttled."),
+);
 
 #[derive(Clone)]
 pub struct FigmaRepository {
@@ -21,9 +28,9 @@ pub struct FigmaRepository {
 pub type DownloadUrl = String;
 
 impl FigmaRepository {
-    const REMOTE_SOURCE_TAG: u8 = 0x42;
-    const EXPORTED_IMAGE_TAG: u8 = 0x43;
-    const DOWNLOADED_IMAGE_TAG: u8 = 0x44;
+    pub const REMOTE_SOURCE_TAG: u8 = 0x42;
+    pub const EXPORTED_IMAGE_TAG: u8 = 0x43;
+    pub const DOWNLOADED_IMAGE_TAG: u8 = 0x44;
 
     pub fn new(api: FigmaApi, cache: Cache) -> Self {
         Self {
@@ -144,6 +151,7 @@ impl FigmaRepository {
                     Err(e) => match e.0 {
                         StatusCode(code) if code == 429 => {
                             debug!(target: "FigmaRepository", "rate limit encountered");
+                            let _ = &*RATE_LIMIT_NOTIFICATION;
                             OperationResult::Retry(e)
                         }
                         _ => OperationResult::Err(e),

@@ -22,8 +22,7 @@ lib_progress_bar.workspace = true
 # External
 clap.workspace = true
 log.workspace = true
-fern.workspace = true
 serde.workspace = true
 derive_more.workspace = true
-owo-colors.workspace = true
 ureq.workspace = true
+crossterm.workspace = true

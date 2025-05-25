@@ -42,7 +42,6 @@ owo-colors = "4"
 fast-glob = "0.4.5"
 bytes = "1.10"
 surrealkv = "0.9"
-fern = "0.7.1"
 dashmap = "6.1"
 bincode = { version = "2.0", features = ["serde"] }
 xxhash-rust = { version = "0.8", features = ["xxh64"] }
@@ -53,3 +52,4 @@ ureq = { version = "3.0", default-features = false, features = [
 ] }
 ordermap = "0.5.7"
 webp = { git = "https://github.com/tonykolomeytsev/webp.git" }
+crossterm = "0.29"

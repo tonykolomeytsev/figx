@@ -2,8 +2,8 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use cli::{
-    Cli, CliSubcommand, CommandAQueryArgs, CommandFetchArgs, CommandImportArgs, CommandInfoArgs,
-    CommandQueryArgs,
+    Cli, CliSubcommand, CommandAQueryArgs, CommandCleanArgs, CommandFetchArgs, CommandImportArgs,
+    CommandInfoArgs, CommandQueryArgs,
 };
 use command_aquery::FeatureAQueryOptions;
 use command_clean::FeatureCleanOptions;
@@ -16,14 +16,14 @@ mod cli;
 mod error;
 mod logging;
 use error::*;
-use log::info;
-use logging::init_log_impl;
+use log::Log;
+use logging::{init_log_impl, LOGGER};
 
 pub fn main() -> ExitCode {
-    info!("Starting...");
     match run_app() {
         Ok(_) => ExitCode::SUCCESS,
         Err(err) => {
+            (&*LOGGER).flush();
             handle_error(err);
             ExitCode::FAILURE
         }
@@ -68,7 +68,11 @@ fn run_app() -> Result<()> {
             command_import::import(FeatureImportOptions { pattern, refetch })?
         }
 
-        CliSubcommand::Clean => command_clean::clean(FeatureCleanOptions)?,
+        CliSubcommand::Clean(CommandCleanArgs {
+            all,
+        }) => command_clean::clean(FeatureCleanOptions {
+            all
+        })?,
     }
     Ok(())
 }

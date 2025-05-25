@@ -8,3 +8,4 @@ bytes.workspace = true
 surrealkv.workspace = true
 bincode.workspace = true
 xxhash-rust.workspace = true
+log.workspace = true

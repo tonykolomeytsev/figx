@@ -2,6 +2,7 @@ use bincode::{Decode, Encode};
 use bytes::Bytes;
 pub use error::*;
 pub use key::*;
+use log::debug;
 use std::{path::Path, sync::Arc};
 use surrealkv::{IsolationLevel, Options, Store};
 
@@ -166,5 +167,25 @@ impl Cache {
             Ok(None) => Err(Error::MissingRequiredValue(format!("{key:?}"))),
             Err(e) => Err(e),
         }
+    }
+
+    pub fn retain(&self, predicate: impl Fn(u8) -> bool) -> Result<()> {
+        let txn = self.store.begin()?;
+        let start: &[u8] = &[0x00; 9];
+        let end: &[u8] = &[0xff; 9];
+        let mut keys_to_delete = Vec::new();
+        txn.keys(start..end, None)
+            .filter(|arr| match arr.first() {
+                Some(tag) => !predicate(*tag),
+                None => false,
+            })
+            .for_each(|key| keys_to_delete.push(key));
+        let mut txn = self.store.begin()?;
+        for key in keys_to_delete {
+            debug!(target: "Cache", "deleting cache key {:?}", key);
+            txn.delete(key)?;
+        }
+        txn.commit()?;
+        Ok(())
     }
 }

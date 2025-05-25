@@ -49,9 +49,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                 },
             )?,
         },
-        || {
-            info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60));
-        },
+        || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
     )?;
     Ok(())
 }
