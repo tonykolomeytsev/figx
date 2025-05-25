@@ -664,6 +664,7 @@ dependencies = [
  "derive_more",
  "fern",
  "lib_label",
+ "lib_progress_bar",
  "lib_svg2compose",
  "log",
  "owo-colors",
@@ -1156,6 +1157,13 @@ name = "lib_label"
 version = "0.3.2"
 dependencies = [
  "fast-glob",
+]
+
+[[package]]
+name = "lib_progress_bar"
+version = "0.3.2"
+dependencies = [
+ "owo-colors",
 ]
 
 [[package]]

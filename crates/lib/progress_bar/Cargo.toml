@@ -1,0 +1,8 @@
+[package]
+name = "lib_progress_bar"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+owo-colors.workspace = true
+# crossterm = "0.29"
