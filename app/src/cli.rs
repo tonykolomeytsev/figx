@@ -94,7 +94,7 @@ pub struct CommandImportArgs {
 pub struct CommandCleanArgs {
     /// Remove all metadata about remotes and all downloaded images
     #[arg(long)]
-    pub all: bool
+    pub all: bool,
 }
 
 fn get_styles() -> Styles {

@@ -26,7 +26,7 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
         ctx,
         ConvertPngToWebpArgs {
             quality: args.profile.quality,
-            bytes: &png,
+            bytes: png,
             label: &args.attrs.label,
         },
     )?;
@@ -36,7 +36,7 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
             output_dir: &args.attrs.package_dir.join(&args.profile.output_dir),
             file_name: args.attrs.label.name.as_ref(),
             file_extension: "webp",
-            bytes: &webp,
+            bytes: webp,
         },
         || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
     )

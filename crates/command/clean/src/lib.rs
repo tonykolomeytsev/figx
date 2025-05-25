@@ -16,11 +16,13 @@ pub fn clean(opts: FeatureCleanOptions) -> Result<()> {
         }
         FeatureCleanOptions { all: false } => {
             let cache = setup_cache(&cache_dir)?;
-            let _ = cache.retain(|tag| match tag {
-                FigmaRepository::REMOTE_SOURCE_TAG
-                | FigmaRepository::DOWNLOADED_IMAGE_TAG
-                | FigmaRepository::EXPORTED_IMAGE_TAG => true,
-                _ => false,
+            let _ = cache.retain(|tag| {
+                matches!(
+                    tag,
+                    FigmaRepository::REMOTE_SOURCE_TAG
+                        | FigmaRepository::DOWNLOADED_IMAGE_TAG
+                        | FigmaRepository::EXPORTED_IMAGE_TAG
+                )
             });
         }
     }

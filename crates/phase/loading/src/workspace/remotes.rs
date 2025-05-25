@@ -68,7 +68,7 @@ fn parse_access_token(value: &Option<String>) -> Option<String> {
         chars.as_str()
     }
     match value {
-        None => match std::env::var("FIGMA_PERSONAL_ACCESS_TOKEN") {
+        None => match std::env::var("FIGMA_PERSONAL_TOKEN") {
             Ok(value) => Some(value),
             _ => None,
         },

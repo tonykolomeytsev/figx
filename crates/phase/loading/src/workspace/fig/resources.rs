@@ -1,13 +1,16 @@
 use crate::{
+    AndroidWebpProfile, ComposeProfile, Error, LoadedFigFile, PdfProfile, PngProfile, Profile,
+    RemoteSource, Resource, ResourceAttrs, Result, SvgProfile, WebpProfile,
     workspace::{
-        profiles::{CanBeExtendedBy, PngProfileDto}, AndroidWebpProfileDto, ComposeProfileDto, PdfProfileDto, SvgProfileDto, WebpProfileDto
-    }, AndroidWebpProfile, ComposeProfile, Error, LoadedFigFile, PdfProfile, PngProfile, Profile, RemoteSource, Resource, ResourceAttrs, Result, SvgProfile, WebpProfile
+        AndroidWebpProfileDto, ComposeProfileDto, PdfProfileDto, SvgProfileDto, WebpProfileDto,
+        profiles::{CanBeExtendedBy, PngProfileDto},
+    },
 };
 use lib_label::{Label, ResourceName};
 use ordermap::OrderMap;
 use serde::Deserialize;
-use toml::Table;
 use std::{collections::HashMap, str::FromStr, sync::Arc};
+use toml::Table;
 
 #[derive(Deserialize, Default)]
 pub(super) struct ResourcesDto(HashMap<String, Table>);

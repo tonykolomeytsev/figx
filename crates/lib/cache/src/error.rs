@@ -40,7 +40,7 @@ impl std::fmt::Display for Error {
             SurrealKV(msg) => write!(f, "surrealkv error: {msg}"),
             Serialization(msg) => write!(f, "serialization error: {msg}"),
             Deserialization(msg) => write!(f, "deserialization error: {msg}"),
-            MissingRequiredValue(key) => write!(f, "missing required value: key={key}")
+            MissingRequiredValue(key) => write!(f, "missing required value: key={key}"),
         }
     }
 }

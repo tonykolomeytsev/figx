@@ -26,7 +26,7 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
             output_dir: &args.attrs.package_dir.join(&args.profile.output_dir),
             file_name: args.attrs.label.name.as_ref(),
             file_extension: "png",
-            bytes: &png,
+            bytes: png,
         },
         || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
     )?;

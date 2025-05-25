@@ -62,11 +62,7 @@ impl log::Log for Logger {
 
     fn flush(&self) {
         let mut stdout = stderr().lock();
-        let _ = queue!(
-            stdout,
-            MoveToColumn(0),
-            Clear(ClearType::CurrentLine),
-        );
+        let _ = queue!(stdout, MoveToColumn(0), Clear(ClearType::CurrentLine),);
     }
 }
 

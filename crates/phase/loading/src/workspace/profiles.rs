@@ -98,6 +98,7 @@ pub(super) struct AndroidWebpProfileDto {
     pub android_res_dir: Option<PathBuf>,
     pub quality: Option<f32>,
     pub scales: Option<BTreeSet<AndroidDensity>>,
+    pub night: Option<String>,
 }
 
 #[derive(Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -275,6 +276,7 @@ impl CanBeExtendedBy<AndroidWebpProfileDto> for AndroidWebpProfile {
                 .scales
                 .map(|set| set.into_iter().map(Into::into).collect())
                 .unwrap_or_else(|| self.scales.clone()),
+            night: another.night.or(self.night.clone()),
         }
     }
 }

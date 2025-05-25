@@ -39,18 +39,10 @@ pub struct EvalContext {
     pub cache: Cache,
 }
 
+#[derive(Default)]
 pub struct EvalArgs {
     pub refetch: bool,
     pub diagnostics: bool,
-}
-
-impl Default for EvalArgs {
-    fn default() -> Self {
-        Self {
-            refetch: false,
-            diagnostics: false,
-        }
-    }
 }
 
 const MAX_NUM_THREADS: usize = 6;
@@ -81,8 +73,8 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .map(|res| {
             use phase_loading::Profile::*;
             let result = match res.profile.as_ref() {
-                Png(png_profile) => import_png(&ctx, ImportPngArgs::new(&res.attrs, &png_profile)),
-                Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(&res.attrs, &svg_profile)),
+                Png(png_profile) => import_png(&ctx, ImportPngArgs::new(&res.attrs, png_profile)),
+                Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(&res.attrs, svg_profile)),
                 Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(&res.attrs, pdf_profile)),
                 Webp(webp_profile) => {
                     import_webp(&ctx, ImportWebpArgs::new(&res.attrs, webp_profile))

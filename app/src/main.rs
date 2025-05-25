@@ -17,13 +17,13 @@ mod error;
 mod logging;
 use error::*;
 use log::Log;
-use logging::{init_log_impl, LOGGER};
+use logging::{LOGGER, init_log_impl};
 
 pub fn main() -> ExitCode {
     match run_app() {
         Ok(_) => ExitCode::SUCCESS,
         Err(err) => {
-            (&*LOGGER).flush();
+            (*LOGGER).flush();
             handle_error(err);
             ExitCode::FAILURE
         }
@@ -68,11 +68,9 @@ fn run_app() -> Result<()> {
             command_import::import(FeatureImportOptions { pattern, refetch })?
         }
 
-        CliSubcommand::Clean(CommandCleanArgs {
-            all,
-        }) => command_clean::clean(FeatureCleanOptions {
-            all
-        })?,
+        CliSubcommand::Clean(CommandCleanArgs { all }) => {
+            command_clean::clean(FeatureCleanOptions { all })?
+        }
     }
     Ok(())
 }

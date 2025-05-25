@@ -20,19 +20,19 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
     download_image(
         ctx,
         DownloadImageArgs {
-            remote: &args.remote,
+            remote: args.remote,
             url: &export_image(
                 ctx,
                 ExportImageArgs {
-                    remote: &args.remote,
+                    remote: args.remote,
                     format: args.format,
                     scale: args.scale,
                     node: find_node_by_name(FindNodeByNameArgs {
-                        name: &args.node_name,
+                        name: args.node_name,
                         remote: &fetch_remote(
                             ctx,
                             FetchRemoteArgs {
-                                remote: &args.remote,
+                                remote: args.remote,
                             },
                             || info!(target: "Fetching", "remote {}", args.remote),
                         )?,

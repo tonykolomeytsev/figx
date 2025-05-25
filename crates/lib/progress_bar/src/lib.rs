@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, atomic::AtomicUsize};
 
-static PROGRESS_BAR: LazyLock<ProgressBar> = LazyLock::new(|| ProgressBar::default());
+static PROGRESS_BAR: LazyLock<ProgressBar> = LazyLock::new(ProgressBar::default);
 const PROGRESS_BAR_WIDTH: usize = 30;
 
 #[derive(Default)]

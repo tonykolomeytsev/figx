@@ -11,7 +11,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
     let cache_key = CacheKey::builder()
         .set_tag(COMPOSE_TRANSFORM_TAG)
         .write(args.svg)
-        .write_str(&args.package)
+        .write_str(args.package)
         .write_bool(args.kotlin_explicit_api)
         .build();
 

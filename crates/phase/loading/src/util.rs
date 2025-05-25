@@ -10,13 +10,13 @@ pub(crate) struct FileWithParentDir {
 }
 
 /// Find a file in the current directory or one of its ancestors
-/// 
-/// Searches for a file with the given name starting from the specified directory 
-/// and traversing up through its ancestors. If the file is found, returns both 
+///
+/// Searches for a file with the given name starting from the specified directory
+/// and traversing up through its ancestors. If the file is found, returns both
 /// the file path and the directory it was found in.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```ignore
 /// # use std::path::Path;
 /// # use phase_loading::util::find_file_in_ancestors;
@@ -52,7 +52,7 @@ pub(crate) fn find_files_in_child_dirs(
     builder.standard_filters(true);
     builder.hidden(false);
     builder.max_depth(Some(std::usize::MAX)); // Search all subdirectories
-    
+
     let mut results = vec![];
     for entry in builder.build() {
         let entry = entry?;

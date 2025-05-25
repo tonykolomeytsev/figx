@@ -1,5 +1,5 @@
-use crate::image_vector::*;
 use crate::Result;
+use crate::image_vector::*;
 
 impl TryFrom<usvg::Tree> for ImageVector {
     type Error = crate::Error;

@@ -42,10 +42,10 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     name: args.attrs.label.name.as_ref(),
                     package: match args.profile.package.as_ref() {
                         None => &package,
-                        Some(package) => &package,
+                        Some(package) => package,
                     },
                     kotlin_explicit_api: args.profile.kotlin_explicit_api,
-                    svg: &svg,
+                    svg,
                 },
             )?,
         },

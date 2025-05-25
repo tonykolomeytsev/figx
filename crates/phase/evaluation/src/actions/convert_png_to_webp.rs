@@ -20,7 +20,7 @@ pub fn convert_png_to_webp(ctx: &EvalContext, args: ConvertPngToWebpArgs) -> Res
 
     // otherwise, do transform
     info!(target: "Converting", "PNG to WEBP: {}", args.label.truncated_display(50));
-    let png = image::load_from_memory_with_format(&args.bytes, image::ImageFormat::Png)?;
+    let png = image::load_from_memory_with_format(args.bytes, image::ImageFormat::Png)?;
     let encoder = webp::Encoder::from_image(&png).map_err(|_| Error::WebpCreate)?; // fails if img is not RBG8 or RBGA8
     let webp = if args.quality == 100.0 {
         encoder.encode_lossless()

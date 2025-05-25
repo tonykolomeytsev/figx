@@ -24,7 +24,7 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
             output_dir: &args.attrs.package_dir.join(&args.profile.output_dir),
             file_name: args.attrs.label.name.as_ref(),
             file_extension: "pdf",
-            bytes: &pdf,
+            bytes: pdf,
         },
         || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
     )?;

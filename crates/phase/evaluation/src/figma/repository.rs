@@ -141,7 +141,7 @@ impl FigmaRepository {
                     &remote.access_token,
                     &remote.file_key,
                     GetImageQueryParameters {
-                        ids: Some(&vec![node.id.to_owned()]),
+                        ids: Some(&[node.id.to_owned()]),
                         scale: Some(scale),
                         format: Some(format),
                         ..Default::default()
@@ -195,7 +195,7 @@ impl FigmaRepository {
         // construct unique cache key
         let cache_key = CacheKey::builder()
             .set_tag(Self::DOWNLOADED_IMAGE_TAG)
-            .write_str(&url)
+            .write_str(url)
             .build();
 
         // return cached value if it exists
@@ -212,7 +212,7 @@ impl FigmaRepository {
         }
 
         // otherwise, request value from remote
-        let response = self.api.download_resource(&remote.access_token, &url);
+        let response = self.api.download_resource(&remote.access_token, url);
         let bytes = response?;
 
         // remember result to cache

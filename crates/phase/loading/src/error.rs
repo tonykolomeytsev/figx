@@ -9,14 +9,12 @@ pub enum Error {
     Internal(String),
 
     // region: Init
-
     InitInaccessibleCurrentWorkDir,
     InitNotInWorkspace,
 
     // endregion: Init
 
     // region: Workspace
-
     WorkspaceRead(std::io::Error),
     WorkspaceParse(toml::de::Error),
     WorkspaceNoRemotes,
@@ -29,7 +27,6 @@ pub enum Error {
     // endregion: Workspace
 
     // region: FigFiles
-
     FigTraversing(String),
     FigRead(std::io::Error),
     FigParse(toml::de::Error),
@@ -37,7 +34,6 @@ pub enum Error {
     FigInvalidPackage(PackageParsingError),
     FigInvalidRemoteName(String),
     FigInvalidProfileName(String),
-
     // endregion: FigFiles
 }
 

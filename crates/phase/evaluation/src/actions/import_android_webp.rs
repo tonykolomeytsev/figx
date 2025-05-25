@@ -25,13 +25,24 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
             .iter()
             .map(density_name)
             .collect::<Vec<_>>()
-            .join(", ")
+            .join(", "),
     );
 
-    args.profile
-        .scales
-        .par_iter()
-        .map(|density| {
+    // region: generating all android variants
+    let scales = &args.profile.scales;
+    let themes: &[_] = if let Some(night_variant) = &args.profile.night {
+        let light_variant = &args.attrs.node_name;
+        let night_variant = expand_night_variant(light_variant, night_variant);
+        &[(light_variant.to_owned(), false), (night_variant, true)]
+    } else {
+        let light_variant = &args.attrs.node_name;
+        &[(light_variant.to_owned(), false)]
+    };
+    let all_variants = cartesian_product(scales, themes);
+    // endregion: generating all android variants
+
+    all_variants.par_iter()
+        .map(|(density, (node_name, is_night))| {
             let factor = scale_factor(density);
             let density_name = density_name(density);
 
@@ -40,7 +51,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 GetRemoteImageArgs {
                     label: &args.attrs.label,
                     remote: &args.attrs.remote,
-                    node_name: &args.attrs.node_name,
+                    node_name,
                     format: "png",
                     scale: factor,
                 },
@@ -54,11 +65,16 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 },
             )?;
             drop(png);
+            let variant_name = if !is_night {
+                format!("{density_name}")
+            } else {
+                format!("night-{density_name}")
+            };
             let output_dir = args
                 .attrs
                 .package_dir
                 .join(&args.profile.android_res_dir)
-                .join(&format!("drawable-{density_name}"));
+                .join(&format!("drawable-{variant_name}"));
 
             materialize(
                 ctx,
@@ -68,7 +84,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     file_extension: "webp",
                     bytes: &webp,
                 },
-                || info!(target: "Writing", "`{}` ({density_name}) to file", args.attrs.label.truncated_display(50)),
+                || info!(target: "Writing", "`{}` ({variant_name}) to file", args.attrs.label.truncated_display(50)),
             )
         })
         .collect::<Result<()>>()?;
@@ -88,15 +104,14 @@ impl<'a> ImportAndroidWebpArgs<'a> {
 
 pub fn scale_factor(d: &AndroidDensity) -> f32 {
     use AndroidDensity::*;
-    let density = match d {
+    match d {
         LDPI => 0.75,
         MDPI => 1.0,
         HDPI => 1.5,
         XHDPI => 2.0,
         XXHDPI => 3.0,
         XXXHDPI => 4.0,
-    };
-    density
+    }
 }
 
 pub fn density_name(d: &AndroidDensity) -> &str {
@@ -109,4 +124,15 @@ pub fn density_name(d: &AndroidDensity) -> &str {
         XXHDPI => "xxhdpi",
         XXXHDPI => "xxxhdpi",
     }
+}
+
+fn cartesian_product<'a, A, B>(list_a: &'a [A], list_b: &'a [B]) -> Vec<(&'a A, &'a B)> {
+    list_a
+        .iter()
+        .flat_map(|a| list_b.iter().map(move |b| (a, b)))
+        .collect()
+}
+
+fn expand_night_variant(light_variant: &str, night_variant: &str) -> String {
+    night_variant.replacen("{name}", light_variant, 1)
 }

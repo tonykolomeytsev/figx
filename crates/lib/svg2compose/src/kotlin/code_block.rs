@@ -47,7 +47,7 @@ impl CodeBlockBuilder {
 
     pub fn add_code_block(mut self, cb: CodeBlock) -> Self {
         let mut cb = cb;
-        self.imports.extend(cb.imports.into_iter());
+        self.imports.extend(cb.imports);
         self.tokens.append(&mut cb.tokens);
         self
     }
@@ -55,7 +55,7 @@ impl CodeBlockBuilder {
     pub fn add_code_blocks(mut self, cbs: Vec<CodeBlock>) -> Self {
         for cb in cbs {
             let mut cb = cb;
-            self.imports.extend(cb.imports.into_iter());
+            self.imports.extend(cb.imports);
             self.tokens.append(&mut cb.tokens);
         }
         self

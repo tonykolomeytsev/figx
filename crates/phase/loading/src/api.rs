@@ -172,6 +172,7 @@ pub struct AndroidWebpProfile {
     pub android_res_dir: PathBuf,
     pub quality: f32,
     pub scales: Vec<AndroidDensity>,
+    pub night: Option<String>,
 }
 
 impl Default for AndroidWebpProfile {
@@ -182,6 +183,7 @@ impl Default for AndroidWebpProfile {
             android_res_dir: PathBuf::from("src/main/res"),
             quality: 100.0,
             scales: vec![MDPI, HDPI, XHDPI, XXHDPI, XXXHDPI],
+            night: None,
         }
     }
 }
