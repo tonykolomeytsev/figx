@@ -13,6 +13,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
         .write(args.svg)
         .write_str(args.package)
         .write_bool(args.kotlin_explicit_api)
+        .write_str(args.extension_target.as_deref().unwrap_or_default())
         .build();
 
     // return cached value if it exists
@@ -28,6 +29,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
             image_name: args.name.to_owned(),
             package: args.package.to_owned(),
             kotlin_explicit_api: args.kotlin_explicit_api,
+            extension_target_fq_name: args.extension_target.to_owned(),
         },
     )?;
 
@@ -40,5 +42,6 @@ pub struct ConvertSvgToComposeArgs<'a> {
     pub name: &'a str,
     pub package: &'a str,
     pub kotlin_explicit_api: bool,
+    pub extension_target: &'a Option<String>,
     pub svg: &'a [u8],
 }

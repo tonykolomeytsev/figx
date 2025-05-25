@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::SvgToComposeOptions;
 use crate::image_vector::*;
 use crate::kotlin::*;
@@ -199,10 +201,32 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             image_name,
             package,
             kotlin_explicit_api,
+            extension_target_fq_name,
         } = options;
 
-        let public_property = PropertySpec::builder(&image_name, "ImageVector")
+        // region: determine extension target
+        let (public_property_name, additional_import) = match &extension_target_fq_name {
+            Some(fq_name) => {
+                debug!("Im here");
+                if let Some((_, simple_name)) = fq_name.rsplit_once(".") {
+                    (
+                        format!("{simple_name}.{image_name}"),
+                        Some(fq_name),
+                    )
+                } else {
+                    (format!("{fq_name}.{image_name}"), None)
+                }
+            }
+            None => (image_name.to_owned(), None),
+        };
+        // endregion: determine extension target
+
+        let public_property = PropertySpec::builder(&public_property_name, "ImageVector")
             .require_import("androidx.compose.ui.graphics.vector.ImageVector")
+            .touch(|it| match additional_import {
+                Some(import) => it.require_import(import),
+                None => it,
+            })
             .touch(|it| match kotlin_explicit_api {
                 true => it.add_modifier("public"),
                 false => it,

@@ -152,6 +152,7 @@ pub struct ComposeProfile {
     pub src_dir: PathBuf,
     pub package: Option<String>,
     pub kotlin_explicit_api: bool,
+    pub extension_target: Option<String>,
 }
 
 impl Default for ComposeProfile {
@@ -162,6 +163,7 @@ impl Default for ComposeProfile {
             src_dir: PathBuf::new(),
             package: None,
             kotlin_explicit_api: false,
+            extension_target: None,
         }
     }
 }

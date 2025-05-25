@@ -48,6 +48,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                         Some(package) => package,
                     },
                     kotlin_explicit_api: args.profile.kotlin_explicit_api,
+                    extension_target: &args.profile.extension_target,
                     svg,
                 },
             )?,
