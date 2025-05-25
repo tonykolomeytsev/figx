@@ -90,6 +90,7 @@ pub(super) struct ComposeProfileDto {
     pub package: Option<String>,
     pub kotlin_explicit_api: Option<bool>,
     pub extension_target: Option<String>,
+    pub file_suppress_lint: Option<BTreeSet<String>>,
 }
 
 #[derive(Deserialize, Default)]
@@ -262,6 +263,10 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .kotlin_explicit_api
                 .unwrap_or(self.kotlin_explicit_api),
             extension_target: another.extension_target.or(self.extension_target.clone()),
+            file_suppress_lint: another
+                .file_suppress_lint
+                .map(|it| it.into_iter().collect())
+                .unwrap_or(self.file_suppress_lint.to_owned()),
         }
     }
 }

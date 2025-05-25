@@ -15,6 +15,7 @@ pub struct SvgToComposeOptions {
     pub package: String,
     pub kotlin_explicit_api: bool,
     pub extension_target_fq_name: Option<String>,
+    pub file_suppress_lint: Vec<String>,
 }
 
 pub fn transform_svg_to_compose(svg: &[u8], options: SvgToComposeOptions) -> Result<Vec<u8>> {

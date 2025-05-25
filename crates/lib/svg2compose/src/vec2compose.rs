@@ -202,6 +202,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             package,
             kotlin_explicit_api,
             extension_target_fq_name,
+            file_suppress_lint: file_suppress_annotations,
         } = options;
 
         // region: determine extension target
@@ -209,10 +210,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             Some(fq_name) => {
                 debug!("Im here");
                 if let Some((_, simple_name)) = fq_name.rsplit_once(".") {
-                    (
-                        format!("{simple_name}.{image_name}"),
-                        Some(fq_name),
-                    )
+                    (format!("{simple_name}.{image_name}"), Some(fq_name))
                 } else {
                     (format!("{fq_name}.{image_name}"), None)
                 }
@@ -264,7 +262,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             .begin_control_flow(format!("private fun {image_name}Preview() {{"))
             .add_statement("Icon(")
             .indent()
-            .add_statement(format!("imageVector = {image_name},"))
+            .add_statement(format!("imageVector = {public_property_name},"))
             .add_statement("contentDescription = null,")
             .unindent()
             .add_statement(")")
@@ -277,6 +275,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             .build();
 
         Self::builder(package)
+            .add_suppressions(file_suppress_annotations)
             .add_member(public_property.into())
             .add_member(backing_field.into())
             .add_member(preview_fun)

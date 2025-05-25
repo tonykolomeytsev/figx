@@ -153,6 +153,7 @@ pub struct ComposeProfile {
     pub package: Option<String>,
     pub kotlin_explicit_api: bool,
     pub extension_target: Option<String>,
+    pub file_suppress_lint: Vec<String>,
 }
 
 impl Default for ComposeProfile {
@@ -164,6 +165,7 @@ impl Default for ComposeProfile {
             package: None,
             kotlin_explicit_api: false,
             extension_target: None,
+            file_suppress_lint: Vec::new(),
         }
     }
 }

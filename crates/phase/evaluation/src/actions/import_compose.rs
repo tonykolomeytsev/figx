@@ -49,6 +49,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     },
                     kotlin_explicit_api: args.profile.kotlin_explicit_api,
                     extension_target: &args.profile.extension_target,
+                    file_suppress_lint: &args.profile.file_suppress_lint,
                     svg,
                 },
             )?,
