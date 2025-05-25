@@ -1,6 +1,9 @@
 use std::fmt::Display;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::sync::{LazyLock, atomic::AtomicUsize};
+
+use ordermap::OrderSet;
 
 static PROGRESS_BAR: LazyLock<ProgressBar> = LazyLock::new(ProgressBar::default);
 const PROGRESS_BAR_WIDTH: usize = 30;
@@ -10,6 +13,7 @@ pub struct ProgressBar {
     max: AtomicUsize,
     current: AtomicUsize,
     visible: AtomicBool,
+    in_progress_items: Arc<Mutex<OrderSet<String>>>,
 }
 
 impl ProgressBar {
@@ -40,6 +44,29 @@ impl Display for ProgressBar {
             write!(f, "{}", " ".repeat(PROGRESS_BAR_WIDTH - filled_area))?;
         }
         write!(f, "] {current}/{max}")?;
+        let mut length = 0;
+        for (idx, item) in self
+            .in_progress_items
+            .as_ref()
+            .lock()
+            .unwrap()
+            .iter()
+            .enumerate()
+        {
+            if idx == 0 {
+                write!(f, ": ")?;
+            }
+            length += item.len();
+            if length > 60 {
+                write!(f, ", ...")?;
+                break;
+            }
+            if idx > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{item}")?;
+        }
+
         Ok(())
     }
 }
@@ -62,6 +89,26 @@ pub fn set_progress_bar_visible(visible: bool) {
 
 pub fn get_progress_bar_display() -> String {
     PROGRESS_BAR.to_string()
+}
+
+pub fn create_in_progress_item<'a>(name: &'a str) -> InProgressGuard<'a> {
+    let guard = InProgressGuard(name);
+    PROGRESS_BAR
+        .in_progress_items
+        .lock()
+        .unwrap()
+        .insert(name.to_owned());
+    return guard;
+}
+
+pub struct InProgressGuard<'a>(&'a str);
+
+impl<'a> Drop for InProgressGuard<'a> {
+    fn drop(&mut self) {
+        if let Ok(mut items) = PROGRESS_BAR.in_progress_items.lock() {
+            items.remove(self.0);
+        }
+    }
 }
 
 #[cfg(test)]

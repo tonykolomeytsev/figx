@@ -1,3 +1,4 @@
+use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::{PngProfile, ResourceAttrs};
 
@@ -10,6 +11,8 @@ use super::{
 
 pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
     debug!(target: "Import", "png: {}", args.attrs.label.name);
+    let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
+
     let png = &get_remote_image(
         ctx,
         GetRemoteImageArgs {

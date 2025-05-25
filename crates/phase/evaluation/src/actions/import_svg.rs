@@ -1,3 +1,4 @@
+use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::{ResourceAttrs, SvgProfile};
 
@@ -10,6 +11,8 @@ use super::{
 
 pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
     debug!(target: "Import", "svg: {}", args.attrs.label.name);
+    let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
+    
     let svg = get_remote_image(
         ctx,
         GetRemoteImageArgs {

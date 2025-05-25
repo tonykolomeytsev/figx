@@ -6,11 +6,13 @@ use crate::{
     EvalContext, Result,
     actions::convert_png_to_webp::{ConvertPngToWebpArgs, convert_png_to_webp},
 };
+use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::{ResourceAttrs, WebpProfile};
 
 pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
     debug!(target: "Import", "webp: {}", args.attrs.label.name);
+    let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
 
     let png = &get_remote_image(
         ctx,

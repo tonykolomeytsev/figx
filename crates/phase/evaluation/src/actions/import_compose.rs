@@ -6,12 +6,15 @@ use crate::{
     EvalContext, Result,
     actions::convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
 };
+use lib_progress_bar::create_in_progress_item;
 use log::{debug, info, warn};
 use phase_loading::{ComposeProfile, ResourceAttrs};
 use std::path::{Path, PathBuf};
 
 pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> {
     debug!(target: "Import", "compose: {}", args.attrs.label.name);
+    let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
+    
     let output_dir = get_output_dir_for_compose_profile(args.profile, &args.attrs.package_dir);
     let package = get_kotlin_package(&output_dir).unwrap_or_default();
 

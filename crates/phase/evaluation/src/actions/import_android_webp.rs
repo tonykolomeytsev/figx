@@ -1,3 +1,4 @@
+use lib_progress_bar::create_in_progress_item;
 use log::debug;
 use log::info;
 use phase_loading::AndroidDensity;
@@ -27,6 +28,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
             .collect::<Vec<_>>()
             .join(", "),
     );
+    let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
 
     // region: generating all android variants
     let scales = &args.profile.scales;
