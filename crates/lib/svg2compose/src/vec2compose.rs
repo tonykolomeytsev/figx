@@ -120,14 +120,15 @@ impl From<GroupNode> for CodeBlock {
             translation,
             scale,
         } = value;
-        let name = match name {
-            Some(name) => format!("\"{name}\""),
-            None => "null".to_string(),
-        };
         Self::builder()
             .add_statement("group(")
             .indent()
-            .add_statement(format!("name = {name},"))
+            .touch(|it| {
+                match name {
+                    Some(name) => it.add_statement(format!("name = \"{name}\",")),
+                    None => it,
+                }
+            })
             .add_statement(format!("rotate = {rotate}f,"))
             .add_statement(format!("pivotX = {}f,", pivot.x))
             .add_statement(format!("pivotY = {}f,", pivot.y))
