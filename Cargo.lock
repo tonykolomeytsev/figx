@@ -362,7 +362,7 @@ checksum = "54261aba646433cb567ec89844be4c4825ca92a4f8afba52fc4dd88436e31bbd"
 
 [[package]]
 name = "command_aquery"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "lib_label",
  "owo-colors",
@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "command_clean"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "lib_cache",
  "log",
@@ -382,7 +382,7 @@ dependencies = [
 
 [[package]]
 name = "command_fetch"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "lib_label",
  "phase_evaluation",
@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "command_import"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "lib_figma",
  "lib_label",
@@ -401,14 +401,14 @@ dependencies = [
 
 [[package]]
 name = "command_info"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "phase_loading",
 ]
 
 [[package]]
 name = "command_query"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "lib_label",
  "line-numbers",
@@ -688,7 +688,7 @@ dependencies = [
 
 [[package]]
 name = "figmagic"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "clap",
  "command_aquery",
@@ -1173,7 +1173,7 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "lib_cache"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "bincode",
  "bytes",
@@ -1184,7 +1184,7 @@ dependencies = [
 
 [[package]]
 name = "lib_figma"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "bytes",
  "log",
@@ -1196,14 +1196,14 @@ dependencies = [
 
 [[package]]
 name = "lib_label"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "fast-glob",
 ]
 
 [[package]]
 name = "lib_progress_bar"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "crossterm",
  "ordermap",
@@ -1211,7 +1211,7 @@ dependencies = [
 
 [[package]]
 name = "lib_svg2compose"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "colorsys",
  "log",
@@ -1514,7 +1514,7 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "phase_evaluation"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "bincode",
  "dashmap 6.1.0",
@@ -1539,7 +1539,7 @@ dependencies = [
 
 [[package]]
 name = "phase_loading"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "derive_more",
  "ignore",
