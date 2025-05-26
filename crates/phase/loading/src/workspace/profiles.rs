@@ -97,6 +97,7 @@ pub(super) struct ComposeProfileDto {
     pub extension_target: Option<String>,
     pub file_suppress_lint: Option<BTreeSet<String>>,
     pub color_mappings: Option<Vec<ColorMappingDto>>,
+    pub preview: Option<ComposePreviewDto>,
 }
 
 #[derive(Deserialize)]
@@ -104,6 +105,13 @@ pub(super) struct ComposeProfileDto {
 pub(super) struct ColorMappingDto {
     pub from: String,
     pub to: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct ComposePreviewDto {
+    pub imports: Vec<String>,
+    pub code: String,
 }
 
 #[derive(Deserialize, Default)]
@@ -285,6 +293,7 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .color_mappings
                 .map(|it| it.into_iter().map(Into::into).collect())
                 .unwrap_or(self.color_mappings.clone()),
+            preview: another.preview.map(Into::into).or(self.preview.clone()),
         }
     }
 }
@@ -325,6 +334,15 @@ impl From<ColorMappingDto> for crate::ColorMapping {
         Self {
             from: value.from,
             to: value.to,
+        }
+    }
+}
+
+impl From<ComposePreviewDto> for crate::ComposePreview {
+    fn from(value: ComposePreviewDto) -> Self {
+        Self {
+            imports: value.imports,
+            code: value.code,
         }
     }
 }

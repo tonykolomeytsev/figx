@@ -155,6 +155,7 @@ pub struct ComposeProfile {
     pub extension_target: Option<String>,
     pub file_suppress_lint: Vec<String>,
     pub color_mappings: Vec<ColorMapping>,
+    pub preview: Option<ComposePreview>,
 }
 
 #[derive(Clone)]
@@ -162,6 +163,14 @@ pub struct ComposeProfile {
 pub struct ColorMapping {
     pub from: String,
     pub to: String,
+}
+
+
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
+pub struct ComposePreview {
+    pub imports: Vec<String>,
+    pub code: String,
 }
 
 impl Default for ComposeProfile {
@@ -175,6 +184,7 @@ impl Default for ComposeProfile {
             extension_target: None,
             file_suppress_lint: Vec::new(),
             color_mappings: Vec::new(),
+            preview: None,
         }
     }
 }
