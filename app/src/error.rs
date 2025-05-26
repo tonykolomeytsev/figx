@@ -196,13 +196,13 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                 {s: <7}{access_token} = \"some-token\"\n\
                 {tabs} {underline}\n\n\
                 {tabs} ... or ...\n\n\
-                {s: <7}{access_token} = \"$FIGMA_ACCESS_TOKEN\"\n\
+                {s: <7}{access_token} = \"FIGMA_ACCESS_TOKEN\"\n\
                 {tabs} {underline}\n",
                 err_label = "error:".red().bold(),
                 s = "",
-                access_token = "access_token".green(),
+                access_token = "access_token.env".green(),
                 tabs = " ".repeat(6),
-                underline = "+".repeat(12).green().bold(),
+                underline = "+".repeat(16).green().bold(),
             );
         }
         WorkspaceMoreThanOneDefaultRemotes => {
