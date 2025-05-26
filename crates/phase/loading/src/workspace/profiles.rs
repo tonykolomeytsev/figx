@@ -91,6 +91,14 @@ pub(super) struct ComposeProfileDto {
     pub kotlin_explicit_api: Option<bool>,
     pub extension_target: Option<String>,
     pub file_suppress_lint: Option<BTreeSet<String>>,
+    pub color_mappings: Option<Vec<ColorMappingDto>>,
+}
+
+#[derive(Deserialize)]
+pub(super) struct ColorMappingDto {
+    pub from: String,
+    pub to: String,
+    pub imports: Vec<String>,
 }
 
 #[derive(Deserialize, Default)]
@@ -267,6 +275,10 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .file_suppress_lint
                 .map(|it| it.into_iter().collect())
                 .unwrap_or(self.file_suppress_lint.to_owned()),
+            color_mappings: another
+                .color_mappings
+                .map(|it| it.into_iter().map(Into::into).collect())
+                .unwrap_or(self.color_mappings.clone()),
         }
     }
 }
@@ -298,6 +310,16 @@ impl From<AndroidDensity> for crate::AndroidDensity {
             AndroidDensity::XHDPI => XHDPI,
             AndroidDensity::XXHDPI => XXHDPI,
             AndroidDensity::XXXHDPI => XXXHDPI,
+        }
+    }
+}
+
+impl From<ColorMappingDto> for crate::ColorMapping {
+    fn from(value: ColorMappingDto) -> Self {
+        Self {
+            from: value.from,
+            to: value.to,
+            imports: value.imports,
         }
     }
 }

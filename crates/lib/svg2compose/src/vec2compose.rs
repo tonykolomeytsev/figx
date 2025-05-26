@@ -201,12 +201,13 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             image_name,
             package,
             kotlin_explicit_api,
-            extension_target_fq_name,
-            file_suppress_lint: file_suppress_annotations,
+            extension_target,
+            file_suppress_lint,
+            color_mappings: _,
         } = options;
 
         // region: determine extension target
-        let (public_property_name, additional_import) = match &extension_target_fq_name {
+        let (public_property_name, additional_import) = match &extension_target {
             Some(fq_name) => {
                 debug!("Im here");
                 if let Some((_, simple_name)) = fq_name.rsplit_once(".") {
@@ -275,7 +276,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             .build();
 
         Self::builder(package)
-            .add_suppressions(file_suppress_annotations)
+            .add_suppressions(file_suppress_lint)
             .add_member(public_property.into())
             .add_member(backing_field.into())
             .add_member(preview_fun)

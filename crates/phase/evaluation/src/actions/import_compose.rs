@@ -51,6 +51,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     extension_target: &args.profile.extension_target,
                     file_suppress_lint: &args.profile.file_suppress_lint,
                     svg,
+                    color_mappings: &args.profile.color_mappings,
                 },
             )?,
         },

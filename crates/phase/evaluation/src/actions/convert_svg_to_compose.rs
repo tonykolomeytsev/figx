@@ -3,19 +3,28 @@ use crate::Result;
 use lib_cache::CacheKey;
 use lib_svg2compose::SvgToComposeOptions;
 use log::debug;
+use phase_loading::ColorMapping;
 
 const COMPOSE_TRANSFORM_TAG: u8 = 0x03;
 
 pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) -> Result<Vec<u8>> {
     // construct unique cache key
-    let cache_key = CacheKey::builder()
+    let mut cache_key = CacheKey::builder()
         .set_tag(COMPOSE_TRANSFORM_TAG)
         .write(args.svg)
         .write_str(args.package)
         .write_bool(args.kotlin_explicit_api)
         .write_str(args.extension_target.as_deref().unwrap_or_default())
-        .write_str(&args.file_suppress_lint.join(",").to_string())
-        .build();
+        .write_str(&args.file_suppress_lint.join(",").to_string());
+
+    for mapping in args.color_mappings {
+        cache_key = cache_key
+            .write_str(&mapping.from)
+            .write_str(&mapping.to)
+            .write_str(&mapping.imports.join(",").to_string())
+    }
+
+    let cache_key = cache_key.build();
 
     // return cached value if it exists
     if let Some(compose) = ctx.cache.get_bytes(&cache_key)? {
@@ -30,8 +39,17 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
             image_name: args.name.to_owned(),
             package: args.package.to_owned(),
             kotlin_explicit_api: args.kotlin_explicit_api,
-            extension_target_fq_name: args.extension_target.to_owned(),
+            extension_target: args.extension_target.to_owned(),
             file_suppress_lint: args.file_suppress_lint.to_owned(),
+            color_mappings: args
+                .color_mappings
+                .iter()
+                .map(|domain| lib_svg2compose::ColorMapping {
+                    from: domain.from.to_owned(),
+                    to: domain.to.to_owned(),
+                    imports: domain.imports.to_owned(),
+                })
+                .collect(),
         },
     )?;
 
@@ -46,5 +64,6 @@ pub struct ConvertSvgToComposeArgs<'a> {
     pub kotlin_explicit_api: bool,
     pub extension_target: &'a Option<String>,
     pub file_suppress_lint: &'a [String],
+    pub color_mappings: &'a [ColorMapping],
     pub svg: &'a [u8],
 }

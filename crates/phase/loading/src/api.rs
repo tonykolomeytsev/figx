@@ -154,6 +154,15 @@ pub struct ComposeProfile {
     pub kotlin_explicit_api: bool,
     pub extension_target: Option<String>,
     pub file_suppress_lint: Vec<String>,
+    pub color_mappings: Vec<ColorMapping>,
+}
+
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
+pub struct ColorMapping {
+    pub from: String,
+    pub to: String,
+    pub imports: Vec<String>,
 }
 
 impl Default for ComposeProfile {
@@ -166,6 +175,7 @@ impl Default for ComposeProfile {
             kotlin_explicit_api: false,
             extension_target: None,
             file_suppress_lint: Vec::new(),
+            color_mappings: Vec::new(),
         }
     }
 }
