@@ -2,7 +2,7 @@ use crate::EvalContext;
 use crate::Result;
 use lib_cache::CacheKey;
 use lib_svg2compose::SvgToComposeOptions;
-use log::debug;
+use log::info;
 use phase_loading::ColorMapping;
 use phase_loading::ComposePreview;
 
@@ -36,7 +36,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
     }
 
     // otherwise, do transform
-    debug!(target: "Transform", "svg to compose (name={})", args.name);
+    info!(target: "Converting", "SVG to Compose: {}", args.name);
     let compose = lib_svg2compose::transform_svg_to_compose(
         args.svg,
         SvgToComposeOptions {
