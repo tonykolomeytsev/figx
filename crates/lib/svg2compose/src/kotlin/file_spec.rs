@@ -68,7 +68,7 @@ impl Display for FileSpec {
         if !suppressions.is_empty() {
             writeln!(f, "@file:Suppress(")?;
             for s in suppressions {
-                writeln!(f, "    \"{s}\"")?;
+                writeln!(f, "    \"{s}\",")?;
             }
             writeln!(f, ")")?;
             writeln!(f)?;
