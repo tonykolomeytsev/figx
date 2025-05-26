@@ -59,7 +59,7 @@ impl From<PathNode> for CodeBlock {
             .add_statement("path(")
             .indent()
             .touch(|it| match fill_color {
-                Some(c) => it.add_statement(c.as_solid_color()),
+                Some(c) => it.add_statement(format!("fill = {},", c.as_solid_color())),
                 None => it,
             })
             .touch(|it| match alpha {
