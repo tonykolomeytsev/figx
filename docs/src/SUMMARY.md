@@ -34,6 +34,7 @@
     - [WEBP profile](./reference/1.4-webp-profile.md)
     - [Compose profile](./reference/1.5-compose-profile.md)
     - [Android-Webp profile](./reference/1.6-android-webp-profile.md)
+- [Remotes](./reference/2-remotes.md)
 - [Commands]()
     - [figmagic init]()
     - [figmagic info]()
