@@ -6,6 +6,6 @@ Figmagic is a CLI tool for managing assets exported from Figma. It's an ideal ch
 
 - ⚖️ **Correct**: The result of importing assets into your project precisely reflects what’s defined in the Figmagic configuration — no more, no less. You now have a single source of truth for design assets.
 
-- 🛡️ **Reliable**: Importing assets through Figmagic yields the same result on any machine. In case of instability, you receive a clear and understandable error message. Non-reproducible results can only occur due to changes made by designers in Figma, not because of the developers or the tool.
+- 🛡️ **Reliable**: Importing assets through Figmagic yields the same result on any machine. Non-reproducible results can only occur due to changes made by designers in Figma, not because of the developers or the tool.
 
 - ♻️ **Caching**: Network requests are minimized. Only changed assets are fetched. The cache is portable across machines.

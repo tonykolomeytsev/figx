@@ -27,6 +27,13 @@
 
 # Reference Guide
 
+- [Profiles](./reference/1-profiles.md)
+    - [PNG profile](./reference/1.1-png-profile.md)
+    - [SVG profile](./reference/1.2-svg-profile.md)
+    - [PDF profile](./reference/1.3-pdf-profile.md)
+    - [WEBP profile](./reference/1.4-webp-profile.md)
+    - [Compose profile](./reference/1.5-compose-profile.md)
+    - [Android-Webp profile](./reference/1.6-android-webp-profile.md)
 - [Commands]()
     - [figmagic init]()
     - [figmagic info]()
