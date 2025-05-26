@@ -14,8 +14,24 @@ struct RemoteDto {
     pub file_key: String,
     #[serde(default = "Default::default")]
     pub container_node_ids: Vec<String>,
-    pub access_token: Option<String>,
+    #[serde(default = "Default::default")]
+    pub access_token: AccessTokenDefinition,
     pub default: Option<bool>,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum AccessTokenDefinition {
+    Explicit(String),
+    Env { env: String },
+}
+
+impl Default for AccessTokenDefinition {
+    fn default() -> Self {
+        Self::Env {
+            env: "FIGMA_PERSONAL_TOKEN".to_owned(),
+        }
+    }
 }
 
 pub(crate) fn parse_remotes(
@@ -62,19 +78,13 @@ pub(crate) fn parse_remotes(
     Ok(all_remotes)
 }
 
-fn parse_access_token(value: &Option<String>) -> Option<String> {
-    fn remove_first(s: &str) -> &str {
-        let mut chars = s.chars();
-        let _ = chars.next();
-        chars.as_str()
-    }
+fn parse_access_token(value: &AccessTokenDefinition) -> Option<String> {
     match value {
-        None => match std::env::var("FIGMA_PERSONAL_TOKEN") {
+        AccessTokenDefinition::Explicit(token) => Some(token.to_owned()),
+        AccessTokenDefinition::Env { env } => match std::env::var(env) {
             Ok(value) => Some(value),
             _ => None,
         },
-        Some(value) if value.starts_with("$") => std::env::var(remove_first(value)).ok(),
-        Some(value) => Some(value.clone()),
     }
 }
 
