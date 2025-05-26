@@ -1,3 +1,6 @@
+use colorsys::Rgb;
+use usvg::Fill;
+
 use crate::Result;
 use crate::image_vector::*;
 
@@ -86,8 +89,59 @@ impl TryFrom<&usvg::Path> for Node {
     fn try_from(path: &usvg::Path) -> Result<Self> {
         let fill = path.fill();
         let fill_type = fill.map(|it| it.rule().into()).unwrap_or_default();
-        let fill_color = fill.and_then(|it| it.paint().try_into().ok());
+        let fill_color = match fill.map(Fill::paint) {
+            Some(usvg::Paint::Color(c)) => {
+                Some(PooledColor::Source(Rgb::from((c.red, c.green, c.blue))))
+            }
+            Some(usvg::Paint::LinearGradient(_)) => {
+                return Err("Unsupported fill paint type: linear-gradient".into());
+            }
+            Some(usvg::Paint::Pattern(_)) => {
+                return Err("Unsupported fill paint type: pattern".into());
+            }
+            Some(usvg::Paint::RadialGradient(_)) => {
+                return Err("Unsupported fill paint type: radial-gradient".into());
+            }
+            None => None,
+        };
         let fill_alpha = fill.map(|it| it.opacity().get()).unwrap_or(1.0);
+        let stroke_color = match path.stroke().map(usvg::Stroke::paint) {
+            Some(usvg::Paint::Color(c)) => {
+                Some(PooledColor::Source(Rgb::from((c.red, c.green, c.blue))))
+            }
+            Some(usvg::Paint::LinearGradient(_)) => {
+                return Err("Unsupported stroke paint type: linear-gradient".into());
+            }
+            Some(usvg::Paint::Pattern(_)) => {
+                return Err("Unsupported stroke paint type: pattern".into());
+            }
+            Some(usvg::Paint::RadialGradient(_)) => {
+                return Err("Unsupported stroke paint type: radial-gradient".into());
+            }
+            None => None,
+        };
+        let stroke = match path.stroke() {
+            Some(stroke) => Stroke {
+                color: stroke_color,
+                alpha: stroke.opacity().get(),
+                width: stroke.width().get(),
+                cap: match stroke.linecap() {
+                    usvg::LineCap::Butt => Cap::Butt,
+                    usvg::LineCap::Round => Cap::Round,
+                    usvg::LineCap::Square => Cap::Square,
+                },
+                join: match stroke.linejoin() {
+                    usvg::LineJoin::Bevel => Join::Bevel,
+                    usvg::LineJoin::Miter => Join::Miter,
+                    usvg::LineJoin::Round => Join::Round,
+                    usvg::LineJoin::MiterClip => {
+                        return Err("unsupported stroke join: miter-clip".into());
+                    }
+                },
+                miter: stroke.miterlimit().get(),
+            },
+            None => Stroke::default(),
+        };
 
         let path = PathNode {
             fill_type,
@@ -98,10 +152,7 @@ impl TryFrom<&usvg::Path> for Node {
                 .map(|it| it.try_into())
                 .collect::<Result<Vec<_>>>()?,
             alpha: fill_alpha,
-            stroke: match path.stroke() {
-                Some(stroke) => stroke.try_into()?,
-                None => Stroke::default(),
-            },
+            stroke,
         };
         Ok(Self::Path(path))
     }
@@ -113,56 +164,6 @@ impl From<usvg::FillRule> for FillType {
             usvg::FillRule::NonZero => FillType::NonZero,
             usvg::FillRule::EvenOdd => FillType::EvenOdd,
         }
-    }
-}
-
-impl TryFrom<&usvg::Paint> for FillColor {
-    type Error = crate::Error;
-
-    fn try_from(value: &usvg::Paint) -> Result<Self> {
-        use usvg::Paint::*;
-        match value {
-            Color(color) => Ok(color.into()),
-            LinearGradient(_) => Err("unsupported paint in svg: linear-gradient".into()),
-            RadialGradient(_) => Err("unsupported paint in svg: radial-gradient".into()),
-            Pattern(_) => Err("unsupported paint in svg: pattern".into()),
-        }
-    }
-}
-
-impl From<&usvg::Color> for FillColor {
-    fn from(value: &usvg::Color) -> Self {
-        FillColor {
-            r: value.red,
-            g: value.green,
-            b: value.blue,
-        }
-    }
-}
-
-impl TryFrom<&usvg::Stroke> for Stroke {
-    type Error = crate::Error;
-
-    fn try_from(stroke: &usvg::Stroke) -> Result<Self> {
-        Ok(Stroke {
-            color: stroke.paint().try_into().ok(),
-            alpha: stroke.opacity().get(),
-            width: stroke.width().get(),
-            cap: match stroke.linecap() {
-                usvg::LineCap::Butt => Cap::Butt,
-                usvg::LineCap::Round => Cap::Round,
-                usvg::LineCap::Square => Cap::Square,
-            },
-            join: match stroke.linejoin() {
-                usvg::LineJoin::Bevel => Join::Bevel,
-                usvg::LineJoin::Miter => Join::Miter,
-                usvg::LineJoin::Round => Join::Round,
-                usvg::LineJoin::MiterClip => {
-                    return Err("unsupported stroke join: miter-clip".into());
-                }
-            },
-            miter: stroke.miterlimit().get(),
-        })
     }
 }
 

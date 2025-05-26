@@ -1,5 +1,3 @@
-use log::debug;
-
 use crate::SvgToComposeOptions;
 use crate::image_vector::*;
 use crate::kotlin::*;
@@ -40,7 +38,7 @@ impl From<PathNode> for CodeBlock {
         } = value;
         // TODO: support gradients
         let stroke_color = match stroke.color {
-            Some(c) => format!("SolidColor(Color(0xFF{:02X}{:02X}{:02X}))", c.r, c.g, c.b),
+            Some(c) => c.as_solid_color(),
             None => "null".to_string(),
         };
         let stroke_cap_str = match stroke.cap {
@@ -61,11 +59,7 @@ impl From<PathNode> for CodeBlock {
             .add_statement("path(")
             .indent()
             .touch(|it| match fill_color {
-                Some(c) => {
-                    // TODO: support gradients
-                    let color = format!("SolidColor(Color(0xFF{:02X}{:02X}{:02X}))", c.r, c.g, c.b);
-                    it.add_statement(color)
-                }
+                Some(c) => it.add_statement(c.as_solid_color()),
                 None => it,
             })
             .touch(|it| match alpha {
@@ -209,7 +203,6 @@ impl From<BackingFieldComposableSpec> for FileSpec {
         // region: determine extension target
         let (public_property_name, additional_import) = match &extension_target {
             Some(fq_name) => {
-                debug!("Im here");
                 if let Some((_, simple_name)) = fq_name.rsplit_once(".") {
                     (format!("{simple_name}.{image_name}"), Some(fq_name))
                 } else {

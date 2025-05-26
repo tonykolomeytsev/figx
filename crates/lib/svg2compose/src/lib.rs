@@ -1,7 +1,9 @@
+use color_mapping::map_colors;
 use image_vector::ImageVector;
 use kotlin::FileSpec;
 use vec2compose::BackingFieldComposableSpec;
 
+mod color_mapping;
 mod image_vector;
 mod kotlin;
 mod svg2vec;
@@ -22,13 +24,15 @@ pub struct SvgToComposeOptions {
 pub struct ColorMapping {
     pub from: String,
     pub to: String,
-    pub imports: Vec<String>,
 }
 
 pub fn transform_svg_to_compose(svg: &[u8], options: SvgToComposeOptions) -> Result<Vec<u8>> {
     let tree = usvg::Tree::from_data(svg, &Default::default())?;
     let mut image_vector: ImageVector = tree.try_into()?;
     image_vector.name = options.image_name.to_owned();
+    if !options.color_mappings.is_empty() {
+        map_colors(&mut image_vector, &options.color_mappings)?;
+    }
     let output = backing_field_template(image_vector, options);
     Ok(output.into_bytes())
 }

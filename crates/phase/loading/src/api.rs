@@ -162,7 +162,6 @@ pub struct ComposeProfile {
 pub struct ColorMapping {
     pub from: String,
     pub to: String,
-    pub imports: Vec<String>,
 }
 
 impl Default for ComposeProfile {

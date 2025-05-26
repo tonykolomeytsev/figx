@@ -1,3 +1,5 @@
+use colorsys::Rgb;
+
 pub struct ImageVector {
     pub name: String,
     pub width: f32,
@@ -23,7 +25,7 @@ pub struct GroupNode {
 
 pub struct PathNode {
     pub fill_type: FillType,
-    pub fill_color: Option<FillColor>,
+    pub fill_color: Option<PooledColor>,
     pub commands: Vec<Command>,
     pub alpha: f32,
     pub stroke: Stroke,
@@ -39,12 +41,6 @@ impl Default for FillType {
     fn default() -> Self {
         Self::NonZero
     }
-}
-
-pub struct FillColor {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
 }
 
 pub struct Translation {
@@ -72,7 +68,7 @@ pub struct Point {
 }
 
 pub struct Stroke {
-    pub color: Option<FillColor>,
+    pub color: Option<PooledColor>,
     pub alpha: f32,
     pub width: f32,
     pub cap: Cap,
@@ -105,4 +101,23 @@ pub enum Join {
     Bevel,
     Miter,
     Round,
+}
+
+pub enum PooledColor {
+    Source(Rgb),
+    Mapped(String),
+}
+
+impl PooledColor {
+    pub fn as_solid_color(&self) -> String {
+        match self {
+            PooledColor::Source(c) => format!(
+                "SolidColor(Color(0xFF{:02X}{:02X}{:02X}))",
+                c.red() as u8,
+                c.green() as u8,
+                c.blue() as u8
+            ),
+            PooledColor::Mapped(c) => format!("SolidColor({c})"),
+        }
+    }
 }

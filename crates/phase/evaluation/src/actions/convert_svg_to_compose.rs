@@ -21,7 +21,6 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
         cache_key = cache_key
             .write_str(&mapping.from)
             .write_str(&mapping.to)
-            .write_str(&mapping.imports.join(",").to_string())
     }
 
     let cache_key = cache_key.build();
@@ -47,7 +46,6 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
                 .map(|domain| lib_svg2compose::ColorMapping {
                     from: domain.from.to_owned(),
                     to: domain.to.to_owned(),
-                    imports: domain.imports.to_owned(),
                 })
                 .collect(),
         },
