@@ -52,6 +52,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     file_suppress_lint: &args.profile.file_suppress_lint,
                     svg,
                     color_mappings: &args.profile.color_mappings,
+                    preview: &args.profile.preview,
                 },
             )?,
         },

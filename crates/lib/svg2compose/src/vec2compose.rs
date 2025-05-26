@@ -198,6 +198,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             extension_target,
             file_suppress_lint,
             color_mappings: _,
+            preview,
         } = options;
 
         // region: determine extension target
@@ -250,23 +251,31 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             .mutable()
             .build();
 
-        let preview_fun = CodeBlock::builder()
-            .add_statement("@Preview(showBackground = true)")
-            .add_statement("@Composable")
-            .begin_control_flow(format!("private fun {image_name}Preview() {{"))
-            .add_statement("Icon(")
-            .indent()
-            .add_statement(format!("imageVector = {public_property_name},"))
-            .add_statement("contentDescription = null,")
-            .unindent()
-            .add_statement(")")
-            .end_control_flow()
-            .require_imports(&[
-                "androidx.compose.material3.Icon",
-                "androidx.compose.runtime.Composable",
-                "androidx.compose.ui.tooling.preview.Preview",
-            ])
-            .build();
+        let preview_fun = if let Some(preview) = preview {
+            let code = preview.code.replace("{name}", &image_name);
+            CodeBlock::builder()
+                .require_imports(&preview.imports)
+                .add_statement(code)
+                .build()
+        } else {
+            CodeBlock::builder()
+                .add_statement("@Preview(showBackground = true)")
+                .add_statement("@Composable")
+                .begin_control_flow(format!("private fun {image_name}Preview() {{"))
+                .add_statement("Icon(")
+                .indent()
+                .add_statement(format!("imageVector = {public_property_name},"))
+                .add_statement("contentDescription = null,")
+                .unindent()
+                .add_statement(")")
+                .end_control_flow()
+                .require_imports(&[
+                    "androidx.compose.material3.Icon",
+                    "androidx.compose.runtime.Composable",
+                    "androidx.compose.ui.tooling.preview.Preview",
+                ])
+                .build()
+        };
 
         Self::builder(package)
             .add_suppressions(file_suppress_lint)

@@ -19,11 +19,17 @@ pub struct SvgToComposeOptions {
     pub extension_target: Option<String>,
     pub file_suppress_lint: Vec<String>,
     pub color_mappings: Vec<ColorMapping>,
+    pub preview: Option<ComposePreview>,
 }
 
 pub struct ColorMapping {
     pub from: String,
     pub to: String,
+}
+
+pub struct ComposePreview {
+    pub imports: Vec<String>,
+    pub code: String,
 }
 
 pub fn transform_svg_to_compose(svg: &[u8], options: SvgToComposeOptions) -> Result<Vec<u8>> {

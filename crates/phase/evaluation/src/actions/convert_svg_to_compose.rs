@@ -4,6 +4,7 @@ use lib_cache::CacheKey;
 use lib_svg2compose::SvgToComposeOptions;
 use log::debug;
 use phase_loading::ColorMapping;
+use phase_loading::ComposePreview;
 
 const COMPOSE_TRANSFORM_TAG: u8 = 0x03;
 
@@ -18,9 +19,13 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
         .write_str(&args.file_suppress_lint.join(",").to_string());
 
     for mapping in args.color_mappings {
+        cache_key = cache_key.write_str(&mapping.from).write_str(&mapping.to)
+    }
+
+    if let Some(preview) = args.preview {
         cache_key = cache_key
-            .write_str(&mapping.from)
-            .write_str(&mapping.to)
+            .write_str(&preview.imports.join(","))
+            .write_str(&preview.code)
     }
 
     let cache_key = cache_key.build();
@@ -48,6 +53,13 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
                     to: domain.to.to_owned(),
                 })
                 .collect(),
+            preview: args
+                .preview
+                .as_ref()
+                .map(|domain| lib_svg2compose::ComposePreview {
+                    imports: domain.imports.to_owned(),
+                    code: domain.code.to_owned(),
+                }),
         },
     )?;
 
@@ -63,5 +75,6 @@ pub struct ConvertSvgToComposeArgs<'a> {
     pub extension_target: &'a Option<String>,
     pub file_suppress_lint: &'a [String],
     pub color_mappings: &'a [ColorMapping],
+    pub preview: &'a Option<ComposePreview>,
     pub svg: &'a [u8],
 }
