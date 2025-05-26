@@ -49,6 +49,7 @@ struct CustomProfileDto {
 }
 
 #[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub(super) struct PngProfileDto {
     #[serde(rename = "remote")]
     pub remote_id: Option<RemoteId>,
@@ -57,6 +58,7 @@ pub(super) struct PngProfileDto {
 }
 
 #[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub(super) struct SvgProfileDto {
     #[serde(rename = "remote")]
     pub remote_id: Option<RemoteId>,
@@ -65,6 +67,7 @@ pub(super) struct SvgProfileDto {
 }
 
 #[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub(super) struct PdfProfileDto {
     #[serde(rename = "remote")]
     pub remote_id: Option<RemoteId>,
@@ -73,6 +76,7 @@ pub(super) struct PdfProfileDto {
 }
 
 #[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub(super) struct WebpProfileDto {
     #[serde(rename = "remote")]
     pub remote_id: Option<RemoteId>,
@@ -82,6 +86,7 @@ pub(super) struct WebpProfileDto {
 }
 
 #[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub(super) struct ComposeProfileDto {
     #[serde(rename = "remote")]
     pub remote_id: Option<RemoteId>,
@@ -95,12 +100,14 @@ pub(super) struct ComposeProfileDto {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub(super) struct ColorMappingDto {
     pub from: String,
     pub to: String,
 }
 
 #[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub(super) struct AndroidWebpProfileDto {
     #[serde(rename = "remote")]
     pub remote_id: Option<RemoteId>,

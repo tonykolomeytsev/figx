@@ -9,6 +9,7 @@ use std::sync::Arc;
 pub(super) struct RemotesDto(HashMap<String, RemoteDto>);
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct RemoteDto {
     pub file_key: String,
     #[serde(default = "Default::default")]

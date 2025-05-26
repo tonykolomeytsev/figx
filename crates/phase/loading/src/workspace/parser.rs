@@ -13,6 +13,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub(super) struct WorkspaceDto {
     #[serde(default = "Default::default")]
     pub remotes: RemotesDto,
