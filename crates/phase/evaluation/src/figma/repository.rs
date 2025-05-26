@@ -5,9 +5,9 @@ use lib_cache::{Cache, CacheKey};
 use lib_figma::{FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, Node};
 use log::{debug, warn};
 use phase_loading::RemoteSource;
-use retry::OperationResult;
 use retry::delay::Exponential;
 use retry::retry_with_index;
+use retry::{OperationResult, delay::jitter};
 use std::{
     collections::{HashMap, VecDeque},
     sync::LazyLock,
@@ -132,8 +132,9 @@ impl FigmaRepository {
 
         // otherwise, request value from remote
         on_export_start();
-        let response =
-            retry_with_index(Exponential::from_millis_with_factor(5000, 2.0), |attempt| {
+        let response = retry_with_index(
+            Exponential::from_millis_with_factor(5000, 2.0).map(jitter),
+            |attempt| {
                 if attempt > 1 {
                     debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
                 };
@@ -157,7 +158,8 @@ impl FigmaRepository {
                         _ => OperationResult::Err(e),
                     },
                 }
-            });
+            },
+        );
 
         let node_id = node.id.as_str();
         let url = {
