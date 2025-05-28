@@ -98,6 +98,8 @@ pub(super) struct ComposeProfileDto {
     pub file_suppress_lint: Option<BTreeSet<String>>,
     pub color_mappings: Option<Vec<ColorMappingDto>>,
     pub preview: Option<ComposePreviewDto>,
+    pub variant_naming: Option<ResourceVariantNamingDto>,
+    pub variants: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -112,6 +114,13 @@ pub(super) struct ColorMappingDto {
 pub(super) struct ComposePreviewDto {
     pub imports: Vec<String>,
     pub code: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct ResourceVariantNamingDto {
+    pub local_name: String,
+    pub figma_name: String,
 }
 
 #[derive(Deserialize, Default)]
@@ -294,6 +303,11 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .map(|it| it.into_iter().map(Into::into).collect())
                 .unwrap_or(self.color_mappings.clone()),
             preview: another.preview.map(Into::into).or(self.preview.clone()),
+            variant_naming: another
+                .variant_naming
+                .map(Into::into)
+                .unwrap_or_else(|| self.variant_naming.clone()),
+            variants: another.variants.or_else(|| self.variants.clone()),
         }
     }
 }
@@ -343,6 +357,15 @@ impl From<ComposePreviewDto> for crate::ComposePreview {
         Self {
             imports: value.imports,
             code: value.code,
+        }
+    }
+}
+
+impl From<ResourceVariantNamingDto> for crate::ResourceVariantNaming {
+    fn from(value: ResourceVariantNamingDto) -> Self {
+        Self {
+            local_name: value.local_name.to_owned(),
+            figma_name: value.figma_name.to_owned(),
         }
     }
 }

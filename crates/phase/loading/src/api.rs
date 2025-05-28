@@ -156,6 +156,8 @@ pub struct ComposeProfile {
     pub file_suppress_lint: Vec<String>,
     pub color_mappings: Vec<ColorMapping>,
     pub preview: Option<ComposePreview>,
+    pub variant_naming: ResourceVariantNaming,
+    pub variants: Option<Vec<String>>,
 }
 
 #[derive(Clone)]
@@ -165,12 +167,18 @@ pub struct ColorMapping {
     pub to: String,
 }
 
-
 #[derive(Clone)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct ComposePreview {
     pub imports: Vec<String>,
     pub code: String,
+}
+
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
+pub struct ResourceVariantNaming {
+    pub local_name: String,
+    pub figma_name: String,
 }
 
 impl Default for ComposeProfile {
@@ -185,6 +193,11 @@ impl Default for ComposeProfile {
             file_suppress_lint: Vec::new(),
             color_mappings: Vec::new(),
             preview: None,
+            variant_naming: ResourceVariantNaming {
+                local_name: "{base}{variant}".to_owned(),
+                figma_name: "{base}_{variant}".to_owned(),
+            },
+            variants: None,
         }
     }
 }

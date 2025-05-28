@@ -9,12 +9,18 @@ use crate::{
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info, warn};
 use phase_loading::{ComposeProfile, ResourceAttrs};
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::{Path, PathBuf};
+
+struct ResourceVariant {
+    pub res_name: String,
+    pub node_name: String,
+}
 
 pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> {
     debug!(target: "Import", "compose: {}", args.attrs.label.name);
     let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
-    
+
     let output_dir = get_output_dir_for_compose_profile(args.profile, &args.attrs.package_dir);
     let package = get_kotlin_package(&output_dir).unwrap_or_default();
 
@@ -22,42 +28,78 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
         warn!("Kotlin package for {} was not found", output_dir.display());
     }
 
-    let svg = &get_remote_image(
-        ctx,
-        GetRemoteImageArgs {
-            label: &args.attrs.label,
-            remote: &args.attrs.remote,
-            node_name: &args.attrs.node_name,
-            format: "svg",
-            scale: args.profile.scale,
-        },
-    )?;
+    let base_variant = ResourceVariant {
+        res_name: args.attrs.label.name.to_string(),
+        node_name: args.attrs.node_name.to_owned(),
+    };
 
-    materialize(
-        ctx,
-        MaterializeArgs {
-            output_dir: &output_dir,
-            file_name: args.attrs.label.name.as_ref(),
-            file_extension: "kt",
-            bytes: &convert_svg_to_compose(
+    // region: generate variants
+    let variants = match &args.profile.variants {
+        Some(variants) => variants
+            .iter()
+            .map(|variant| {
+                let naming = &args.profile.variant_naming;
+                let res_name = naming
+                    .local_name
+                    .replace("{base}", &base_variant.res_name)
+                    .replace("{variant}", &variant);
+                let node_name = naming
+                    .figma_name
+                    .replace("{base}", &base_variant.node_name)
+                    .replace("{variant}", &variant);
+
+                ResourceVariant {
+                    res_name,
+                    node_name,
+                }
+            })
+            .collect::<Vec<_>>(),
+        None => vec![base_variant],
+    };
+    // endregion: generate variants
+
+    variants
+        .par_iter()
+        .map(|variant| {
+            let svg = &get_remote_image(
                 ctx,
-                ConvertSvgToComposeArgs {
-                    name: args.attrs.label.name.as_ref(),
-                    package: match args.profile.package.as_ref() {
-                        None => &package,
-                        Some(package) => package,
-                    },
-                    kotlin_explicit_api: args.profile.kotlin_explicit_api,
-                    extension_target: &args.profile.extension_target,
-                    file_suppress_lint: &args.profile.file_suppress_lint,
-                    svg,
-                    color_mappings: &args.profile.color_mappings,
-                    preview: &args.profile.preview,
+                GetRemoteImageArgs {
+                    label: &args.attrs.label,
+                    remote: &args.attrs.remote,
+                    node_name: &variant.node_name,
+                    format: "svg",
+                    scale: args.profile.scale,
                 },
-            )?,
-        },
-        || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
-    )?;
+            )?;
+
+            materialize(
+                ctx,
+                MaterializeArgs {
+                    output_dir: &output_dir,
+                    file_name: &variant.res_name,
+                    file_extension: "kt",
+                    bytes: &convert_svg_to_compose(
+                        ctx,
+                        ConvertSvgToComposeArgs {
+                            name: &variant.res_name,
+                            package: match args.profile.package.as_ref() {
+                                None => &package,
+                                Some(package) => package,
+                            },
+                            kotlin_explicit_api: args.profile.kotlin_explicit_api,
+                            extension_target: &args.profile.extension_target,
+                            file_suppress_lint: &args.profile.file_suppress_lint,
+                            svg,
+                            color_mappings: &args.profile.color_mappings,
+                            preview: &args.profile.preview,
+                        },
+                    )?,
+                },
+                || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
+            )
+        })
+        .collect::<Result<Vec<_>>>()?;
+
     Ok(())
 }
 
