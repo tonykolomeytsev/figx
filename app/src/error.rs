@@ -1,5 +1,7 @@
+use codespan_reporting::diagnostic::{Diagnostic, Label, Severity};
 use crossterm::style::Stylize;
 use derive_more::From;
+use std::{cmp::min, ops::Range};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -95,51 +97,53 @@ fn handle_cmd_clean_error(err: command_clean::Error) {
 }
 
 fn handle_pattern_error(err: lib_label::PatternError) {
-    eprintln!(
-        "{err_label} entered pattern is incorrect:",
-        err_label = "error:".red().bold(),
-    );
-
     use lib_label::PatternError::*;
     match err {
-        BadPackage(pattern, package) => {
-            eprintln!(
-                // --- pattern
-                "  {arrow} '{full_pattern}'\n\
-                {s: <7}{underline} {help}\n\n\
-                {tip_label} valid package patterns are: '//foo/bar' 'buz/...', '//...', or even empty\n",
-                // --- args
-                arrow = "-->".cyan(),
-                full_pattern = pattern,
-                s = "",
-                underline = "^".repeat(package.len()).yellow().bold(),
-                help = "help: package pattern contains invalid characters"
-                    .yellow()
-                    .bold(),
-                tip_label = "  tip:".green(),
-            )
-        }
+        BadPackage(pattern, package) => cli_input_error(CliInputDiagnostics {
+            message: &format!("entered pattern is incorrect: `{pattern}`"),
+            labels: &[
+                CliInputLabel::Tip(&unindent::unindent(
+                    "
+                        valid package patterns are: 
+                        - `//foo/bar`
+                        - `buz/...`
+                        - `//...`
+                        - or even empty
+                    ",
+                )),
+                CliInputLabel::YellowHelp(
+                    &pattern,
+                    0..package.len(),
+                    "package pattern contains invalid characters",
+                ),
+            ],
+        }),
         BadTarget(pattern, target) => {
             let pos = pattern.find(':').unwrap_or_default();
-            eprintln!(
-                // --- pattern
-                "  {arrow} '{full_pattern}'\n\
-                {s}{underline} {help}\n\n\
-                {tip_label} valid target pattern are: '*', '*-16px', 'ic_*_24', '*Icon', 'app-logo'\n",
-                // --- args
-                arrow = "-->".cyan(),
-                full_pattern = pattern,
-                s = " ".repeat(pos + 8),
-                underline = "^".repeat(target.len()).yellow().bold(),
-                help = if target.is_empty() {
-                    "help: target pattern mustn't be empty"
-                } else {
-                    "help: target pattern contains invalid characters"
-                }
-                .yellow()
-                .bold(),
-                tip_label = "  tip:".green(),
-            )
+            cli_input_error(CliInputDiagnostics {
+                message: &format!("entered pattern is incorrect: `{pattern}`"),
+                labels: &[
+                    CliInputLabel::Tip(&unindent::unindent(
+                        "
+                        valid target patterns are: 
+                        - *
+                        - *-16,
+                        - ic_*_24
+                        - *Icon
+                        - StarOutline24,
+                    ",
+                    )),
+                    CliInputLabel::YellowHelp(
+                        &pattern,
+                        pos..target.len(),
+                        if target.is_empty() {
+                            "^ target pattern mustn't be empty"
+                        } else {
+                            "target pattern contains invalid characters"
+                        },
+                    ),
+                ],
+            })
         }
     }
 }
@@ -147,49 +151,42 @@ fn handle_pattern_error(err: lib_label::PatternError) {
 fn handle_phase_loading_error(err: phase_loading::Error) {
     use phase_loading::Error::*;
     match err {
-        Internal(str) => {
-            eprintln!(
-                "{err_label} internal error: {description}",
-                err_label = "error:".red().bold(),
-                description = str,
-            );
-        }
-        InitNotInWorkspace => {
-            eprintln!(
-                "{err_label} current working directory is not part of the figx workspace\n\n\
-                {tip_label} workspace is the root directory of the project, which contains the file '.figxconfig.toml'.\n",
-                err_label = "error:".red().bold(),
-                tip_label = "  tip:".green(),
-            );
-        }
-        InitInaccessibleCurrentWorkDir => {
-            eprintln!(
-                "{err_label} unable to access current working directory\n\n\
-                {tip_label} there may be some file access rights issues\n",
-                err_label = "error:".red().bold(),
-                tip_label = "  tip:".green(),
-            );
-        }
-        WorkspaceRead(err) => {
-            eprintln!(
-                "{err_label} unable to read workspace file '.figxconfig.toml':\n\n{err}\n",
-                err_label = "error:".red().bold(),
-            );
-        }
+        Internal(str) => cli_input_error(CliInputDiagnostics {
+            message: &format!("[internal] {str}"),
+            labels: &[],
+        }),
+        InitNotInWorkspace => cli_input_error(CliInputDiagnostics {
+            message: "current working directory is not part of the FigX workspace",
+            labels: &[CliInputLabel::Tip(&unindent::unindent(
+                "
+                    A `workspace` is the root directory of a project/repository that contains 
+                    the marker file `figxconfig.toml` and all its child directories.
+                ",
+            ))],
+        }),
+        InitInaccessibleCurrentWorkDir => cli_input_error(CliInputDiagnostics {
+            message: "unable to access current working directory",
+            labels: &[CliInputLabel::Tip(
+                "there may be some file access rights issues",
+            )],
+        }),
+        WorkspaceRead(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("unable to read workspace file '.figxconfig.toml': {err}"),
+            labels: &[],
+        }),
         WorkspaceParse(err) => {
             eprintln!(
                 "{err_label} failed to parse workspace file '.figxconfig.toml':\n\n{err}\n",
                 err_label = "error:".red().bold(),
             );
         }
-        WorkspaceNoRemotes => {
-            eprintln!(
-                "{err_label} no remotes specified in workspace file '.figxconfig.toml'\n\n\
-                {tip_label} at least one remote must be specified, e.g. '[remotes.figma]'\n",
-                err_label = "error:".red().bold(),
-                tip_label = "  tip:".green(),
-            );
-        }
+        WorkspaceNoRemotes => cli_input_error(CliInputDiagnostics {
+            message: "no remotes specified in workspace file '.figxconfig.toml'",
+            labels: &[
+                CliInputLabel::Tip("at least one remote must be specified, e.g:"),
+                CliInputLabel::Suggestion("[remotes.design]"),
+            ],
+        }),
         WorkspaceRemoteNoAccessToken(id) => {
             eprintln!(
                 "{err_label} remote '{id}' has no access token specified \n\n\
@@ -205,12 +202,10 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                 underline = "+".repeat(16).green().bold(),
             );
         }
-        WorkspaceMoreThanOneDefaultRemotes => {
-            eprintln!(
-                "{err_label} the default remote can only be one\n",
-                err_label = "error:".red().bold(),
-            );
-        }
+        WorkspaceMoreThanOneDefaultRemotes => cli_input_error(CliInputDiagnostics {
+            message: "the default remote can only be one",
+            labels: &[],
+        }),
         WorkspaceAtLeastOneDefaultRemote => {
             eprintln!(
                 "{err_label} at least one remote must be selected by default\n\n\
@@ -235,19 +230,18 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                 err_label = "error:".red().bold(),
             );
         }
-        FigTraversing(err) => {
-            eprintln!(
-                "{err_label} internal error: {description}",
-                err_label = "error:".red().bold(),
-                description = err,
-            );
-        }
-        FigRead(err) => {
-            eprintln!(
-                "{err_label} unable to read fig file '.fig.toml':\n\n{err}\n",
-                err_label = "error:".red().bold(),
-            );
-        }
+        FigTraversing(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("[internal] fig-files traversing: {err}"),
+            labels: &[CliInputLabel::Tip(
+                "there may be some file access rights issues",
+            )],
+        }),
+        FigRead(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("unable to read fig-file: {err}"),
+            labels: &[CliInputLabel::Tip(
+                "there may be some file access rights issues",
+            )],
+        }),
         FigParse(err) => {
             eprintln!(
                 "{err_label} failed to parse fig file '.fig.toml':\n\n{err}\n",
@@ -353,6 +347,52 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
         }
         Interrupted(err) => {
             eprintln!("{err_label} {err}", err_label = "error:".red().bold());
+        }
+    }
+}
+
+struct CliInputDiagnostics<'a> {
+    message: &'a str,
+    labels: &'a [CliInputLabel<'a>],
+}
+
+enum CliInputLabel<'a> {
+    Suggestion(&'a str),
+    YellowHelp(&'a str, Range<usize>, &'a str),
+    Tip(&'a str),
+}
+
+fn cli_input_error(args: CliInputDiagnostics) {
+    let err_label = "error:".red().bold();
+    let tip_label = "tip:".green();
+    let CliInputDiagnostics { message, labels } = args;
+    eprintln!("{err_label} {message}");
+    for label in labels {
+        use CliInputLabel::*;
+        match label {
+            Suggestion(s) => {
+                eprintln!("\n       {}", s.green());
+                eprintln!("       {}", "+".repeat(s.len()).green())
+            }
+            YellowHelp(s1, rng, desc) => {
+                let help_label = "help:".bold().yellow();
+                let desc = desc.bold().yellow();
+                eprintln!("\n {help_label} {}", s1.bold().white());
+                eprintln!(
+                    "       {}{} {desc}",
+                    " ".repeat(rng.start),
+                    "^".repeat(rng.end).yellow().bold(),
+                );
+            }
+            Tip(s) => {
+                for (n, line) in s.lines().enumerate() {
+                    if n == 0 {
+                        eprintln!("\n  {tip_label} {line}")
+                    } else {
+                        eprintln!("       {line}")
+                    }
+                }
+            }
         }
     }
 }

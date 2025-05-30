@@ -54,3 +54,5 @@ ordermap = { version = "0.5.7", features = ["serde"] }
 webp = { git = "https://github.com/tonykolomeytsev/webp.git" }
 crossterm = "0.29"
 ignore = "0.4.23"
+codespan-reporting = "0.12"
+unindent = "0.2.4"
