@@ -92,6 +92,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                             svg,
                             color_mappings: &args.profile.color_mappings,
                             preview: &args.profile.preview,
+                            composable_get: args.profile.composable_get,
                         },
                     )?,
                 },

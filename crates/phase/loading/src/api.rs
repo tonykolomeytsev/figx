@@ -158,6 +158,7 @@ pub struct ComposeProfile {
     pub preview: Option<ComposePreview>,
     pub variant_naming: ResourceVariantNaming,
     pub variants: Option<Vec<String>>,
+    pub composable_get: bool,
 }
 
 #[derive(Clone)]
@@ -199,6 +200,7 @@ impl Default for ComposeProfile {
                 figma_name: "{base}_{variant}".to_owned(),
             },
             variants: None,
+            composable_get: false,
         }
     }
 }

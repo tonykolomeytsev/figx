@@ -96,6 +96,7 @@ pub(super) struct ComposeProfileDto {
     pub preview: Option<ComposePreviewDto>,
     pub variant_naming: Option<ResourceVariantNamingDto>,
     pub variants: Option<Vec<String>>,
+    pub composable_get: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -306,6 +307,7 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .map(Into::into)
                 .unwrap_or_else(|| self.variant_naming.clone()),
             variants: another.variants.or_else(|| self.variants.clone()),
+            composable_get: another.composable_get.unwrap_or(self.composable_get),
         }
     }
 }

@@ -20,6 +20,7 @@ pub struct SvgToComposeOptions {
     pub file_suppress_lint: Vec<String>,
     pub color_mappings: Vec<ColorMapping>,
     pub preview: Option<ComposePreview>,
+    pub composable_get: bool,
 }
 
 pub struct ColorMapping {

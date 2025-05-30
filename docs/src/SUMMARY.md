@@ -16,14 +16,16 @@
         - [Minimal Example](./user_guide/2.2.1-minimal-example.md)
         - [Single-module android project](./user_guide/2.2.2-singlemodule-android-project.md)
         - [Multi-module android project](./user_guide/2.2.3-multimodule-android-project.md)
-- [How-to Guides]()
+- [How-to Guides](./user_guide/3-how-to-guides.md)
+    - [Recipes](./user_guide/3.1-recipes.md)
+        - [Android – Import WEBP assets into drawable directories with dark theme support](./user_guide/3.1.1-android-webp-1.md)
+        - [Android - Import WEBP assets into multiple feature modules](./user_guide/3.1.2-android-webp-2.md)
+        - [Android Compose – Import monochrome icons as ImageVector](./user_guide/3.1.3-android-compose-1.md)
+        - [Android Compose – Import multi-variant monochrome icons as ImageVector](./user_guide/3.1.4-android-compose-2.md)
     - [Know your resources]()
         - [About `info` command]()
         - [Why you need `query`]()
         - [Wht you need `aquery`]()
-    - [Recipes]()
-        - [Recipe 1]()
-        - [Recipe 2]()
 
 # Reference Guide
 

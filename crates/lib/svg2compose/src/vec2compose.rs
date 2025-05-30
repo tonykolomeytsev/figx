@@ -201,6 +201,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             file_suppress_lint,
             color_mappings: _,
             preview,
+            composable_get,
         } = options;
 
         let backing_field_name = uncapitalize(&image_name);
@@ -230,7 +231,14 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             })
             .getter(
                 CodeBlock::builder()
-                    .begin_control_flow("get()")
+                    .touch(|it| {
+                        if composable_get {
+                            it.begin_control_flow("@Composable get()")
+                                .require_import("androidx.compose.runtime.Composable")
+                        } else {
+                            it.begin_control_flow("get()")
+                        }
+                    })
                     .begin_control_flow(format!("if (_{backing_field_name} != null)"))
                     .add_statement(format!("return _{backing_field_name}!!"))
                     .end_control_flow()

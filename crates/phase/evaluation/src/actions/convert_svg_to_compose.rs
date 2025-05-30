@@ -61,6 +61,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
                     imports: domain.imports.to_owned(),
                     code: domain.code.to_owned(),
                 }),
+            composable_get: args.composable_get,
         },
     )?;
 
@@ -78,4 +79,5 @@ pub struct ConvertSvgToComposeArgs<'a> {
     pub color_mappings: &'a [ColorMapping],
     pub preview: &'a Option<ComposePreview>,
     pub svg: &'a [u8],
+    pub composable_get: bool,
 }
