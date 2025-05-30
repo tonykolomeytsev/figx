@@ -60,6 +60,11 @@ fn parse_packages(
         .iter()
         // do not load irrelevant packages
         .filter(|f| lib_label::package_matches(&pattern, &f.package, &context.current_dir))
-        .map(|f| parse_fig(f, remotes, profiles, &pattern, &context.current_dir))
+        .map(|f| {
+            parse_fig(f, remotes, profiles, &pattern, &context.current_dir).map_err(|e| match e {
+                Error::FigParse(e, _) => Error::FigParse(e, f.fig_file.to_owned()),
+                e => e,
+            })
+        })
         .collect()
 }

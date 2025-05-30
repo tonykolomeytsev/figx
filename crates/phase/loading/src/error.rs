@@ -31,11 +31,11 @@ pub enum Error {
     // region: FigFiles
     FigTraversing(String),
     FigRead(std::io::Error),
-    FigParse(toml::de::Error),
+    FigParse(toml::de::Error, PathBuf),
     FigInvalidResourceName(NameParsingError),
     FigInvalidPackage(PackageParsingError),
     FigInvalidRemoteName(String),
-    FigInvalidProfileName(String),
+    FigInvalidProfileName(String, PathBuf),
     // endregion: FigFiles
 }
 

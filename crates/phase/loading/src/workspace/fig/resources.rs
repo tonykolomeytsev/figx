@@ -40,7 +40,7 @@ pub(super) fn parse_resources(
                 parse_definitions(&mut resources, profile, definitions, fig_file, remotes)?
             }
             None => {
-                return Err(Error::FigInvalidProfileName(profile_name));
+                return Err(Error::FigInvalidProfileName(profile_name, fig_file.fig_file.to_owned()));
             }
         }
     }
@@ -120,7 +120,9 @@ macro_rules! definitions_parser {
             // iterate over each resource definition in [<profile_name>] dictionary
             for (key, def) in definitions {
                 // Parse definition (short 'id = "name"' or long 'id = { ... }')
-                let def: ResDefinition<$dto_type> = def.try_into().map_err(Error::FigParse)?;
+                let def: ResDefinition<$dto_type> = def
+                    .try_into()
+                    .map_err(|e| Error::FigParse(e, PathBuf::new()))?;
                 // Parse local resource name (id)
                 let resource_name =
                     ResourceName::from_str(&key).map_err(Error::FigInvalidResourceName)?;

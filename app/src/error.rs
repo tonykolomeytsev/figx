@@ -252,19 +252,23 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                 "there may be some file access rights issues",
             )],
         }),
-        FigParse(err) => {
-            eprintln!(
-                "{err_label} failed to parse fig file '.fig.toml':\n\n{err}\n",
-                err_label = "error:".red().bold(),
-            );
+        FigParse(err, path) => {
+            let file = create_simple_file(&path);
+            let diagnostic = Diagnostic::error()
+                .with_message("failed to parse fig file `.fig.toml`")
+                .with_label(
+                    Label::primary((), err.span().unwrap_or_default()).with_message(err.message()),
+                );
+            print_codespan_diag(diagnostic, file);
         }
         FigInvalidResourceName(err) => handle_name_parsing_error(err),
         FigInvalidPackage(err) => handle_package_parsing_error(err),
-        FigInvalidProfileName(err) => {
-            eprintln!(
-                "{err_label} invalid profile name '{err}'\n",
-                err_label = "error:".red().bold(),
-            );
+        FigInvalidProfileName(err, path) => {
+            let file = create_simple_file(&path);
+            let diagnostic = Diagnostic::error()
+                .with_message(format!("invalid profile name `{err}`"))
+                .with_note("there is no profile with this name");
+            print_codespan_diag(diagnostic, file);
         }
         FigInvalidRemoteName(remote) => {
             eprintln!(

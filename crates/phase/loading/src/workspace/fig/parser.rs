@@ -5,7 +5,7 @@ use crate::{Profile, RemoteSource};
 use lib_label::LabelPattern;
 use ordermap::OrderMap;
 use serde::Deserialize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 #[derive(Deserialize)]
@@ -22,7 +22,7 @@ impl FigFileDto {
     }
 
     pub fn from_str(string: &str) -> Result<Self> {
-        toml::from_str::<FigFileDto>(string).map_err(Error::FigParse)
+        toml::from_str::<FigFileDto>(string).map_err(|e| Error::FigParse(e, PathBuf::new()))
     }
 }
 
