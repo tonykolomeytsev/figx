@@ -5,6 +5,7 @@ use crate::kotlin::*;
 pub struct BackingFieldComposableSpec {
     pub options: SvgToComposeOptions,
     pub image_vector: ImageVector,
+    pub imports: Vec<String>,
 }
 
 impl From<Command> for CodeBlock {
@@ -190,6 +191,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
         let BackingFieldComposableSpec {
             options,
             image_vector,
+            imports,
         } = value;
         let SvgToComposeOptions {
             image_name,
@@ -279,6 +281,7 @@ impl From<BackingFieldComposableSpec> for FileSpec {
         };
 
         Self::builder(package)
+            .require_imports(&imports)
             .add_suppressions(file_suppress_lint)
             .add_member(public_property.into())
             .add_member(backing_field.into())

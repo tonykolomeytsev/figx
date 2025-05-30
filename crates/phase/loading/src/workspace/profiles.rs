@@ -107,6 +107,8 @@ pub(super) struct ComposeProfileDto {
 pub(super) struct ColorMappingDto {
     pub from: String,
     pub to: String,
+    #[serde(default =  "Default::default")]
+    pub imports: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -348,6 +350,7 @@ impl From<ColorMappingDto> for crate::ColorMapping {
         Self {
             from: value.from,
             to: value.to,
+            imports: value.imports,
         }
     }
 }

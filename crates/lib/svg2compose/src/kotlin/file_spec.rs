@@ -41,6 +41,12 @@ impl FileSpecBuilder {
         self
     }
 
+    pub fn require_imports<S: AsRef<str>>(mut self, s: &[S]) -> Self {
+        self.imports
+            .extend(s.iter().map(|it| it.as_ref().to_string()));
+        self
+    }
+
     pub fn add_suppressions(mut self, list: Vec<String>) -> Self {
         let mut list = list;
         self.suppressions.append(&mut list);

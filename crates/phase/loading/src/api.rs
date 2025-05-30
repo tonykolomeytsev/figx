@@ -165,6 +165,7 @@ pub struct ComposeProfile {
 pub struct ColorMapping {
     pub from: String,
     pub to: String,
+    pub imports: Vec<String>,
 }
 
 #[derive(Clone)]

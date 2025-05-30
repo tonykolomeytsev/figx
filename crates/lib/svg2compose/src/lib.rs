@@ -25,6 +25,7 @@ pub struct SvgToComposeOptions {
 pub struct ColorMapping {
     pub from: String,
     pub to: String,
+    pub imports: Vec<String>,
 }
 
 pub struct ComposePreview {
@@ -36,17 +37,19 @@ pub fn transform_svg_to_compose(svg: &[u8], options: SvgToComposeOptions) -> Res
     let tree = usvg::Tree::from_data(svg, &Default::default())?;
     let mut image_vector: ImageVector = tree.try_into()?;
     image_vector.name = options.image_name.to_owned();
+    let mut used_imports = Vec::new();
     if !options.color_mappings.is_empty() {
-        map_colors(&mut image_vector, &options.color_mappings)?;
+        used_imports.append(&mut map_colors(&mut image_vector, &options.color_mappings)?);
     }
-    let output = backing_field_template(image_vector, options);
+    let output = backing_field_template(image_vector, options, used_imports);
     Ok(output.into_bytes())
 }
 
-fn backing_field_template(image_vector: ImageVector, options: SvgToComposeOptions) -> String {
+fn backing_field_template(image_vector: ImageVector, options: SvgToComposeOptions, imports: Vec<String>) -> String {
     let cb: FileSpec = BackingFieldComposableSpec {
         options,
         image_vector,
+        imports,
     }
     .into();
     cb.to_string()
