@@ -9,6 +9,7 @@ use codespan_reporting::{
 use crossterm::style::Stylize;
 use derive_more::From;
 use std::{fmt::Display, ops::Range, path::Path};
+use unindent::unindent;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -57,10 +58,10 @@ fn handle_cmd_query_error(err: command_query::Error) {
     match err {
         PatternError(err) => handle_pattern_error(err),
         WorkspaceError(err) => handle_phase_loading_error(err),
-        IO(err) => eprintln!(
-            "{err_label} unable to access config file: {err}",
-            err_label = "error:".red().bold(),
-        ),
+        IO(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("unable to access config file: {err}"),
+            labels: &[],
+        }),
     }
 }
 
@@ -95,10 +96,10 @@ fn handle_cmd_clean_error(err: command_clean::Error) {
     use command_clean::Error::*;
     match err {
         WorkspaceError(err) => handle_phase_loading_error(err),
-        IO(err) => eprintln!(
-            "{err_label} unable to delete cache directory: {err}",
-            err_label = "error:".red().bold(),
-        ),
+        IO(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("unable to delete cache directory: {err}"),
+            labels: &[],
+        }),
         Evaluation(err) => handle_evaluation_error(err),
     }
 }
@@ -190,27 +191,26 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                 );
             print_codespan_diag(diagnostic, file);
         }
-        WorkspaceNoRemotes => cli_input_error(CliInputDiagnostics {
-            message: "no remotes specified in workspace file '.figxconfig.toml'",
-            labels: &[
-                CliInputLabel::Tip("at least one remote must be specified, e.g:"),
-                CliInputLabel::Suggestion("[remotes.design]"),
-            ],
-        }),
-        WorkspaceRemoteNoAccessToken(id) => {
-            eprintln!(
-                "{err_label} remote '{id}' has no access token specified \n\n\
-                {s: <7}{access_token} = \"some-token\"\n\
-                {tabs} {underline}\n\n\
-                {tabs} ... or ...\n\n\
-                {s: <7}{access_token} = \"FIGMA_ACCESS_TOKEN\"\n\
-                {tabs} {underline}\n",
-                err_label = "error:".red().bold(),
-                s = "",
-                access_token = "access_token.env".green(),
-                tabs = " ".repeat(6),
-                underline = "+".repeat(16).green().bold(),
-            );
+        WorkspaceNoRemotes(path) => {
+            let file = create_simple_file(&path);
+            let diagnostic = Diagnostic::error()
+                .with_message("no remotes specified in workspace file `.figxconfig.toml`")
+                .with_note(unindent(
+                    "at least one remote must be specified, e.g: `[remotes.design]`",
+                ));
+            print_codespan_diag(diagnostic, file);
+        }
+        WorkspaceRemoteNoAccessToken(id, path) => {
+            let file = create_simple_file(&path);
+            let diagnostic = Diagnostic::error()
+                .with_message(format!("remote `{id}` has no access token specified"))
+                .with_note(unindent(
+                    "
+                        consider using `access_token.env = \"ENV_WITH_TOKEN\"`
+                        or specify FIGMA_PERSONAL_TOKEN in your environment
+                    ",
+                ));
+            print_codespan_diag(diagnostic, file);
         }
         WorkspaceMoreThanOneDefaultRemotes => cli_input_error(CliInputDiagnostics {
             message: "the default remote can only be one",
@@ -366,6 +366,7 @@ struct CliInputDiagnostics<'a> {
     labels: &'a [CliInputLabel<'a>],
 }
 
+#[allow(unused)]
 enum CliInputLabel<'a> {
     Suggestion(&'a str),
     YellowHelp(&'a str, Range<usize>, &'a str),

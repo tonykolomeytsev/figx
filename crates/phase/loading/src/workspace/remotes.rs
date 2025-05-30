@@ -3,6 +3,7 @@ use crate::{Error, Result};
 use ordermap::OrderMap;
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 #[derive(Deserialize, Default)]
@@ -42,9 +43,13 @@ pub(crate) fn parse_remotes(
         OrderMap::with_capacity(remotes.capacity());
     let remotes_len = remotes.len();
 
+    if remotes_len == 0 {
+        return Err(Error::WorkspaceNoRemotes(PathBuf::new()));
+    }
+
     for (id, dto) in remotes {
         let access_token = parse_access_token(&dto.access_token)
-            .ok_or(Error::WorkspaceRemoteNoAccessToken(id.to_string()))?;
+            .ok_or(Error::WorkspaceRemoteNoAccessToken(id.to_string(), PathBuf::new()))?;
         if dto.container_node_ids.is_empty() {
             return Err(Error::WorkspaceRemoteWithEmptyNodeId);
         }

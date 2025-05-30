@@ -65,6 +65,8 @@ pub fn load_workspace(pattern: LabelPattern) -> Result<Workspace> {
     let ws_file = invocation_ctx.workspace_file.clone();
     parse_workspace(invocation_ctx, pattern).map_err(|e| match e {
         Error::WorkspaceParse(e, _) => Error::WorkspaceParse(e, ws_file),
+        Error::WorkspaceNoRemotes(_) => Error::WorkspaceNoRemotes(ws_file),
+        Error::WorkspaceRemoteNoAccessToken(s, _) => Error::WorkspaceRemoteNoAccessToken(s, ws_file),
         e => e,
     })
 }

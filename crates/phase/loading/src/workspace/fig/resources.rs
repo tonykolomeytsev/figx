@@ -9,7 +9,7 @@ use crate::{
 use lib_label::{Label, ResourceName};
 use ordermap::OrderMap;
 use serde::Deserialize;
-use std::{collections::HashMap, str::FromStr, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, str::FromStr, sync::Arc};
 use toml::Table;
 
 #[derive(Deserialize, Default)]
@@ -174,7 +174,10 @@ fn parse_remote_by_id(
     remote_id: &str,
 ) -> Result<Arc<RemoteSource>> {
     if remote_id.is_empty() {
-        let default_remote = remotes.first().ok_or(Error::WorkspaceNoRemotes)?.1;
+        let default_remote = remotes
+            .first()
+            .ok_or_else(|| Error::WorkspaceNoRemotes(PathBuf::new()))?
+            .1;
         Ok(default_remote.clone())
     } else {
         remotes

@@ -19,8 +19,8 @@ pub enum Error {
     // region: Workspace
     WorkspaceRead(std::io::Error),
     WorkspaceParse(toml::de::Error, PathBuf),
-    WorkspaceNoRemotes,
-    WorkspaceRemoteNoAccessToken(String),
+    WorkspaceNoRemotes(PathBuf),
+    WorkspaceRemoteNoAccessToken(String, PathBuf),
     WorkspaceMoreThanOneDefaultRemotes,
     WorkspaceAtLeastOneDefaultRemote,
     WorkspaceRemoteWithEmptyNodeId,

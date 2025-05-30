@@ -103,18 +103,19 @@ impl FigmaRepository {
 
         // otherwise, request value from remote
         on_fetch_start();
-        let response = self.api.get_file_nodes(
-            &remote.access_token,
-            &remote.file_key,
-            GetFileNodesQueryParameters {
-                ids: Some(&remote.container_node_ids),
-                geometry: Some("paths"),
-                ..Default::default()
-            },
-        );
+        let response = self
+            .api
+            .get_file_nodes(
+                &remote.access_token,
+                &remote.file_key,
+                GetFileNodesQueryParameters {
+                    ids: Some(&remote.container_node_ids),
+                    geometry: Some("paths"),
+                    ..Default::default()
+                },
+            )?;
 
         let metadata = {
-            let response = response?;
             let all_nodes: Vec<Node> = response
                 .nodes
                 .into_values()
