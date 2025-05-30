@@ -123,11 +123,9 @@ impl From<GroupNode> for CodeBlock {
         Self::builder()
             .add_statement("group(")
             .indent()
-            .touch(|it| {
-                match name {
-                    Some(name) => it.add_statement(format!("name = \"{name}\",")),
-                    None => it,
-                }
+            .touch(|it| match name {
+                Some(name) => it.add_statement(format!("name = \"{name}\",")),
+                None => it,
             })
             .add_statement(format!("rotate = {rotate}f,"))
             .add_statement(format!("pivotX = {}f,", pivot.x))
@@ -177,6 +175,7 @@ impl From<ImageVector> for CodeBlock {
             .begin_control_flow(").apply {")
             .add_code_blocks(nodes.into_iter().map(Into::into).collect())
             .end_control_flow()
+            .no_new_line()
             .add_statement(".build()")
             .require_imports(&[
                 "androidx.compose.ui.unit.dp",
@@ -201,6 +200,8 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             color_mappings: _,
             preview,
         } = options;
+
+        let backing_field_name = uncapitalize(&image_name);
 
         // region: determine extension target
         let (public_property_name, additional_import) = match &extension_target {
@@ -228,26 +229,25 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             .getter(
                 CodeBlock::builder()
                     .begin_control_flow("get()")
-                    .begin_control_flow(format!("if (_{image_name} != null)"))
-                    .add_statement(format!("return _{image_name}!!"))
+                    .begin_control_flow(format!("if (_{backing_field_name} != null)"))
+                    .add_statement(format!("return _{backing_field_name}!!"))
                     .end_control_flow()
                     .add_code_block(
                         CodeBlock::builder()
-                            .add_statement(format!("_{image_name} = "))
+                            .add_statement(format!("_{backing_field_name} = "))
                             .no_new_line()
                             .add_code_block(image_vector.into())
                             .build(),
                     )
-                    .add_statement(format!("return _{image_name}!!"))
+                    .add_statement(format!("return _{backing_field_name}!!"))
                     .end_control_flow()
                     .build(),
             )
             .build();
 
-        let backing_field = PropertySpec::builder(format!("_{image_name}"), "ImageVector?")
+        let backing_field = PropertySpec::builder(format!("_{backing_field_name}"), "ImageVector?")
             .require_import("androidx.compose.ui.graphics.vector.ImageVector")
             .initializer(CodeBlock::builder().add_statement("null").build())
-            .add_annotation(r#"@Suppress("ObjectPropertyName")"#)
             .add_modifier("private")
             .mutable()
             .build();
@@ -284,5 +284,13 @@ impl From<BackingFieldComposableSpec> for FileSpec {
             .add_member(backing_field.into())
             .add_member(preview_fun)
             .build()
+    }
+}
+
+fn uncapitalize(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_lowercase().chain(c).collect(),
     }
 }

@@ -26,7 +26,8 @@ fn replace_color_if_needed(color: &mut PooledColor, color_mappings: &[ColorMappi
         };
         if mapping.from == "*" || rgb == &Rgb::from_hex_str(&mapping.from)? {
             debug!(target: "Svg2Compose", "Found color mapping match: {} -> {}", mapping.from, mapping.to);
-            *color = PooledColor::Mapped(mapping.to.to_owned())
+            *color = PooledColor::Mapped(mapping.to.to_owned());
+            return Ok(()); // color was replaced, no more to do
         }
     }
     Ok(())
