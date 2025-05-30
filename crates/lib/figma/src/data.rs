@@ -278,7 +278,7 @@ pub struct GetImageQueryParameters<'a> {
     pub version: Option<&'a str>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct GetImageResponse {
     pub err: Option<String>,
     pub images: HashMap<String, Option<String>>,

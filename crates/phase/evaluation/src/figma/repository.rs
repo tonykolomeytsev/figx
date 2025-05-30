@@ -12,6 +12,7 @@ use retry::delay::Exponential;
 use retry::retry_with_index;
 use retry::{OperationResult, delay::jitter};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use std::{
     collections::{HashMap, VecDeque},
@@ -175,14 +176,45 @@ impl FigmaRepository {
             self.batched_api.insert(batch_key.clone(), new_batcher);
         }
         // Then call batch
+        let node_id = node.id.as_str();
+        let node_name = node.name.as_str();
         let batched_api = self
             .batched_api
             .get(&batch_key)
             .expect("Value always exists");
-        let response = batched_api.batch(node.id.to_owned());
+        let no_requested_node_attempts = Arc::new(AtomicUsize::new(0));
+        let response = retry_with_index(
+            Exponential::from_millis_with_factor(5000, 2.0).map(jitter),
+            |attempt| {
+                if attempt > 1 {
+                    debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
+                };
+                match batched_api.batch(node.id.to_owned()).as_ref() {
+                    Ok(result) if !result.images.contains_key(node_id) => {
+                        debug!(target: "FigmaRepository", "response has no requested node '{node_name}' with id '{node_id}'");
+                        no_requested_node_attempts.fetch_add(1, Ordering::SeqCst);
+                        let err = Error::ExportImage(format!(
+                            "response has no requested node '{node_name}' with id '{node_id}'",
+                        ));
+                        if no_requested_node_attempts.load(Ordering::SeqCst) < 3 {
+                            OperationResult::Retry(err)
+                        } else {
+                            OperationResult::Err(err)
+                        }
+                    }
+                    Ok(result) => OperationResult::Ok(result.to_owned()),
+                    Err(e) => match e.0 {
+                        StatusCode(code) if code == 429 => {
+                            debug!(target: "FigmaRepository", "rate limit encountered");
+                            let _ = &*RATE_LIMIT_NOTIFICATION;
+                            OperationResult::Retry(Error::ExportImage(e.to_string()))
+                        }
+                        _ => OperationResult::Err(Error::ExportImage(e.to_string())),
+                    },
+                }
+            },
+        );
 
-        let node_id = node.id.as_str();
-        let node_name = node.name.as_str();
         let url = {
             let response = match response.as_ref() {
                 Ok(response) => response,
