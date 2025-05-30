@@ -12,7 +12,7 @@ use retry::delay::Exponential;
 use retry::retry_with_index;
 use retry::{OperationResult, delay::jitter};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 use std::{
     collections::{HashMap, VecDeque},
@@ -30,6 +30,7 @@ pub struct FigmaRepository {
     batched_api: Arc<DashMap<BatchKey, ExportImgBatcher>>,
     cache: Cache,
     locks: KeyMutex<CacheKey, ()>,
+    refetch_done: Arc<AtomicBool>,
 }
 
 pub struct BatchedApi {
@@ -63,6 +64,7 @@ impl FigmaRepository {
             batched_api: Arc::new(DashMap::new()),
             cache,
             locks: KeyMutex::new(),
+            refetch_done: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -88,6 +90,9 @@ impl FigmaRepository {
 
         // this section will be accessed by only one thread for one remote
         let _lock = self.locks.lock(cache_key.clone()).unwrap();
+
+        // check if refetch really needed
+        let refetch = refetch && !self.refetch_done.swap(true, Ordering::SeqCst);
 
         // return cached value if it exists
         if !refetch {
