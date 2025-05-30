@@ -1,5 +1,4 @@
 use std::{
-    fmt::Debug,
     hash::Hash,
     sync::{
         Arc, Condvar, Mutex,
@@ -20,7 +19,7 @@ where
     batched_op: B,
     in_progress: Arc<AtomicBool>,
     result_cond: Arc<Condvar>,
-    result: Arc<Mutex<Option<R>>>,
+    result: Arc<Mutex<Option<Arc<R>>>>,
 }
 
 pub trait Batched<V, R> {
@@ -29,9 +28,8 @@ pub trait Batched<V, R> {
 
 impl<V, B, R> Batcher<V, B, R>
 where
-    V: Eq + Hash + Clone + Debug,
+    V: Eq + Hash + Clone,
     B: Batched<V, R>,
-    R: Clone,
 {
     pub fn new(max_batch_size: usize, timeout: Duration, batched_op: B) -> Self {
         Self {
@@ -46,7 +44,7 @@ where
         }
     }
 
-    pub fn batch(&self, value: V) -> R {
+    pub fn batch(&self, value: V) -> Arc<R> {
         let mut buffer = self.buffer.lock().unwrap();
         while buffer.len() >= self.max_batch_size {
             buffer = self.buffer_cond.wait(buffer).unwrap();
@@ -89,6 +87,7 @@ where
             self.buffer_cond.notify_all();
 
             let response = self.batched_op.execute(values);
+            let response = Arc::new(response);
 
             let mut result = self.result.lock().unwrap();
             *result = Some(response.clone());
@@ -164,10 +163,7 @@ mod test {
         assert_eq!(5, results.len());
         let first_value = results.first().unwrap();
         assert!(results.iter().all(|it| it == first_value));
-        assert_eq!(
-            [0, 1, 2, 3, 4].into_iter().collect::<HashSet<_>>(),
-            *first_value
-        );
+        assert_eq!(&hash_set![0, 1, 2, 3, 4], first_value.as_ref());
     }
 
     #[test]
@@ -201,11 +197,11 @@ mod test {
         // Then
         assert_eq!(2, executions_count.load(Ordering::SeqCst));
         assert_eq!(5, results.len());
-        assert_eq!(Some(&hash_set!(0, 1)), results.iter().nth(0));
-        assert_eq!(Some(&hash_set!(0, 1)), results.iter().nth(1));
-        assert_eq!(Some(&hash_set!(2, 3, 4)), results.iter().nth(2));
-        assert_eq!(Some(&hash_set!(2, 3, 4)), results.iter().nth(3));
-        assert_eq!(Some(&hash_set!(2, 3, 4)), results.iter().nth(4));
+        assert_eq!(&hash_set!(0, 1), results.iter().nth(0).unwrap().as_ref());
+        assert_eq!(&hash_set!(0, 1), results.iter().nth(1).unwrap().as_ref());
+        assert_eq!(&hash_set!(2, 3, 4), results.iter().nth(2).unwrap().as_ref());
+        assert_eq!(&hash_set!(2, 3, 4), results.iter().nth(3).unwrap().as_ref());
+        assert_eq!(&hash_set!(2, 3, 4), results.iter().nth(4).unwrap().as_ref());
     }
 
     #[test]
@@ -237,10 +233,10 @@ mod test {
         // Then
         assert_eq!(2, executions_count.load(Ordering::SeqCst));
         assert_eq!(5, results.len());
-        assert_eq!(Some(&hash_set!(0, 1, 2)), results.iter().nth(0));
-        assert_eq!(Some(&hash_set!(0, 1, 2)), results.iter().nth(1));
-        assert_eq!(Some(&hash_set!(0, 1, 2)), results.iter().nth(2));
-        assert_eq!(Some(&hash_set!(3, 4)), results.iter().nth(3));
-        assert_eq!(Some(&hash_set!(3, 4)), results.iter().nth(4));
+        assert_eq!(&hash_set!(0, 1, 2), results.iter().nth(0).unwrap().as_ref());
+        assert_eq!(&hash_set!(0, 1, 2), results.iter().nth(1).unwrap().as_ref());
+        assert_eq!(&hash_set!(0, 1, 2), results.iter().nth(2).unwrap().as_ref());
+        assert_eq!(&hash_set!(3, 4), results.iter().nth(3).unwrap().as_ref());
+        assert_eq!(&hash_set!(3, 4), results.iter().nth(4).unwrap().as_ref());
     }
 }

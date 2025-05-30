@@ -1,13 +1,18 @@
-use super::{NodeMetadata, RemoteMetadata};
+use super::{Batched, Batcher, NodeMetadata, RemoteMetadata};
 use crate::{Error, Result};
+use dashmap::DashMap;
 use key_mutex::KeyMutex;
 use lib_cache::{Cache, CacheKey};
-use lib_figma::{FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, Node};
+use lib_figma::{
+    FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, GetImageResponse, Node,
+};
 use log::{debug, warn};
 use phase_loading::RemoteSource;
 use retry::delay::Exponential;
 use retry::retry_with_index;
 use retry::{OperationResult, delay::jitter};
+use std::sync::Arc;
+use std::time::Duration;
 use std::{
     collections::{HashMap, VecDeque},
     sync::LazyLock,
@@ -21,9 +26,28 @@ static RATE_LIMIT_NOTIFICATION: LazyLock<()> = LazyLock::new(
 #[derive(Clone)]
 pub struct FigmaRepository {
     api: FigmaApi,
+    batched_api: Arc<DashMap<BatchKey, ExportImgBatcher>>,
     cache: Cache,
     locks: KeyMutex<CacheKey, ()>,
 }
+
+pub struct BatchedApi {
+    api: FigmaApi,
+    remote: Arc<RemoteSource>,
+    format: String,
+    scale: f32,
+}
+
+#[derive(Eq, PartialEq, Hash, Debug, Clone)]
+pub struct BatchKey(String);
+
+impl BatchKey {
+    pub fn from(file_key: &str, format: &str, scale: f32) -> Self {
+        Self(format!("{file_key}:{format}:{scale}"))
+    }
+}
+
+pub type ExportImgBatcher = Batcher<String, BatchedApi, lib_figma::Result<GetImageResponse>>;
 
 pub type DownloadUrl = String;
 
@@ -35,6 +59,7 @@ impl FigmaRepository {
     pub fn new(api: FigmaApi, cache: Cache) -> Self {
         Self {
             api,
+            batched_api: Arc::new(DashMap::new()),
             cache,
             locks: KeyMutex::new(),
         }
@@ -100,7 +125,7 @@ impl FigmaRepository {
 
     pub fn export(
         &self,
-        remote: &RemoteSource,
+        remote: &Arc<RemoteSource>,
         node: &NodeMetadata,
         format: &str,
         scale: f32,
@@ -132,48 +157,47 @@ impl FigmaRepository {
 
         // otherwise, request value from remote
         on_export_start();
-        let response = retry_with_index(
-            Exponential::from_millis_with_factor(5000, 2.0).map(jitter),
-            |attempt| {
-                if attempt > 1 {
-                    debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
-                };
-                match self.api.get_image(
-                    &remote.access_token,
-                    &remote.file_key,
-                    GetImageQueryParameters {
-                        ids: Some(&[node.id.to_owned()]),
-                        scale: Some(scale),
-                        format: Some(format),
-                        ..Default::default()
-                    },
-                ) {
-                    Ok(result) => OperationResult::Ok(result),
-                    Err(e) => match e.0 {
-                        StatusCode(code) if code == 429 => {
-                            debug!(target: "FigmaRepository", "rate limit encountered");
-                            let _ = &*RATE_LIMIT_NOTIFICATION;
-                            OperationResult::Retry(e)
-                        }
-                        _ => OperationResult::Err(e),
-                    },
-                }
-            },
-        );
+        let batch_key = BatchKey::from(&remote.file_key, &format, scale);
+
+        // Avoid DashMap's entry locking
+        if let None = self.batched_api.get(&batch_key) {
+            // Build batcher outside DashMap lock
+            let new_batcher = Batcher::new(
+                10,
+                Duration::from_millis(1000),
+                BatchedApi {
+                    api: self.api.clone(),
+                    remote: remote.clone(),
+                    format: format.to_owned(),
+                    scale: scale,
+                },
+            );
+            self.batched_api.insert(batch_key.clone(), new_batcher);
+        }
+        // Then call batch
+        let batched_api = self
+            .batched_api
+            .get(&batch_key)
+            .expect("Value always exists");
+        let response = batched_api.batch(node.id.to_owned());
 
         let node_id = node.id.as_str();
+        let node_name = node.name.as_str();
         let url = {
-            let mut response = response?;
-            if let Some(error) = response.err {
+            let response = match response.as_ref() {
+                Ok(response) => response,
+                Err(e) => return Err(Error::ExportImage(e.to_string())),
+            };
+            if let Some(error) = &response.err {
                 return Err(Error::ExportImage(format!(
-                    "got response with error: {error}"
+                    "got response with error while exporting '{node_name}': {error}"
                 )));
             }
-            let download_url = match response.images.remove(node_id) {
+            let download_url = match response.images.get(node_id) {
                 Some(url) => url,
                 None => {
                     return Err(Error::ExportImage(format!(
-                        "response has no requested node with id '{node_id}'"
+                        "response has no requested node '{node_name}' with id '{node_id}'",
                     )));
                 }
             };
@@ -181,7 +205,7 @@ impl FigmaRepository {
                 Some(url) => url,
                 None => {
                     return Err(Error::ExportImage(format!(
-                        "requested node with id '{node_id}' was not rendered by Figma backend",
+                        "requested node '{node_name}' with id '{node_id}' was not rendered by Figma backend",
                     )));
                 }
             }
@@ -190,7 +214,7 @@ impl FigmaRepository {
         // remember result to cache
         self.cache.put::<DownloadUrl>(&cache_key, &url)?;
         // return result and release lock
-        Ok(url)
+        Ok(url.to_owned())
     }
 
     pub fn download(&self, remote: &RemoteSource, url: &str) -> Result<Vec<u8>> {
@@ -248,4 +272,26 @@ fn extract_metadata(values: &[Node]) -> RemoteMetadata {
         }
     }
     RemoteMetadata { name_to_node }
+}
+
+impl Batched<String, lib_figma::Result<GetImageResponse>> for BatchedApi {
+    fn execute(&self, ids: Vec<String>) -> lib_figma::Result<GetImageResponse> {
+        let BatchedApi {
+            api,
+            remote,
+            format,
+            scale,
+        } = self;
+        debug!(target: "FigmaRepository", "Batched request: ids={}; format={format}; scale={scale}", ids.join(","));
+        Ok(api.get_image(
+            &remote.access_token,
+            &remote.file_key,
+            GetImageQueryParameters {
+                ids: Some(&ids),
+                scale: Some(*scale),
+                format: Some(format),
+                ..Default::default()
+            },
+        )?)
+    }
 }

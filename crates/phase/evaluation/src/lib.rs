@@ -45,7 +45,7 @@ pub struct EvalArgs {
     pub diagnostics: bool,
 }
 
-const MAX_NUM_THREADS: usize = 6;
+const MAX_NUM_THREADS: usize = 8;
 
 pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     let instant = Instant::now();

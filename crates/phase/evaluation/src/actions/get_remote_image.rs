@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::{
     download_image::DownloadImageArgs,
     export_image::{ExportImageArgs, export_image},
@@ -46,7 +48,7 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
 
 pub struct GetRemoteImageArgs<'a> {
     pub label: &'a Label,
-    pub remote: &'a RemoteSource,
+    pub remote: &'a Arc<RemoteSource>,
     pub node_name: &'a str,
     pub format: &'a str,
     pub scale: f32,

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     EvalContext, Result,
     figma::{DownloadUrl, NodeMetadata},
@@ -19,7 +21,7 @@ pub fn export_image(
 }
 
 pub struct ExportImageArgs<'a> {
-    pub remote: &'a RemoteSource,
+    pub remote: &'a Arc<RemoteSource>,
     pub node: &'a NodeMetadata,
     pub format: &'a str,
     pub scale: f32,

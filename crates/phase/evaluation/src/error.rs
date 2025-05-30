@@ -65,3 +65,10 @@ impl From<retry::Error<lib_figma::Error>> for Error {
         value.error.into()
     }
 }
+
+
+impl From<retry::Error<Error>> for Error {
+    fn from(value: retry::Error<Error>) -> Self {
+        value.error.into()
+    }
+}
