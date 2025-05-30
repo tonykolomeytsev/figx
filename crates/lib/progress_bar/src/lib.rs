@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::io::{stderr, IsTerminal};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::sync::{LazyLock, atomic::AtomicUsize};
@@ -6,6 +7,7 @@ use std::sync::{LazyLock, atomic::AtomicUsize};
 use ordermap::OrderSet;
 
 static PROGRESS_BAR: LazyLock<ProgressBar> = LazyLock::new(ProgressBar::default);
+static IS_TTY: LazyLock<bool> = LazyLock::new(|| stderr().lock().is_terminal());
 const PROGRESS_BAR_WIDTH: usize = 30;
 
 #[derive(Default)]
@@ -80,6 +82,9 @@ pub fn set_progress_bar_progress(current: usize) {
 }
 
 pub fn is_progress_bar_visible() -> bool {
+    if !*IS_TTY {
+        return false
+    }
     PROGRESS_BAR.visible.load(Ordering::Relaxed)
 }
 
