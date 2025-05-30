@@ -687,7 +687,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "figmagic"
+name = "figx"
 version = "0.3.11"
 dependencies = [
  "clap",

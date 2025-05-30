@@ -1,6 +1,6 @@
 # Remotes Reference
 
-Remotes in figmagic function similarly to Git remotes - they define the source locations in Figma where your design assets are stored. A remote configuration specifies:
+Remotes in figx function similarly to Git remotes - they define the source locations in Figma where your design assets are stored. A remote configuration specifies:
 - Which Figma file to access
 - Precisely where in that file to look for assets
 - Authentication credentials

@@ -1,6 +1,6 @@
 # Installation
 
-You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figmagic/releases).
+You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figx/releases).
 
 Or build the tool from source:
 
@@ -15,14 +15,14 @@ cargo install --release --locked --path app
 Easiest way for MacOS is to install from homebrew:
 
 ```bash
-brew tap tonykolomeytsev/figmagic
-brew install figmagic
+brew tap tonykolomeytsev/figx
+brew install figx
 ```
 
 ## Windows
 
-You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figmagic/releases).
+You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figx/releases).
 
 ## Linux
 
-You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figmagic/releases).
+You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figx/releases).

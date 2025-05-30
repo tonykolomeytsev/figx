@@ -156,8 +156,8 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
         }
         InitNotInWorkspace => {
             eprintln!(
-                "{err_label} current working directory is not part of the figmagic workspace\n\n\
-                {tip_label} workspace is the root directory of the project, which contains the file '.figmagic.toml'.\n",
+                "{err_label} current working directory is not part of the figx workspace\n\n\
+                {tip_label} workspace is the root directory of the project, which contains the file '.figxconfig.toml'.\n",
                 err_label = "error:".red().bold(),
                 tip_label = "  tip:".green(),
             );
@@ -172,19 +172,19 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
         }
         WorkspaceRead(err) => {
             eprintln!(
-                "{err_label} unable to read workspace file '.figmagic.toml':\n\n{err}\n",
+                "{err_label} unable to read workspace file '.figxconfig.toml':\n\n{err}\n",
                 err_label = "error:".red().bold(),
             );
         }
         WorkspaceParse(err) => {
             eprintln!(
-                "{err_label} failed to parse workspace file '.figmagic.toml':\n\n{err}\n",
+                "{err_label} failed to parse workspace file '.figxconfig.toml':\n\n{err}\n",
                 err_label = "error:".red().bold(),
             );
         }
         WorkspaceNoRemotes => {
             eprintln!(
-                "{err_label} no remotes specified in workspace file '.figmagic.toml'\n\n\
+                "{err_label} no remotes specified in workspace file '.figxconfig.toml'\n\n\
                 {tip_label} at least one remote must be specified, e.g. '[remotes.figma]'\n",
                 err_label = "error:".red().bold(),
                 tip_label = "  tip:".green(),
@@ -301,7 +301,7 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
         ),
         Cache(err) => eprintln!(
             "{err_label} cache error: '{err}'\n\n\
-            {tip_label} if the problem persists, run 'figmagic clean'\n",
+            {tip_label} if the problem persists, run 'figx clean'\n",
             err_label = "error:".red().bold(),
             tip_label = "  tip:".green(),
         ),

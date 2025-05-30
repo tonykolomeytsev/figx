@@ -1,6 +1,6 @@
 # Profiles Reference
 
-This document describes all built-in import profiles available in figmagic. Profiles can be configured in the root `.figmagic.toml` file and extended to create custom import configurations.
+This document describes all built-in import profiles available in FigX. Profiles can be configured in the root `.figxconfig.toml` file and extended to create custom import configurations.
 
 ## Profile Types
 1. Image Profiles

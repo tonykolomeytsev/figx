@@ -44,5 +44,5 @@ jobs:
       - name: Publish artifacts and release
         uses: houseabsolute/actions-rust-release@v0
         with:
-          executable-name: figmagic
+          executable-name: figx
           target: ${{ matrix.platform.target }}
