@@ -15,7 +15,7 @@ pub use error::*;
 
 static WORKSPACE_FILE_NAME: &str = ".figxconfig.toml";
 static RESOURCES_FILE_NAME: &str = ".fig.toml";
-static CACHE_DIR: &str = ".fig-out/caches";
+static CACHE_DIR: &str = ".figx-out/caches";
 
 pub fn load_invocation_context() -> Result<InvocationContext> {
     let working_dir = std::env::current_dir().map_err(|_| Error::InitInaccessibleCurrentWorkDir)?;
