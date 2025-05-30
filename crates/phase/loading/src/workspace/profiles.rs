@@ -195,38 +195,32 @@ fn parse_custom_profiles(
         if let Some(base) = profiles.get(&attrs.extends) {
             match base.as_ref() {
                 Profile::Png(base) => {
-                    let custom: PngProfileDto =
-                        attrs.profile.try_into().map_err(Error::FigParse)?;
+                    let custom: PngProfileDto = attrs.profile.try_into()?;
                     profiles.insert(name, Arc::new(Profile::Png(base.extend(custom))));
                 }
 
                 Profile::Svg(base) => {
-                    let custom: SvgProfileDto =
-                        attrs.profile.try_into().map_err(Error::FigParse)?;
+                    let custom: SvgProfileDto = attrs.profile.try_into()?;
                     profiles.insert(name, Arc::new(Profile::Svg(base.extend(custom))));
                 }
 
                 Profile::Pdf(base) => {
-                    let custom: PdfProfileDto =
-                        attrs.profile.try_into().map_err(Error::FigParse)?;
+                    let custom: PdfProfileDto = attrs.profile.try_into()?;
                     profiles.insert(name, Arc::new(Profile::Pdf(base.extend(custom))));
                 }
 
                 Profile::Webp(base) => {
-                    let custom: WebpProfileDto =
-                        attrs.profile.try_into().map_err(Error::FigParse)?;
+                    let custom: WebpProfileDto = attrs.profile.try_into()?;
                     profiles.insert(name, Arc::new(Profile::Webp(base.extend(custom))));
                 }
 
                 Profile::Compose(base) => {
-                    let custom: ComposeProfileDto =
-                        attrs.profile.try_into().map_err(Error::FigParse)?;
+                    let custom: ComposeProfileDto = attrs.profile.try_into()?;
                     profiles.insert(name, Arc::new(Profile::Compose(base.extend(custom))));
                 }
 
                 Profile::AndroidWebp(base) => {
-                    let custom: AndroidWebpProfileDto =
-                        attrs.profile.try_into().map_err(Error::FigParse)?;
+                    let custom: AndroidWebpProfileDto = attrs.profile.try_into()?;
                     profiles.insert(name, Arc::new(Profile::AndroidWebp(base.extend(custom))));
                 }
             }

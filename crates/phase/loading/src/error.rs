@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use derive_more::From;
 use lib_label::{NameParsingError, PackageParsingError};
 
@@ -16,7 +18,7 @@ pub enum Error {
 
     // region: Workspace
     WorkspaceRead(std::io::Error),
-    WorkspaceParse(toml::de::Error),
+    WorkspaceParse(toml::de::Error, PathBuf),
     WorkspaceNoRemotes,
     WorkspaceRemoteNoAccessToken(String),
     WorkspaceMoreThanOneDefaultRemotes,
@@ -54,6 +56,12 @@ impl From<&str> for Error {
 impl From<ignore::Error> for Error {
     fn from(value: ignore::Error) -> Self {
         Self::Internal(value.to_string())
+    }
+}
+
+impl From<toml::de::Error> for Error {
+    fn from(value: toml::de::Error) -> Self {
+        Self::WorkspaceParse(value, PathBuf::new())
     }
 }
 

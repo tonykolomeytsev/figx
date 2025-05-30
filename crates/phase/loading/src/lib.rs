@@ -62,7 +62,11 @@ pub fn load_invocation_context() -> Result<InvocationContext> {
 
 pub fn load_workspace(pattern: LabelPattern) -> Result<Workspace> {
     let invocation_ctx = load_invocation_context()?;
-    parse_workspace(invocation_ctx, pattern)
+    let ws_file = invocation_ctx.workspace_file.clone();
+    parse_workspace(invocation_ctx, pattern).map_err(|e| match e {
+        Error::WorkspaceParse(e, _) => Error::WorkspaceParse(e, ws_file),
+        e => e,
+    })
 }
 
 fn find_workspace_file(start_dir: &Path) -> Result<FileWithParentDir> {

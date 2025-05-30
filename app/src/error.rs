@@ -1,7 +1,14 @@
-use codespan_reporting::diagnostic::{Diagnostic, Label, Severity};
+use codespan_reporting::{
+    diagnostic::{Diagnostic, Label},
+    files::SimpleFile,
+    term::{
+        self,
+        termcolor::{ColorChoice, StandardStream},
+    },
+};
 use crossterm::style::Stylize;
 use derive_more::From;
-use std::{cmp::min, ops::Range};
+use std::{fmt::Display, ops::Range, path::Path};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -174,11 +181,14 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             message: &format!("unable to read workspace file '.figxconfig.toml': {err}"),
             labels: &[],
         }),
-        WorkspaceParse(err) => {
-            eprintln!(
-                "{err_label} failed to parse workspace file '.figxconfig.toml':\n\n{err}\n",
-                err_label = "error:".red().bold(),
-            );
+        WorkspaceParse(err, path) => {
+            let file = create_simple_file(&path);
+            let diagnostic = Diagnostic::error()
+                .with_message("failed to parse workspace file `.figxconfig.toml`")
+                .with_label(
+                    Label::primary((), err.span().unwrap_or_default()).with_message(err.message()),
+                );
+            print_codespan_diag(diagnostic, file);
         }
         WorkspaceNoRemotes => cli_input_error(CliInputDiagnostics {
             message: "no remotes specified in workspace file '.figxconfig.toml'",
@@ -395,4 +405,20 @@ fn cli_input_error(args: CliInputDiagnostics) {
             }
         }
     }
+}
+
+fn create_simple_file(path: &Path) -> SimpleFile<String, String> {
+    SimpleFile::new(
+        path.display().to_string(),
+        std::fs::read_to_string(path).expect("file is available right after parsing"),
+    )
+}
+
+fn print_codespan_diag<A: Display + Clone, B: AsRef<str>>(
+    diagnostic: Diagnostic<()>,
+    file: SimpleFile<A, B>,
+) {
+    let writer = StandardStream::stderr(ColorChoice::Always);
+    let config = term::Config::default();
+    let _ = term::emit(&mut writer.lock(), &config, &file, &diagnostic);
 }

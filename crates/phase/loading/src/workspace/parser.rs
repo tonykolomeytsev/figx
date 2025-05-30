@@ -24,11 +24,11 @@ pub(super) struct WorkspaceDto {
 impl WorkspaceDto {
     pub fn from_file(file: &Path) -> Result<Self> {
         let string = std::fs::read_to_string(file).map_err(Error::WorkspaceRead)?;
-        Self::from_str(&string)
+        Self::from_str(&string).map_err(|e| Error::WorkspaceParse(e, file.to_owned()))
     }
 
-    pub fn from_str(string: &str) -> Result<Self> {
-        toml::from_str::<WorkspaceDto>(string).map_err(Error::WorkspaceParse)
+    pub fn from_str(string: &str) -> std::result::Result<Self, toml::de::Error> {
+        toml::from_str::<WorkspaceDto>(string)
     }
 }
 
