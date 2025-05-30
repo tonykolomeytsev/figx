@@ -20,6 +20,7 @@ pub enum CliSubcommand {
     Info(CommandInfoArgs),
 
     /// Search resources in the current workspace
+    #[clap(alias("q"))]
     Query(CommandQueryArgs),
 
     /// Analyze the action graph of resources in the current workspace
@@ -27,9 +28,11 @@ pub enum CliSubcommand {
     AQuery(CommandAQueryArgs),
 
     /// Download resources metadata from remote to cache
+    #[clap(alias("f"))]
     Fetch(CommandFetchArgs),
 
     /// Import resources from remotes to workspace files
+    #[clap(alias("i"))]
     Import(CommandImportArgs),
 
     /// Clean up application cache
