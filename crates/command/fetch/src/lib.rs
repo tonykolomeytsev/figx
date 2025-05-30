@@ -15,7 +15,7 @@ pub fn fetch(opts: FeatureFetchOptions) -> Result<()> {
         phase_evaluation::evaluate(
             ws,
             EvalArgs {
-                refetch: true,
+                fetch: true,
                 ..Default::default()
             },
         )?;

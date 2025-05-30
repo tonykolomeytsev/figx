@@ -11,7 +11,7 @@ pub fn materialize(
     args: MaterializeArgs,
     on_execute: impl FnOnce(),
 ) -> Result<()> {
-    if ctx.eval_args.refetch || ctx.eval_args.diagnostics {
+    if ctx.eval_args.fetch {
         return Ok(());
     }
 

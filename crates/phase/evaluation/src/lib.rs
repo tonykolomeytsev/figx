@@ -41,8 +41,8 @@ pub struct EvalContext {
 
 #[derive(Default)]
 pub struct EvalArgs {
+    pub fetch: bool,
     pub refetch: bool,
-    pub diagnostics: bool,
 }
 
 const MAX_NUM_THREADS: usize = 8;
@@ -63,8 +63,11 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .collect::<HashSet<_>>()
         .len();
     set_progress_bar_maximum(requested_resources);
-    info!(target: "Requested", "{requested_resources} resource(s) from {requested_remotes} remote(s)");
-
+    if ctx.eval_args.fetch {
+        info!(target: "Requested", "update for {requested_remotes} remote(s)");
+    } else {
+        info!(target: "Requested", "{requested_resources} resource(s) from {requested_remotes} remote(s)");
+    }
     // region: exec
     let result = ws
         .packages
@@ -102,11 +105,15 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     match result {
         Err(e) => Err(e),
         Ok(_) => {
-            info!(
-                target: "Finished", "{res_num} resource(s) in {time}",
-                res_num = processed_resources.load(Ordering::Relaxed),
-                time = format_duration(elapsed),
-            );
+            let time = format_duration(elapsed);
+            if ctx.eval_args.fetch {
+                info!(target: "Finished", "{requested_remotes} remotes(s) in {time}",);
+            } else {
+                info!(
+                    target: "Finished", "{res_num} resource(s) in {time}",
+                    res_num = processed_resources.load(Ordering::Relaxed),
+                );
+            }
             Ok(())
         }
     }

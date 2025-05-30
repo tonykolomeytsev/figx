@@ -7,8 +7,11 @@ pub fn fetch_remote(
     args: FetchRemoteArgs,
     on_fetch_start: impl FnOnce(),
 ) -> Result<RemoteMetadata> {
-    ctx.figma_repository
-        .get_remote(args.remote, ctx.eval_args.refetch, on_fetch_start)
+    ctx.figma_repository.get_remote(
+        args.remote,
+        ctx.eval_args.fetch || ctx.eval_args.refetch,
+        on_fetch_start,
+    )
 }
 
 pub struct FetchRemoteArgs<'a> {
