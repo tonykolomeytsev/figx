@@ -50,6 +50,7 @@ ureq = { version = "3.0", default-features = false, features = [
     "gzip",
     "json",
 ] }
-ordermap = "0.5.7"
+ordermap = { version = "0.5.7", features = ["serde"] }
 webp = { git = "https://github.com/tonykolomeytsev/webp.git" }
 crossterm = "0.29"
+ignore = "0.4.23"

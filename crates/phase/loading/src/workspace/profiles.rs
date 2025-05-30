@@ -4,11 +4,7 @@ use crate::{
 };
 use ordermap::OrderMap;
 use serde::Deserialize;
-use std::{
-    collections::{BTreeSet, HashMap},
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{collections::BTreeSet, path::PathBuf, sync::Arc};
 use toml::Table;
 
 #[derive(Deserialize, Default)]
@@ -16,7 +12,7 @@ pub(super) struct ProfilesDto {
     #[serde(flatten)]
     builtins: BuiltInProfiles,
     #[serde(flatten)]
-    custom: HashMap<String, CustomProfileDto>,
+    custom: OrderMap<String, CustomProfileDto>,
 }
 
 #[derive(Deserialize, Default)]
@@ -107,7 +103,7 @@ pub(super) struct ComposeProfileDto {
 pub(super) struct ColorMappingDto {
     pub from: String,
     pub to: String,
-    #[serde(default =  "Default::default")]
+    #[serde(default = "Default::default")]
     pub imports: Vec<String>,
 }
 
@@ -191,7 +187,7 @@ fn parse_builtin_profiles(
 }
 
 fn parse_custom_profiles(
-    custom: HashMap<String, CustomProfileDto>,
+    custom: OrderMap<String, CustomProfileDto>,
     profiles: &mut OrderMap<String, Arc<Profile>>,
 ) -> Result<()> {
     for (name, attrs) in custom {

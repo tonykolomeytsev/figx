@@ -13,4 +13,4 @@ serde.workspace = true
 log.workspace = true
 derive_more.workspace = true
 ordermap.workspace = true
-ignore = "0.4.23"
+ignore.workspace = true
