@@ -61,11 +61,18 @@ fn run_app() -> Result<()> {
         }
 
         CliSubcommand::Fetch(CommandFetchArgs { pattern }) => {
-            command_fetch::fetch(FeatureFetchOptions { pattern })?
+            command_fetch::fetch(FeatureFetchOptions {
+                pattern,
+                concurrency: cli.jobs,
+            })?
         }
 
         CliSubcommand::Import(CommandImportArgs { pattern, refetch }) => {
-            command_import::import(FeatureImportOptions { pattern, refetch })?
+            command_import::import(FeatureImportOptions {
+                pattern,
+                refetch,
+                concurrency: cli.jobs,
+            })?
         }
 
         CliSubcommand::Clean(CommandCleanArgs { all }) => {

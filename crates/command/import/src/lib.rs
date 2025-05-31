@@ -7,6 +7,7 @@ use phase_evaluation::EvalArgs;
 pub struct FeatureImportOptions {
     pub pattern: Vec<String>,
     pub refetch: bool,
+    pub concurrency: usize,
 }
 
 pub fn import(opts: FeatureImportOptions) -> Result<()> {
@@ -17,6 +18,7 @@ pub fn import(opts: FeatureImportOptions) -> Result<()> {
             ws,
             EvalArgs {
                 refetch: opts.refetch,
+                concurrency: opts.concurrency,
                 ..Default::default()
             },
         )?;

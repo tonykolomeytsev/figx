@@ -7,8 +7,12 @@ use clap::{
 #[command(version, about, long_about = None, styles = get_styles())]
 pub struct Cli {
     /// Turn debugging information on
-    #[arg(short, long = "verbose", action = clap::ArgAction::Count)]
+    #[arg(short, action = clap::ArgAction::Count)]
     pub verbosity: u8,
+
+    /// Number of parallel jobs to run (0 means auto-detect)
+    #[arg(short, action = clap::ArgAction::Set, default_value = "0")]
+    pub jobs: usize,
 
     #[command(subcommand)]
     pub subcommand: CliSubcommand,

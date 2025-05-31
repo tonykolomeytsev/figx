@@ -43,15 +43,17 @@ pub struct EvalContext {
 pub struct EvalArgs {
     pub fetch: bool,
     pub refetch: bool,
+    pub concurrency: usize,
 }
 
+/// Maximum number of parallel jobs if user doesn't specify it explicitly
 const MAX_NUM_THREADS: usize = 8;
 
 pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     let instant = Instant::now();
-    let ctx = init_eval_context(&ws, args)?;
     // setup rayon thread pool
-    fun_name();
+    set_up_rayon(args.concurrency);
+    let ctx = init_eval_context(&ws, args)?;
     set_progress_bar_visible(true);
     let requested_resources = ws.packages.iter().map(|pkg| pkg.resources.len()).sum();
     let processed_resources: Arc<AtomicUsize> = Default::default();
@@ -119,8 +121,12 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     }
 }
 
-fn fun_name() {
-    let num_threads = min(num_cpus::get(), MAX_NUM_THREADS);
+fn set_up_rayon(user_defined_concurrency: usize) {
+    let num_threads = if user_defined_concurrency == 0 {
+        min(num_cpus::get(), MAX_NUM_THREADS)
+    } else {
+        user_defined_concurrency
+    };
     debug!(target: "Setup", "set rayon concurrency to {num_threads}");
     let _ = rayon::ThreadPoolBuilder::new()
         .num_threads(num_threads)

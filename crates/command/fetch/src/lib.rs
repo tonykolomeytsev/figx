@@ -6,6 +6,7 @@ use phase_evaluation::EvalArgs;
 
 pub struct FeatureFetchOptions {
     pub pattern: Vec<String>,
+    pub concurrency: usize,
 }
 
 pub fn fetch(opts: FeatureFetchOptions) -> Result<()> {
@@ -16,6 +17,7 @@ pub fn fetch(opts: FeatureFetchOptions) -> Result<()> {
             ws,
             EvalArgs {
                 fetch: true,
+                concurrency: opts.concurrency,
                 ..Default::default()
             },
         )?;
