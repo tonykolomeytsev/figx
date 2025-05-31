@@ -23,7 +23,7 @@ pub fn main() -> ExitCode {
     match run_app() {
         Ok(_) => ExitCode::SUCCESS,
         Err(err) => {
-            (*LOGGER).flush();
+            LOGGER.wait().flush();
             handle_error(err);
             ExitCode::FAILURE
         }
@@ -32,7 +32,7 @@ pub fn main() -> ExitCode {
 
 fn run_app() -> Result<()> {
     let cli = Cli::parse();
-    init_log_impl(cli.verbosity);
+    init_log_impl(cli.verbosity, cli.quiet);
 
     match cli.subcommand {
         CliSubcommand::Info(CommandInfoArgs { entity }) => {

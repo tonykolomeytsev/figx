@@ -8,13 +8,15 @@ use lib_progress_bar::{get_progress_bar_display, is_progress_bar_visible};
 use log::{max_level, set_logger};
 use std::{
     io::{Write, stderr},
-    sync::LazyLock,
+    sync::OnceLock,
 };
 
-pub static LOGGER: LazyLock<Logger> = LazyLock::new(|| Logger);
+pub static LOGGER: OnceLock<Logger> = OnceLock::new();
 
 /// A simple logger.
-pub struct Logger;
+pub struct Logger {
+    pub quiet: bool,
+}
 
 impl log::Log for Logger {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
@@ -41,15 +43,18 @@ impl log::Log for Logger {
             log::Level::Error => "error:".to_owned().bold().red(),
             log::Level::Info => format!("{target: >12}").bold().green(),
         };
-        let _ = queue!(
-            stdout,
-            MoveToColumn(0),
-            Clear(ClearType::CurrentLine),
-            Print(format!("{label} {msg}\n")),
-        );
+        if !self.quiet || target == "Finished" || target == "Requested" {
+            let _ = queue!(
+                stdout,
+                MoveToColumn(0),
+                Clear(ClearType::CurrentLine),
+                Print(format!("{label} {msg}\n")),
+            );
+        }
         if is_progress_bar_visible() {
             let _ = queue!(
                 stdout,
+                MoveToColumn(0),
                 Print(format!(
                     "{} {}",
                     "   Executing".bold().cyan(),
@@ -85,8 +90,8 @@ fn should_skip_log(record: &log::Record) -> bool {
     false
 }
 
-pub fn init_log_impl(verbosity: u8) {
-    set_logger(&*LOGGER).unwrap();
+pub fn init_log_impl(verbosity: u8, quiet: bool) {
+    set_logger(&*LOGGER.get_or_init(|| Logger { quiet })).unwrap();
 
     // Устанавливаем уровень логгирования в зависимости от verbosity
     log::set_max_level(match verbosity {

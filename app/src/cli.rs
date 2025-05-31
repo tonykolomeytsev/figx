@@ -6,13 +6,17 @@ use clap::{
 #[derive(Parser)]
 #[command(version, about, long_about = None, styles = get_styles())]
 pub struct Cli {
-    /// Turn debugging information on
-    #[arg(short, action = clap::ArgAction::Count)]
+    /// Use verbose output (`-vv` very verbose output)
+    #[arg(short, long = "verbose", action = clap::ArgAction::Count)]
     pub verbosity: u8,
 
     /// Number of parallel jobs to run (0 means auto-detect)
     #[arg(short, action = clap::ArgAction::Set, default_value = "0")]
     pub jobs: usize,
+
+    /// Do not print non-essential messages
+    #[arg(short, long)]
+    pub quiet: bool,
 
     #[command(subcommand)]
     pub subcommand: CliSubcommand,
@@ -24,7 +28,7 @@ pub enum CliSubcommand {
     Info(CommandInfoArgs),
 
     /// Search resources in the current workspace
-    #[clap(alias("q"))]
+    #[clap(visible_alias("q"))]
     Query(CommandQueryArgs),
 
     /// Analyze the action graph of resources in the current workspace
@@ -32,11 +36,11 @@ pub enum CliSubcommand {
     AQuery(CommandAQueryArgs),
 
     /// Download resources metadata from remote to cache
-    #[clap(alias("f"))]
+    #[clap(visible_alias("f"))]
     Fetch(CommandFetchArgs),
 
     /// Import resources from remotes to workspace files
-    #[clap(alias("i"))]
+    #[clap(visible_alias("i"))]
     Import(CommandImportArgs),
 
     /// Clean up application cache
