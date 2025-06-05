@@ -152,6 +152,8 @@ mod de {
             let from = th.required("from")?;
             let to = th.required("to")?;
             let imports = th.optional("imports").unwrap_or_default();
+            th.finalize(None)?;
+            
             Ok(Self { from, to, imports })
         }
     }
@@ -161,6 +163,8 @@ mod de {
             let mut th = TableHelper::new(value)?;
             let imports = th.optional("imports").unwrap_or_default();
             let code = th.required("code")?;
+            th.finalize(None)?;
+
             Ok(Self { imports, code })
         }
     }
@@ -174,6 +178,8 @@ mod de {
             let figma_name = th
                 .optional::<String>("figma_name")
                 .unwrap_or_else(|| "{base}_{variant}".to_owned());
+            th.finalize(None)?;
+
             Ok(Self {
                 local_name,
                 figma_name,
