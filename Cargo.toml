@@ -3,7 +3,7 @@ members = ["app"]
 resolver = "2"
 
 [workspace.package]
-version = "0.3.14"
+version = "0.4.0"
 rust-version = "1.87.0"
 edition = "2024"
 
@@ -30,7 +30,6 @@ lib_cache = { path = "crates/lib/cache" }
 lib_svg2compose = { path = "crates/lib/svg2compose" }
 
 # External Deps
-toml = "0.8"
 toml-span = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
@@ -51,7 +50,7 @@ ureq = { version = "3.0", default-features = false, features = [
     "gzip",
     "json",
 ] }
-ordermap = { version = "0.5.7", features = ["serde"] }
+ordermap = { version = "0.5.7" }
 webp = { git = "https://github.com/tonykolomeytsev/webp.git" }
 crossterm = "0.29"
 ignore = "0.4.23"
