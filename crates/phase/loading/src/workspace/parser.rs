@@ -1,25 +1,16 @@
 use super::fig::parse_fig;
-use super::{ProfilesDto, RemotesDto};
-use crate::Result;
+use crate::parser::WorkspaceDto;
 use crate::workspace::profiles::parse_profiles;
 use crate::workspace::remotes::parse_remotes;
 use crate::{Error, RemoteSource};
 use crate::{InvocationContext, Workspace};
 use crate::{Package, Profile};
+use crate::{ParseWithContext, Result};
 use lib_label::LabelPattern;
+use log::debug;
 use ordermap::OrderMap;
-use serde::Deserialize;
 use std::path::Path;
 use std::sync::Arc;
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(super) struct WorkspaceDto {
-    #[serde(default = "Default::default")]
-    pub remotes: RemotesDto,
-    #[serde(default = "Default::default")]
-    pub profiles: ProfilesDto,
-}
 
 impl WorkspaceDto {
     pub fn from_file(file: &Path) -> Result<Self> {
@@ -27,8 +18,8 @@ impl WorkspaceDto {
         Self::from_str(&string).map_err(|e| Error::WorkspaceParse(e, file.to_owned()))
     }
 
-    pub fn from_str(string: &str) -> std::result::Result<Self, toml::de::Error> {
-        toml::from_str::<WorkspaceDto>(string)
+    pub fn from_str(string: &str) -> std::result::Result<Self, toml_span::DeserError> {
+        WorkspaceDto::parse_with_ctx(&mut toml_span::parse(&string)?, ())
     }
 }
 
@@ -36,6 +27,7 @@ pub(crate) fn parse_workspace(
     context: InvocationContext,
     pattern: LabelPattern,
 ) -> Result<Workspace> {
+    debug!("Parsing workspace config...");
     let ws_dto = WorkspaceDto::from_file(&context.workspace_file)?;
     let remotes = parse_remotes(ws_dto.remotes)?;
     let profiles = parse_profiles(ws_dto.profiles)?;

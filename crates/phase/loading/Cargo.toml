@@ -8,9 +8,11 @@ edition.workspace = true
 lib_label.workspace = true
 
 # External
-toml.workspace = true
-serde.workspace = true
+toml-span.workspace = true
 log.workspace = true
 derive_more.workspace = true
 ordermap.workspace = true
 ignore.workspace = true
+
+[dev-dependencies]
+unindent.workspace = true

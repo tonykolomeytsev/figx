@@ -718,6 +718,7 @@ dependencies = [
  "phase_evaluation",
  "phase_loading",
  "serde",
+ "toml-span",
  "unindent",
  "ureq",
 ]
@@ -1561,8 +1562,8 @@ dependencies = [
  "lib_label",
  "log",
  "ordermap",
- "serde",
- "toml",
+ "toml-span",
+ "unindent",
 ]
 
 [[package]]
@@ -2348,6 +2349,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "toml-span"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70edfdbb3bd469419e2e941b869a7170c158dea27a71da32521f0a6c1f1338db"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
 name = "toml_datetime"
 version = "0.6.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2366,15 +2376,8 @@ dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "toml_write",
  "winnow",
 ]
-
-[[package]]
-name = "toml_write"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfb942dfe1d8e29a7ee7fcbde5bd2b9a25fb89aa70caea2eba3bee836ff41076"
 
 [[package]]
 name = "ttf-parser"

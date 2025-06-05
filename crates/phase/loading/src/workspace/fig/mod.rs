@@ -1,5 +1,6 @@
+mod de;
 mod parser;
 mod resources;
 
 pub(crate) use parser::*;
-use resources::*;
+pub(crate) use resources::*;

@@ -9,6 +9,7 @@ use codespan_reporting::{
 use crossterm::style::Stylize;
 use derive_more::From;
 use std::{fmt::Display, ops::Range, path::Path};
+use toml_span::ErrorKind;
 use unindent::unindent;
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -182,24 +183,11 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             message: &format!("unable to read workspace file '.figxconfig.toml': {err}"),
             labels: &[],
         }),
-        WorkspaceParse(err, path) => {
-            let file = create_simple_file(&path);
-            let diagnostic = Diagnostic::error()
-                .with_message("failed to parse workspace file `.figxconfig.toml`")
-                .with_label(
-                    Label::primary((), err.span().unwrap_or_default()).with_message(err.message()),
-                );
-            print_codespan_diag(diagnostic, file);
-        }
-        WorkspaceNoRemotes(path) => {
-            let file = create_simple_file(&path);
-            let diagnostic = Diagnostic::error()
-                .with_message("no remotes specified in workspace file `.figxconfig.toml`")
-                .with_note(unindent(
-                    "at least one remote must be specified, e.g: `[remotes.design]`",
-                ));
-            print_codespan_diag(diagnostic, file);
-        }
+        WorkspaceParse(err, path) => handle_toml_parsing_error(
+            err,
+            &path,
+            "failed to parse workspace file `.figxconfig.toml`",
+        ),
         WorkspaceRemoteNoAccessToken(id, path) => {
             let file = create_simple_file(&path);
             let diagnostic = Diagnostic::error()
@@ -209,36 +197,9 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                         consider using `access_token.env = \"ENV_WITH_TOKEN\"`
                         or specify FIGMA_PERSONAL_TOKEN in your environment
                     ",
-                ));
-            print_codespan_diag(diagnostic, file);
-        }
-        WorkspaceMoreThanOneDefaultRemotes => cli_input_error(CliInputDiagnostics {
-            message: "the default remote can only be one",
-            labels: &[],
-        }),
-        WorkspaceAtLeastOneDefaultRemote => {
-            eprintln!(
-                "{err_label} at least one remote must be selected by default\n\n\
-                {s: <7}{default} = true\n\
-                {tabs} {underline}\n",
-                err_label = "error:".red().bold(),
-                s = "",
-                default = "default".green(),
-                tabs = " ".repeat(6),
-                underline = "+".repeat(7).green().bold(),
-            );
-        }
-        WorkspaceRemoteWithEmptyNodeId => {
-            eprintln!(
-                "{err_label} remote has empty container_node_id list",
-                err_label = "error:".red().bold(),
-            );
-        }
-        WorkspaceInvalidProfileToExtend(from, to) => {
-            eprintln!(
-                "{err_label} profile {from} cannot be extended with {to}",
-                err_label = "error:".red().bold(),
-            );
+                ))
+                .with_label(Label::primary((), 0..0));
+            print_codespan_diag(diagnostic, &file);
         }
         FigTraversing(err) => cli_input_error(CliInputDiagnostics {
             message: &format!("[internal] fig-files traversing: {err}"),
@@ -253,23 +214,10 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             )],
         }),
         FigParse(err, path) => {
-            let file = create_simple_file(&path);
-            let diagnostic = Diagnostic::error()
-                .with_message("failed to parse fig file `.fig.toml`")
-                .with_label(
-                    Label::primary((), err.span().unwrap_or_default()).with_message(err.message()),
-                );
-            print_codespan_diag(diagnostic, file);
+            handle_toml_parsing_error(err, &path, "failed to parse fig-file `.fig.toml`")
         }
         FigInvalidResourceName(err) => handle_name_parsing_error(err),
         FigInvalidPackage(err) => handle_package_parsing_error(err),
-        FigInvalidProfileName(err, path) => {
-            let file = create_simple_file(&path);
-            let diagnostic = Diagnostic::error()
-                .with_message(format!("invalid profile name `{err}`"))
-                .with_note("there is no profile with this name");
-            print_codespan_diag(diagnostic, file);
-        }
         FigInvalidRemoteName(remote) => {
             eprintln!(
                 "{err_label} invalid remote name '{name}'\n",
@@ -421,9 +369,37 @@ fn create_simple_file(path: &Path) -> SimpleFile<String, String> {
 
 fn print_codespan_diag<A: Display + Clone, B: AsRef<str>>(
     diagnostic: Diagnostic<()>,
-    file: SimpleFile<A, B>,
+    file: &SimpleFile<A, B>,
 ) {
     let writer = StandardStream::stderr(ColorChoice::Always);
     let config = term::Config::default();
-    let _ = term::emit(&mut writer.lock(), &config, &file, &diagnostic);
+    let _ = term::emit(&mut writer.lock(), &config, file, &diagnostic);
+}
+
+fn handle_toml_parsing_error(err: toml_span::DeserError, path: &Path, msg: &str) {
+    let file = create_simple_file(&path);
+    for err in err.errors {
+        let mut diagnostic = Diagnostic::error().with_message(msg);
+
+        match err {
+            toml_span::Error {
+                kind: ErrorKind::UnexpectedKeys { keys, expected },
+                ..
+            } => {
+                for (key, span) in keys.into_iter() {
+                    diagnostic = diagnostic
+                        .with_label(
+                            Label::primary((), span)
+                                .with_message(format!("unexpected key '{key}'")),
+                        )
+                        .with_note(format!("possible keys are: {}", expected.join(", ")));
+                }
+            }
+            err => {
+                diagnostic = diagnostic
+                    .with_label(Label::primary((), err.span).with_message(err.to_string()))
+            }
+        }
+        print_codespan_diag(diagnostic, &file);
+    }
 }

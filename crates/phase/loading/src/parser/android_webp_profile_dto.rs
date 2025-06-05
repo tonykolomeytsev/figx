@@ -1,0 +1,286 @@
+use std::{
+    collections::{BTreeSet, HashSet},
+    path::PathBuf,
+};
+
+use crate::CanBeExtendedBy;
+
+#[derive(Default)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
+pub(crate) struct AndroidWebpProfileDto {
+    pub remote_id: Option<String>,
+    pub android_res_dir: Option<PathBuf>,
+    pub quality: Option<f32>,
+    pub densities: Option<BTreeSet<AndroidDensityDto>>,
+    pub night: Option<String>,
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[cfg_attr(test, derive(Debug))]
+pub(crate) enum AndroidDensityDto {
+    LDPI,
+    MDPI,
+    HDPI,
+    XHDPI,
+    XXHDPI,
+    XXXHDPI,
+}
+
+impl CanBeExtendedBy<Self> for AndroidWebpProfileDto {
+    fn extend(&self, another: &Self) -> Self {
+        Self {
+            remote_id: another
+                .remote_id
+                .as_ref()
+                .or(self.remote_id.as_ref())
+                .cloned(),
+            android_res_dir: another
+                .android_res_dir
+                .as_ref()
+                .or(self.android_res_dir.as_ref())
+                .cloned(),
+            quality: another.quality.or(self.quality),
+            densities: another
+                .densities
+                .as_ref()
+                .or(self.densities.as_ref())
+                .cloned(),
+            night: another.night.as_ref().or(self.night.as_ref()).cloned(),
+        }
+    }
+}
+
+pub(crate) struct AndroidWebpProfileDtoContext<'a> {
+    pub declared_remote_ids: &'a HashSet<String>,
+}
+
+mod de {
+    use super::*;
+    use crate::ParseWithContext;
+    use crate::parser::util::{validate_remote_id, validate_webp_quality};
+    use toml_span::Deserialize;
+    use toml_span::de_helpers::{TableHelper, expected};
+
+    impl<'de> ParseWithContext<'de> for AndroidWebpProfileDto {
+        type Context = AndroidWebpProfileDtoContext<'de>;
+
+        fn parse_with_ctx(
+            value: &mut toml_span::Value<'de>,
+            ctx: Self::Context,
+        ) -> std::result::Result<Self, toml_span::DeserError> {
+            // region: extract
+            let mut th = TableHelper::new(value)?;
+            let remote_id = th.optional_s::<String>("remote");
+            let android_res_dir = th.optional::<String>("android_res_dir").map(PathBuf::from);
+            let quality = th.optional_s::<f32>("quality");
+            let densities = th
+                .optional::<Vec<AndroidDensityDto>>("densities")
+                .map(|vec| vec.into_iter().collect::<BTreeSet<_>>());
+            let night = th.optional("night");
+            th.finalize(None)?;
+            // endregion: extract
+
+            // region: validate
+            let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
+            let quality = validate_webp_quality(quality)?;
+            // endregion: validate
+
+            Ok(Self {
+                remote_id,
+                android_res_dir,
+                quality,
+                densities,
+                night,
+            })
+        }
+    }
+
+    impl<'de> Deserialize<'de> for AndroidDensityDto {
+        fn deserialize(value: &mut toml_span::Value<'de>) -> Result<Self, toml_span::DeserError> {
+            match value.as_str() {
+                Some("ldpi") => Ok(AndroidDensityDto::LDPI),
+                Some("mdpi") => Ok(AndroidDensityDto::MDPI),
+                Some("hdpi") => Ok(AndroidDensityDto::HDPI),
+                Some("xhdpi") => Ok(AndroidDensityDto::XHDPI),
+                Some("xxhdpi") => Ok(AndroidDensityDto::XXHDPI),
+                Some("xxxhdpi") => Ok(AndroidDensityDto::XXXHDPI),
+                _ => Err(expected("android density name: `*dpi`", value.take(), value.span).into()),
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+#[allow(non_snake_case)]
+mod test {
+
+    // use super::*;
+    // use crate::ParseWithContext;
+    // use toml_span::Span;
+    // use unindent::unindent;
+
+    // #[test]
+    // fn AndroidWebpProfileDto__valid_fully_defined_toml__EXPECT__valid_dto() {
+    //     // Given
+    //     let toml = r#"
+    //     remote = "figma"
+    //     scale = 0.42
+    //     quality = 100,
+    //     output_dir = "images"
+    //     "#;
+    //     let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
+    //     let expected_dto = AndroidWebpProfileDto {
+    //         remote_id: Some("figma".to_string()),
+    //         scale: Some(0.42),
+    //         quality: Some(100.0),
+    //         output_dir: Some(PathBuf::from("images")),
+    //     };
+
+    //     // When
+    //     let mut value = toml_span::parse(toml).unwrap();
+    //     let ctx = AndroidWebpProfileDtoContext {
+    //         declared_remote_ids: &declared_remote_ids,
+    //     };
+    //     let actual_dto = AndroidWebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
+
+    //     // Then
+    //     assert_eq!(expected_dto, actual_dto);
+    // }
+
+    // #[test]
+    // fn AndroidWebpProfileDto__valid_partially_defined_toml_v1__EXPECT__valid_dto() {
+    //     // Given
+    //     let toml = r#"
+    //     remote = "figma"
+    //     output_dir = "images"
+    //     "#;
+    //     let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
+    //     let expected_dto = AndroidWebpProfileDto {
+    //         remote_id: Some("figma".to_string()),
+    //         scale: None,
+    //         quality: None,
+    //         output_dir: Some(PathBuf::from("images")),
+    //     };
+
+    //     // When
+    //     let mut value = toml_span::parse(toml).unwrap();
+    //     let ctx = AndroidWebpProfileDtoContext {
+    //         declared_remote_ids: &declared_remote_ids,
+    //     };
+    //     let actual_dto = AndroidWebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
+
+    //     // Then
+    //     assert_eq!(expected_dto, actual_dto);
+    // }
+
+    // #[test]
+    // fn AndroidWebpProfileDto__valid_partially_defined_toml_v2__EXPECT__valid_dto() {
+    //     // Given
+    //     let toml = r#"
+    //     remote = "figma"
+    //     "#;
+    //     let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
+    //     let expected_dto = AndroidWebpProfileDto {
+    //         remote_id: Some("figma".to_string()),
+    //         scale: None,
+    //         quality: None,
+    //         output_dir: None,
+    //     };
+
+    //     // When
+    //     let mut value = toml_span::parse(toml).unwrap();
+    //     let ctx = AndroidWebpProfileDtoContext {
+    //         declared_remote_ids: &declared_remote_ids,
+    //     };
+    //     let actual_dto = AndroidWebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
+
+    //     // Then
+    //     assert_eq!(expected_dto, actual_dto);
+    // }
+
+    // #[test]
+    // fn AndroidWebpProfileDto__valid_partially_defined_toml_v3__EXPECT__valid_dto() {
+    //     // Given
+    //     let toml = r#"
+    //     "#;
+    //     let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
+    //     let expected_dto = AndroidWebpProfileDto {
+    //         remote_id: None,
+    //         scale: None,
+    //         quality: None,
+    //         output_dir: None,
+    //     };
+
+    //     // When
+    //     let mut value = toml_span::parse(toml).unwrap();
+    //     let ctx = AndroidWebpProfileDtoContext {
+    //         declared_remote_ids: &declared_remote_ids,
+    //     };
+    //     let actual_dto = AndroidWebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
+
+    //     // Then
+    //     assert_eq!(expected_dto, actual_dto);
+    // }
+
+    // #[test]
+    // fn AndroidWebpProfileDto__valid_invalid_remote__EXPECT__error_with_correct_span() {
+    //     // Given
+    //     let toml = unindent(
+    //         r#"
+    //             remote = 42
+    //             scale = "0.42"
+    //             output_dir = true
+    //         "#,
+    //     );
+    //     let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
+    //     let err_spans = [Span::new(9, 11), Span::new(21, 25), Span::new(40, 44)];
+
+    //     // When
+    //     let mut value = toml_span::parse(&toml).unwrap();
+    //     let ctx = AndroidWebpProfileDtoContext {
+    //         declared_remote_ids: &declared_remote_ids,
+    //     };
+    //     let actual_err = AndroidWebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap_err();
+
+    //     // Then
+    //     for (expected_span, actual_err) in err_spans.into_iter().zip(actual_err.errors) {
+    //         assert_eq!(expected_span, actual_err.span);
+    //     }
+    // }
+
+    // #[test]
+    // fn AndroidWebpProfileDto__valid_undeclared_key__EXPECT__error_with_correct_span() {
+    //     // Given
+    //     let toml = unindent(
+    //         r#"
+    //             remote = "figma"
+    //             scale = 0.42
+    //             dolor = 1234567
+    //             output_dir = "images"
+    //             lorem = "ipsum"
+    //         "#,
+    //     );
+    //     let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
+    //     let err_spans = [Span::new(30, 35), Span::new(68, 73)];
+
+    //     // When
+    //     let mut value = toml_span::parse(&toml).unwrap();
+    //     let ctx = AndroidWebpProfileDtoContext {
+    //         declared_remote_ids: &declared_remote_ids,
+    //     };
+    //     let actual_err = AndroidWebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap_err();
+
+    //     // Then
+    //     for actual_err in actual_err.errors {
+    //         if let toml_span::Error {
+    //             kind: toml_span::ErrorKind::UnexpectedKeys { keys, .. },
+    //             ..
+    //         } = actual_err
+    //         {
+    //             for ((_, actual_span), expected_span) in keys.into_iter().zip(err_spans) {
+    //                 assert_eq!(expected_span, actual_span);
+    //             }
+    //         }
+    //     }
+    // }
+}

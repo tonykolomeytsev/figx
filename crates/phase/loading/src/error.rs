@@ -1,7 +1,6 @@
-use std::path::PathBuf;
-
 use derive_more::From;
 use lib_label::{NameParsingError, PackageParsingError};
+use std::path::PathBuf;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
@@ -18,24 +17,18 @@ pub enum Error {
 
     // region: Workspace
     WorkspaceRead(std::io::Error),
-    WorkspaceParse(toml::de::Error, PathBuf),
-    WorkspaceNoRemotes(PathBuf),
+    WorkspaceParse(toml_span::DeserError, PathBuf),
     WorkspaceRemoteNoAccessToken(String, PathBuf),
-    WorkspaceMoreThanOneDefaultRemotes,
-    WorkspaceAtLeastOneDefaultRemote,
-    WorkspaceRemoteWithEmptyNodeId,
-    WorkspaceInvalidProfileToExtend(String, String),
 
     // endregion: Workspace
 
     // region: FigFiles
     FigTraversing(String),
     FigRead(std::io::Error),
-    FigParse(toml::de::Error, PathBuf),
+    FigParse(toml_span::DeserError, PathBuf),
     FigInvalidResourceName(NameParsingError),
     FigInvalidPackage(PackageParsingError),
     FigInvalidRemoteName(String),
-    FigInvalidProfileName(String, PathBuf),
     // endregion: FigFiles
 }
 
@@ -56,12 +49,6 @@ impl From<&str> for Error {
 impl From<ignore::Error> for Error {
     fn from(value: ignore::Error) -> Self {
         Self::Internal(value.to_string())
-    }
-}
-
-impl From<toml::de::Error> for Error {
-    fn from(value: toml::de::Error) -> Self {
-        Self::WorkspaceParse(value, PathBuf::new())
     }
 }
 

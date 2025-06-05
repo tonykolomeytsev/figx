@@ -75,6 +75,20 @@ pub enum Profile {
     AndroidWebp(AndroidWebpProfile),
 }
 
+impl Profile {
+    pub fn remote_id(&self) -> &str {
+        use Profile::*;
+        match self {
+            Png(p) => p.remote_id.as_str(),
+            Svg(p) => p.remote_id.as_str(),
+            Pdf(p) => p.remote_id.as_str(),
+            Webp(p) => p.remote_id.as_str(),
+            Compose(p) => p.remote_id.as_str(),
+            AndroidWebp(p) => p.remote_id.as_str(),
+        }
+    }
+}
+
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct PngProfile {
     pub remote_id: RemoteId,

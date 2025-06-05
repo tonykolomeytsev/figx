@@ -28,3 +28,4 @@ ureq.workspace = true
 crossterm.workspace = true
 codespan-reporting.workspace = true
 unindent.workspace = true
+toml-span.workspace = true
