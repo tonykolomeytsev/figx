@@ -1,5 +1,5 @@
 [package]
-name = "command_aquery"
+name = "command_explain"
 version.workspace = true
 edition.workspace = true
 

@@ -31,9 +31,8 @@ pub enum CliSubcommand {
     #[clap(visible_alias("q"))]
     Query(CommandQueryArgs),
 
-    /// Analyze the action graph of resources in the current workspace
-    #[clap(name = "aquery")]
-    AQuery(CommandAQueryArgs),
+    /// Explain how resources are transformed and imported into a project
+    Explain(CommandExplainArgs),
 
     /// Download resources metadata from remote to cache
     #[clap(visible_alias("f"))]
@@ -67,7 +66,7 @@ pub enum QueryOutput {
 }
 
 #[derive(Args, Debug)]
-pub struct CommandAQueryArgs {
+pub struct CommandExplainArgs {
     /// A label pattern describing the resources affected by a command
     pub pattern: Vec<String>,
 }

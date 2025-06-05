@@ -23,7 +23,7 @@ pub enum Error {
     Query(command_query::Error),
 
     #[from]
-    EQuery(command_aquery::Error),
+    EQuery(command_explain::Error),
 
     #[from]
     Fetch(command_fetch::Error),
@@ -66,8 +66,8 @@ fn handle_cmd_query_error(err: command_query::Error) {
     }
 }
 
-fn handle_cmd_equery_error(err: command_aquery::Error) {
-    use command_aquery::Error::*;
+fn handle_cmd_equery_error(err: command_explain::Error) {
+    use command_explain::Error::*;
     match err {
         Pattern(err) => handle_pattern_error(err),
         Workspace(err) => handle_phase_loading_error(err),

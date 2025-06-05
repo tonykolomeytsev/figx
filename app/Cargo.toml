@@ -7,7 +7,7 @@ edition.workspace = true
 # Internal
 command_info.workspace = true
 command_query.workspace = true
-command_aquery.workspace = true
+command_explain.workspace = true
 command_fetch.workspace = true
 command_import.workspace = true
 command_clean.workspace = true

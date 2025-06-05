@@ -18,7 +18,7 @@ phase_evaluation = { path = "crates/phase/evaluation" }
 ## User commands
 command_info = { path = "crates/command/info" }
 command_query = { path = "crates/command/query" }
-command_aquery = { path = "crates/command/aquery" }
+command_explain = { path = "crates/command/explain" }
 command_fetch = { path = "crates/command/fetch" }
 command_import = { path = "crates/command/import" }
 command_clean = { path = "crates/command/clean" }

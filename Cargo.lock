@@ -372,21 +372,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "54261aba646433cb567ec89844be4c4825ca92a4f8afba52fc4dd88436e31bbd"
 
 [[package]]
-name = "command_aquery"
-version = "0.3.14"
-dependencies = [
- "lib_label",
- "owo-colors",
- "phase_evaluation",
- "phase_loading",
-]
-
-[[package]]
 name = "command_clean"
 version = "0.3.14"
 dependencies = [
  "lib_cache",
  "log",
+ "phase_evaluation",
+ "phase_loading",
+]
+
+[[package]]
+name = "command_explain"
+version = "0.3.14"
+dependencies = [
+ "lib_label",
+ "owo-colors",
  "phase_evaluation",
  "phase_loading",
 ]
@@ -703,8 +703,8 @@ version = "0.3.14"
 dependencies = [
  "clap",
  "codespan-reporting",
- "command_aquery",
  "command_clean",
+ "command_explain",
  "command_fetch",
  "command_import",
  "command_info",

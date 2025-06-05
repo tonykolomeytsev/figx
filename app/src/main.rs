@@ -2,11 +2,11 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use cli::{
-    Cli, CliSubcommand, CommandAQueryArgs, CommandCleanArgs, CommandFetchArgs, CommandImportArgs,
+    Cli, CliSubcommand, CommandCleanArgs, CommandExplainArgs, CommandFetchArgs, CommandImportArgs,
     CommandInfoArgs, CommandQueryArgs,
 };
-use command_aquery::FeatureAQueryOptions;
 use command_clean::FeatureCleanOptions;
+use command_explain::FeatureExplainOptions;
 use command_fetch::FeatureFetchOptions;
 use command_import::FeatureImportOptions;
 use command_info::FeatureInfoOptions;
@@ -56,8 +56,8 @@ fn run_app() -> Result<()> {
             })?
         }
 
-        CliSubcommand::AQuery(CommandAQueryArgs { pattern }) => {
-            command_aquery::query(FeatureAQueryOptions { pattern })?
+        CliSubcommand::Explain(CommandExplainArgs { pattern }) => {
+            command_explain::explain(FeatureExplainOptions { pattern })?
         }
 
         CliSubcommand::Fetch(CommandFetchArgs { pattern }) => {
