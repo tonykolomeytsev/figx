@@ -4,6 +4,8 @@ FigX is a no-nonsense CLI tool for importing design assets from Figma into your 
 
 [**See full documentation**](https://tonykolomeytsev.github.io/figx)
 
+<img src=".github/preview.gif" width=100%>
+
 # Quick Start
 
 ## Install
