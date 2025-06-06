@@ -50,6 +50,7 @@ mod de {
     use crate::{
         CanBeExtendedBy, ParseWithContext, parser::android_webp_profile_dto::AndroidWebpProfileDto,
     };
+    use ordermap::ordermap;
     use toml_span::{ErrorKind, de_helpers::TableHelper};
 
     impl<'de> ParseWithContext<'de> for ProfilesDto {
@@ -134,6 +135,15 @@ mod de {
                 profiles.insert(profile_id, profile);
             }
             th.finalize(Some(value))?;
+            
+            profiles.append(&mut ordermap! {
+                "png".to_string() => ProfileDto::Png(png_profile_dto),
+                "svg".to_string() => ProfileDto::Svg(svg_profile_dto),
+                "pdf".to_string() => ProfileDto::Pdf(pdf_profile_dto),
+                "webp".to_string() => ProfileDto::Webp(webp_profile_dto),
+                "compose".to_string() => ProfileDto::Compose(compose_profile_dto),
+                "android-webp".to_string() => ProfileDto::AndroidWebp(android_webp_profile_dto),
+            });
             // endregion: extract
 
             Ok(Self(profiles))
