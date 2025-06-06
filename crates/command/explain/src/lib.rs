@@ -1,7 +1,7 @@
 use lib_label::LabelPattern;
 use owo_colors::OwoColorize;
 use phase_evaluation::actions::{
-    import_android_webp::{density_name, scale_factor},
+    import_android_webp::{cartesian_product, density_name, scale_factor},
     import_compose::{get_kotlin_package, get_output_dir_for_compose_profile},
 };
 use phase_loading::{
@@ -263,18 +263,32 @@ fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
 }
 
 fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node {
+    // region: generating all android variants
+    let scales = &p.scales;
+    let themes: &[_] = if let Some(_) = &p.night {
+        &[(false), (true)]
+    } else {
+        &[(false)]
+    };
+    let all_variants = cartesian_product(scales, themes);
+    // endregion: generating all android variants
+
     let res_name = r.label.name.to_string();
     Node {
         name: r.label.to_string(),
-        children: p
-            .scales
+        children: all_variants
             .iter()
-            .map(|it| {
-                let density_name = density_name(it);
-                let scale_factor = scale_factor(it);
+            .map(|(d, is_night)| {
+                let density_name = density_name(d);
+                let scale_factor = scale_factor(d);
+                let variant_name = if !*is_night {
+                    format!("{density_name}")
+                } else {
+                    format!("night-{density_name}")
+                };
                 node!(
                     "Write to file",
-                    [("output", format!("drawable-{density_name}/{res_name}.webp"))],
+                    [("output", format!("drawable-{variant_name}/{res_name}.webp"))],
                     node!(
                         "Transform PNG to WEBP",
                         [("quality", p.quality.to_string())],

@@ -128,7 +128,7 @@ pub fn density_name(d: &AndroidDensity) -> &str {
     }
 }
 
-fn cartesian_product<'a, A, B>(list_a: &'a [A], list_b: &'a [B]) -> Vec<(&'a A, &'a B)> {
+pub fn cartesian_product<'a, A, B>(list_a: &'a [A], list_b: &'a [B]) -> Vec<(&'a A, &'a B)> {
     list_a
         .iter()
         .flat_map(|a| list_b.iter().map(move |b| (a, b)))
