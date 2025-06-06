@@ -2,26 +2,21 @@
 
 FigX is a no-nonsense CLI tool for importing design assets from Figma into your codebase. Built for developers who value explicit control and reproducibility.
 
+[**See full documentation**](https://tonykolomeytsev.github.io/figx)
+
 ## Why Choose FigX?
 ### 🎯 **Explicit by Design**
-
 - **No magic**: Every operation is clearly defined in your config
-
 - **No surprises**: Assets are imported exactly as specified - nothing more, nothing less
-
 - **No structural requirements**: Works with your existing project layout
 
 ### ⚡ **Performance Optimized**
-
 - **Fast exports**: faster than figma-export
-
 - **Smart caching**: Only fetches changed assets
 
-### 🔍 Single Source of Truth
-
-- **Config-as-documentation**: `.figxconfig.toml` defines your asset pipeline
-
-- **Reproducible results** across all environments
+### 🛡️ Correct results
+- **Config-as-documentation**: `.figxconfig.toml` defines your asset pipeline, `.fig.toml` defines the list of the resources.
+- **Reproducible results** across all environments.
 
 - Version control friendly
 
