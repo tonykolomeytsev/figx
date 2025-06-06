@@ -2,7 +2,7 @@ use crate::{EvalContext, Result, get_file_digest, get_file_fingerprint};
 use bincode::{Decode, Encode};
 use lib_cache::CacheKey;
 use log::debug;
-use std::path::Path;
+use std::{path::Path, sync::atomic::Ordering};
 
 const FILE_DIGEST_TAG: u8 = 0x01;
 
@@ -14,6 +14,9 @@ pub fn materialize(
     if ctx.eval_args.fetch {
         return Ok(());
     }
+
+    // collect metrics
+    ctx.processed_files_counter.fetch_add(1, Ordering::Relaxed);
 
     // construct unique cache key
     let cache_key = CacheKey::builder()

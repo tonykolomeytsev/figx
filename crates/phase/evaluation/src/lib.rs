@@ -37,6 +37,7 @@ pub struct EvalContext {
     pub eval_args: Arc<EvalArgs>,
     pub figma_repository: FigmaRepository,
     pub cache: Cache,
+    pub processed_files_counter: Arc<AtomicUsize>,
 }
 
 #[derive(Default)]
@@ -111,8 +112,9 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
             if ctx.eval_args.fetch {
                 info!(target: "Finished", "{requested_remotes} remotes(s) in {time}",);
             } else {
+                let files_count = ctx.processed_files_counter.load(Ordering::Relaxed);
                 info!(
-                    target: "Finished", "{res_num} resource(s) in {time}",
+                    target: "Finished", "{res_num} resource(s), resulting in {files_count} file(s) in {time}",
                     res_num = processed_resources.load(Ordering::Relaxed),
                 );
             }
@@ -147,6 +149,7 @@ fn init_eval_context(ws: &Workspace, args: EvalArgs) -> Result<EvalContext> {
         eval_args: Arc::new(args),
         figma_repository: FigmaRepository::new(api, cache.clone()),
         cache,
+        processed_files_counter: Default::default(),
     })
 }
 
