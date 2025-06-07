@@ -5,8 +5,8 @@ use phase_evaluation::actions::{
     import_compose::{get_kotlin_package, get_output_dir_for_compose_profile},
 };
 use phase_loading::{
-    AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile, ResourceAttrs, SvgProfile,
-    WebpProfile,
+    AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile, ResourceAttrs,
+    ResourceVariants, SvgProfile, WebpProfile,
 };
 mod error;
 pub use error::*;
@@ -206,9 +206,13 @@ fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
         ]
     }
 
-    if let Some(variants) = &p.variants {
-        for variant in variants {
-            let naming = &p.variant_naming;
+    if let Some(ResourceVariants {
+        naming,
+        list: Some(list),
+    }) = &p.variants
+    {
+        for variant in list {
+            let naming = &naming;
             let res_name = naming
                 .local_name
                 .replace("{base}", &res_name)

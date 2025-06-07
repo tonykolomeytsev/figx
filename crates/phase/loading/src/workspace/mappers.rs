@@ -3,8 +3,8 @@ use crate::{
     WebpProfile,
     parser::{
         AndroidDensityDto, AndroidWebpProfileDto, ColorMappingDto, ComposePreviewDto,
-        ComposeProfileDto, PdfProfileDto, PngProfileDto, ResourceVariantNamingDto, SvgProfileDto,
-        WebpProfileDto,
+        ComposeProfileDto, PdfProfileDto, PngProfileDto, SvgProfileDto, VariantNamingDto,
+        VariantsDto, WebpProfileDto,
     },
 };
 
@@ -114,12 +114,11 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .clone()
                 .map(Into::into)
                 .or_else(|| self.preview.clone()),
-            variant_naming: another
-                .variant_naming
+            variants: another
+                .variants
                 .clone()
                 .map(Into::into)
-                .unwrap_or_else(|| self.variant_naming.clone()),
-            variants: another.variants.clone().or_else(|| self.variants.clone()),
+                .or_else(|| self.variants.clone()),
             composable_get: another.composable_get.unwrap_or(self.composable_get),
         }
     }
@@ -182,11 +181,20 @@ impl From<ComposePreviewDto> for crate::ComposePreview {
     }
 }
 
-impl From<ResourceVariantNamingDto> for crate::ResourceVariantNaming {
-    fn from(value: ResourceVariantNamingDto) -> Self {
+impl From<VariantsDto> for crate::ResourceVariants {
+    fn from(value: VariantsDto) -> Self {
         Self {
-            local_name: value.local_name.to_owned(),
-            figma_name: value.figma_name.to_owned(),
+            naming: value.naming.map(Into::into).unwrap_or_default(),
+            list: value.list,
+        }
+    }
+}
+
+impl From<VariantNamingDto> for crate::ResourceVariantNaming {
+    fn from(value: VariantNamingDto) -> Self {
+        Self {
+            local_name: value.local_name,
+            figma_name: value.figma_name,
         }
     }
 }

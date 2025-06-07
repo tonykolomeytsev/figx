@@ -5,6 +5,8 @@ use std::{
 
 use crate::CanBeExtendedBy;
 
+use super::VariantsDto;
+
 #[derive(Default)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) struct ComposeProfileDto {
@@ -17,8 +19,7 @@ pub(crate) struct ComposeProfileDto {
     pub file_suppress_lint: Option<BTreeSet<String>>,
     pub color_mappings: Option<Vec<ColorMappingDto>>,
     pub preview: Option<ComposePreviewDto>,
-    pub variant_naming: Option<ResourceVariantNamingDto>,
-    pub variants: Option<Vec<String>>,
+    pub variants: Option<VariantsDto>,
     pub composable_get: Option<bool>,
 }
 
@@ -50,11 +51,6 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfileDto {
                 .or(self.color_mappings.as_ref())
                 .cloned(),
             preview: another.preview.as_ref().or(self.preview.as_ref()).cloned(),
-            variant_naming: another
-                .variant_naming
-                .as_ref()
-                .or(self.variant_naming.as_ref())
-                .cloned(),
             variants: another
                 .variants
                 .as_ref()
@@ -84,17 +80,11 @@ pub(crate) struct ComposePreviewDto {
     pub code: String,
 }
 
-#[derive(Clone)]
-#[cfg_attr(test, derive(PartialEq, Debug))]
-pub(crate) struct ResourceVariantNamingDto {
-    pub local_name: String,
-    pub figma_name: String,
-}
-
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::util::{validate_figma_scale, validate_non_empty, validate_remote_id};
+    use crate::parser::de::parse_variants;
+    use crate::parser::util::{validate_figma_scale, validate_remote_id};
     use toml_span::Deserialize;
     use toml_span::de_helpers::TableHelper;
 
@@ -118,8 +108,7 @@ mod de {
             let extension_target = th.optional("extension_target");
             let color_mappings = th.optional("color_mappings");
             let preview = th.optional("preview");
-            let variant_naming = th.optional("variant_naming");
-            let variants = th.optional_s("variants");
+            let variants = parse_variants(&mut th)?;
             let composable_get = th.optional("composable_get");
             th.finalize(None)?;
             // endregion: extract
@@ -127,7 +116,6 @@ mod de {
             // region: validate
             let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
             let scale = validate_figma_scale(scale)?;
-            let variants = validate_non_empty(variants, || "variants cannot be empty".to_string())?;
             // endregion: validate
 
             Ok(Self {
@@ -140,7 +128,6 @@ mod de {
                 extension_target,
                 color_mappings,
                 preview,
-                variant_naming,
                 variants,
                 composable_get,
             })
@@ -167,24 +154,6 @@ mod de {
             th.finalize(None)?;
 
             Ok(Self { imports, code })
-        }
-    }
-
-    impl<'de> Deserialize<'de> for ResourceVariantNamingDto {
-        fn deserialize(value: &mut toml_span::Value<'de>) -> Result<Self, toml_span::DeserError> {
-            let mut th = TableHelper::new(value)?;
-            let local_name = th
-                .optional::<String>("local_name")
-                .unwrap_or_else(|| "{base}{variant}".to_owned());
-            let figma_name = th
-                .optional::<String>("figma_name")
-                .unwrap_or_else(|| "{base}_{variant}".to_owned());
-            th.finalize(None)?;
-
-            Ok(Self {
-                local_name,
-                figma_name,
-            })
         }
     }
 }

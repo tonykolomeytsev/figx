@@ -7,6 +7,7 @@ mod remotes_dto;
 mod resources_dto;
 mod svg_profile_dto;
 mod util;
+mod variants_dto;
 mod webp_profile_dto;
 mod workspace_dto;
 
@@ -18,5 +19,6 @@ pub(crate) use profiles_dto::*;
 pub(crate) use remotes_dto::*;
 pub(crate) use resources_dto::*;
 pub(crate) use svg_profile_dto::*;
+pub(crate) use variants_dto::*;
 pub(crate) use webp_profile_dto::*;
 pub(crate) use workspace_dto::*;

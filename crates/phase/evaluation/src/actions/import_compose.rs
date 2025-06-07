@@ -8,7 +8,7 @@ use crate::{
 };
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info, warn};
-use phase_loading::{ComposeProfile, ResourceAttrs};
+use phase_loading::{ComposeProfile, ResourceAttrs, ResourceVariants};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::{Path, PathBuf};
 
@@ -35,10 +35,13 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
 
     // region: generate variants
     let variants = match &args.profile.variants {
-        Some(variants) => variants
+        Some(ResourceVariants {
+            naming,
+            list: Some(list),
+        }) => list
             .iter()
             .map(|variant| {
-                let naming = &args.profile.variant_naming;
+                let naming = &naming;
                 let res_name = naming
                     .local_name
                     .replace("{base}", &base_variant.res_name)
@@ -54,7 +57,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                 }
             })
             .collect::<Vec<_>>(),
-        None => vec![base_variant],
+        _ => vec![base_variant],
     };
     // endregion: generate variants
 
