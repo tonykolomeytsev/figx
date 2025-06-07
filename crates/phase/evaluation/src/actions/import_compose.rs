@@ -4,18 +4,16 @@ use super::{
 };
 use crate::{
     EvalContext, Result,
-    actions::convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
+    actions::{
+        convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
+        util_variants::generate_variants,
+    },
 };
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info, warn};
-use phase_loading::{ComposeProfile, ResourceAttrs, ResourceVariants};
+use phase_loading::{ComposeProfile, ResourceAttrs};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::{Path, PathBuf};
-
-struct ResourceVariant {
-    pub res_name: String,
-    pub node_name: String,
-}
 
 pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> {
     debug!(target: "Import", "compose: {}", args.attrs.label.name);
@@ -28,38 +26,11 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
         warn!("Kotlin package for {} was not found", output_dir.display());
     }
 
-    let base_variant = ResourceVariant {
-        res_name: args.attrs.label.name.to_string(),
-        node_name: args.attrs.node_name.to_owned(),
-    };
-
-    // region: generate variants
-    let variants = match &args.profile.variants {
-        Some(ResourceVariants {
-            naming,
-            list: Some(list),
-        }) => list
-            .iter()
-            .map(|variant| {
-                let naming = &naming;
-                let res_name = naming
-                    .local_name
-                    .replace("{base}", &base_variant.res_name)
-                    .replace("{variant}", &variant);
-                let node_name = naming
-                    .figma_name
-                    .replace("{base}", &base_variant.node_name)
-                    .replace("{variant}", &variant);
-
-                ResourceVariant {
-                    res_name,
-                    node_name,
-                }
-            })
-            .collect::<Vec<_>>(),
-        _ => vec![base_variant],
-    };
-    // endregion: generate variants
+    let variants = generate_variants(
+        &args.attrs.label.name.to_string(),
+        &args.attrs.node_name,
+        &args.profile.variants,
+    );
 
     variants
         .par_iter()

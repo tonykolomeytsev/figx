@@ -22,6 +22,11 @@ impl CanBeExtendedBy<PngProfileDto> for PngProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
+            variants: another
+                .variants
+                .clone()
+                .map(Into::into)
+                .or(self.variants.clone()),
         }
     }
 }
@@ -40,6 +45,11 @@ impl CanBeExtendedBy<SvgProfileDto> for SvgProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
+                variants: another
+                    .variants
+                    .clone()
+                    .map(Into::into)
+                    .or(self.variants.clone()),
         }
     }
 }
@@ -58,6 +68,11 @@ impl CanBeExtendedBy<PdfProfileDto> for PdfProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
+                variants: another
+                    .variants
+                    .clone()
+                    .map(Into::into)
+                    .or(self.variants.clone()),
         }
     }
 }
@@ -77,6 +92,11 @@ impl CanBeExtendedBy<WebpProfileDto> for WebpProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
+                variants: another
+                    .variants
+                    .clone()
+                    .map(Into::into)
+                    .or(self.variants.clone()),
         }
     }
 }

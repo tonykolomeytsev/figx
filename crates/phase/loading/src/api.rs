@@ -94,6 +94,7 @@ pub struct PngProfile {
     pub remote_id: RemoteId,
     pub scale: f32,
     pub output_dir: PathBuf,
+    pub variants: Option<ResourceVariants>,
 }
 
 impl Default for PngProfile {
@@ -102,6 +103,7 @@ impl Default for PngProfile {
             remote_id: String::new(),
             scale: 1.0,
             output_dir: PathBuf::new(),
+            variants: None,
         }
     }
 }
@@ -111,6 +113,7 @@ pub struct SvgProfile {
     pub remote_id: RemoteId,
     pub scale: f32,
     pub output_dir: PathBuf,
+    pub variants: Option<ResourceVariants>,
 }
 
 impl Default for SvgProfile {
@@ -119,6 +122,7 @@ impl Default for SvgProfile {
             remote_id: String::new(),
             scale: 1.0,
             output_dir: PathBuf::new(),
+            variants: None,
         }
     }
 }
@@ -128,6 +132,7 @@ pub struct PdfProfile {
     pub remote_id: RemoteId,
     pub scale: f32,
     pub output_dir: PathBuf,
+    pub variants: Option<ResourceVariants>,
 }
 
 impl Default for PdfProfile {
@@ -136,6 +141,7 @@ impl Default for PdfProfile {
             remote_id: String::new(),
             scale: 1.0,
             output_dir: PathBuf::new(),
+            variants: None,
         }
     }
 }
@@ -146,6 +152,7 @@ pub struct WebpProfile {
     pub scale: f32,
     pub quality: f32,
     pub output_dir: PathBuf,
+    pub variants: Option<ResourceVariants>,
 }
 
 impl Default for WebpProfile {
@@ -155,6 +162,7 @@ impl Default for WebpProfile {
             scale: 1.0,
             quality: 100.0,
             output_dir: PathBuf::new(),
+            variants: None,
         }
     }
 }

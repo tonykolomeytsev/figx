@@ -2,6 +2,8 @@ use std::{collections::HashSet, path::PathBuf};
 
 use crate::CanBeExtendedBy;
 
+use super::VariantsDto;
+
 #[derive(Default)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) struct WebpProfileDto {
@@ -9,6 +11,7 @@ pub(crate) struct WebpProfileDto {
     pub scale: Option<f32>,
     pub quality: Option<f32>,
     pub output_dir: Option<PathBuf>,
+    pub variants: Option<VariantsDto>,
 }
 
 impl CanBeExtendedBy<Self> for WebpProfileDto {
@@ -26,6 +29,11 @@ impl CanBeExtendedBy<Self> for WebpProfileDto {
                 .as_ref()
                 .or(self.output_dir.as_ref())
                 .cloned(),
+            variants: another
+                .variants
+                .as_ref()
+                .or(self.variants.as_ref())
+                .cloned(),
         }
     }
 }
@@ -36,6 +44,7 @@ pub(crate) struct WebpProfileDtoContext<'a> {
 
 mod de {
     use super::*;
+    use crate::parser::de::parse_variants;
     use crate::ParseWithContext;
     use crate::parser::util::{validate_figma_scale, validate_remote_id, validate_webp_quality};
     use toml_span::de_helpers::TableHelper;
@@ -53,6 +62,7 @@ mod de {
             let scale = th.optional_s::<f32>("scale");
             let quality = th.optional_s::<f32>("quality");
             let output_dir = th.optional::<String>("output_dir").map(PathBuf::from);
+            let variants = parse_variants(&mut th)?;
             th.finalize(None)?;
             // endregion: extract
 
@@ -67,6 +77,7 @@ mod de {
                 scale,
                 quality,
                 output_dir,
+                variants,
             })
         }
     }
@@ -96,6 +107,7 @@ mod test {
             scale: Some(0.42),
             quality: Some(100.0),
             output_dir: Some(PathBuf::from("images")),
+            variants: None,
         };
 
         // When
@@ -122,6 +134,7 @@ mod test {
             scale: None,
             quality: None,
             output_dir: Some(PathBuf::from("images")),
+            variants: None,
         };
 
         // When
@@ -147,6 +160,7 @@ mod test {
             scale: None,
             quality: None,
             output_dir: None,
+            variants: None,
         };
 
         // When
@@ -171,6 +185,7 @@ mod test {
             scale: None,
             quality: None,
             output_dir: None,
+            variants: None,
         };
 
         // When

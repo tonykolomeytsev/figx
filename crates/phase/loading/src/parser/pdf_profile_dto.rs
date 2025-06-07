@@ -1,6 +1,6 @@
-use std::{collections::HashSet, path::PathBuf};
-
+use super::VariantsDto;
 use crate::CanBeExtendedBy;
+use std::{collections::HashSet, path::PathBuf};
 
 #[derive(Default)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -8,6 +8,7 @@ pub(crate) struct PdfProfileDto {
     pub remote_id: Option<String>,
     pub scale: Option<f32>,
     pub output_dir: Option<PathBuf>,
+    pub variants: Option<VariantsDto>,
 }
 
 impl CanBeExtendedBy<Self> for PdfProfileDto {
@@ -24,6 +25,11 @@ impl CanBeExtendedBy<Self> for PdfProfileDto {
                 .as_ref()
                 .or(self.output_dir.as_ref())
                 .cloned(),
+            variants: another
+                .variants
+                .as_ref()
+                .or(self.variants.as_ref())
+                .cloned(),
         }
     }
 }
@@ -35,6 +41,7 @@ pub(crate) struct PdfProfileDtoContext<'a> {
 mod de {
     use super::*;
     use crate::ParseWithContext;
+    use crate::parser::de::parse_variants;
     use crate::parser::util::{validate_figma_scale, validate_remote_id};
     use toml_span::de_helpers::TableHelper;
 
@@ -50,6 +57,7 @@ mod de {
             let remote_id = th.optional_s::<String>("remote");
             let scale = th.optional_s::<f32>("scale");
             let output_dir = th.optional::<String>("output_dir").map(PathBuf::from);
+            let variants = parse_variants(&mut th)?;
             th.finalize(None)?;
             // endregion: extract
 
@@ -62,6 +70,7 @@ mod de {
                 remote_id,
                 scale,
                 output_dir,
+                variants,
             })
         }
     }
@@ -89,6 +98,7 @@ mod test {
             remote_id: Some("figma".to_string()),
             scale: Some(0.42),
             output_dir: Some(PathBuf::from("images")),
+            variants: None,
         };
 
         // When
@@ -114,6 +124,7 @@ mod test {
             remote_id: Some("figma".to_string()),
             scale: None,
             output_dir: Some(PathBuf::from("images")),
+            variants: None,
         };
 
         // When
@@ -138,6 +149,7 @@ mod test {
             remote_id: Some("figma".to_string()),
             scale: None,
             output_dir: None,
+            variants: None,
         };
 
         // When
@@ -161,6 +173,7 @@ mod test {
             remote_id: None,
             scale: None,
             output_dir: None,
+            variants: None,
         };
 
         // When

@@ -12,5 +12,6 @@ pub mod import_png;
 pub mod import_svg;
 pub mod import_webp;
 pub mod materialize;
+pub mod util_variants;
 
 pub(super) use get_remote_image::*;
