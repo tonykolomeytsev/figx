@@ -1,6 +1,7 @@
 use phase_loading::ResourceVariants;
 
 pub struct ResourceVariant {
+    pub default: bool,
     pub res_name: String,
     pub node_name: String,
 }
@@ -11,6 +12,7 @@ pub fn generate_variants(
     variants: &Option<ResourceVariants>,
 ) -> Vec<ResourceVariant> {
     let base_variant = ResourceVariant {
+        default: true,
         res_name: res_name.to_owned(),
         node_name: node_name.to_owned(),
     };
@@ -33,6 +35,7 @@ pub fn generate_variants(
                     .replace("{variant}", &variant);
 
                 ResourceVariant {
+                    default: false,
                     res_name,
                     node_name,
                 }
