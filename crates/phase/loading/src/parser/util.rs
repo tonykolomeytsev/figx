@@ -64,3 +64,17 @@ pub(crate) fn validate_remote_id(
     }
     Ok(remote_id.map(|it| it.value))
 }
+
+pub(crate) fn validate_non_empty<T>(
+    list: Option<Spanned<Vec<T>>>,
+    msg: impl FnOnce() -> String,
+) -> std::result::Result<Option<Vec<T>>, toml_span::DeserError> {
+    if let Some(list) = &list {
+        if list.value.is_empty() {
+            return Err(
+                toml_span::Error::from((ErrorKind::Custom(msg().into()), list.span)).into(),
+            );
+        }
+    }
+    Ok(list.map(|it| it.value))
+}

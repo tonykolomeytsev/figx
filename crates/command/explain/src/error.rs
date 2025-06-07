@@ -6,7 +6,6 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 pub enum Error {
     Pattern(lib_label::PatternError),
     Workspace(phase_loading::Error),
-    Analysis(phase_evaluation::Error),
 }
 
 impl Display for Error {
@@ -25,11 +24,5 @@ impl From<lib_label::PatternError> for Error {
 impl From<phase_loading::Error> for Error {
     fn from(value: phase_loading::Error) -> Self {
         Self::Workspace(value)
-    }
-}
-
-impl From<phase_evaluation::Error> for Error {
-    fn from(value: phase_evaluation::Error) -> Self {
-        Self::Analysis(value)
     }
 }

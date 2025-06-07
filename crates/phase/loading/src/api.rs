@@ -46,6 +46,12 @@ pub type RemoteId = String;
 
 impl Display for RemoteSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "@{}/{}", self.id, self.file_key)
+    }
+}
+
+impl Debug for RemoteSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "@{}/{}/[{}]",
@@ -53,12 +59,6 @@ impl Display for RemoteSource {
             self.file_key,
             self.container_node_ids.join(", ")
         )
-    }
-}
-
-impl Debug for RemoteSource {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Display::fmt(&self, f)
     }
 }
 

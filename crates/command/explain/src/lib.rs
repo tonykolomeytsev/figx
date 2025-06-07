@@ -1,7 +1,7 @@
 use lib_label::LabelPattern;
 use owo_colors::OwoColorize;
 use phase_evaluation::actions::{
-    import_android_webp::{cartesian_product, density_name, scale_factor},
+    import_android_webp::{cartesian_product, density_name, expand_night_variant, scale_factor},
     import_compose::{get_kotlin_package, get_output_dir_for_compose_profile},
 };
 use phase_loading::{
@@ -72,9 +72,9 @@ impl Node {
             let param_key = format!("{param_key}: ");
             writeln!(
                 f,
-                "{prefix}{} {}{}",
+                "{prefix}   {} {}{}",
                 "┆".bright_black(),
-                param_key.blue(),
+                param_key.green(),
                 param_value
             )?;
         }
@@ -107,20 +107,13 @@ fn png_resource_tree(r: &ResourceAttrs, p: &PngProfile) -> Node {
     node!(
         r.label.to_string(),
         node!(
-            "Write to file",
-            [("file", format!("{res_name}.png"))],
-            node!(
-                "Download PNG",
-                node!(
-                    "Export PNG",
-                    [
-                        ("node", r.node_name.to_string()),
-                        ("scale", p.scale.to_string())
-                    ],
-                    node!(format!("Fetch remote {}", r.remote), [])
-                )
-            )
-        )
+            format!("📤 Export PNG from remote {}", r.remote),
+            [
+                ("node", r.node_name.to_string()),
+                ("scale", p.scale.to_string())
+            ]
+        ),
+        node!("💾 Write to file", [("output", format!("{res_name}.png"))])
     )
 }
 
@@ -129,20 +122,13 @@ fn svg_resource_tree(r: &ResourceAttrs, p: &SvgProfile) -> Node {
     node!(
         r.label.to_string(),
         node!(
-            "Write to file",
-            [("file", format!("{res_name}.svg"))],
-            node!(
-                "Download SVG",
-                node!(
-                    "Export SVG",
-                    [
-                        ("node", r.node_name.to_string()),
-                        ("scale", p.scale.to_string())
-                    ],
-                    node!(format!("Fetch remote {}", r.remote), [])
-                )
-            )
-        )
+            format!("📤 Export SVG from remote {}", r.remote),
+            [
+                ("node", r.node_name.to_string()),
+                ("scale", p.scale.to_string())
+            ]
+        ),
+        node!("💾 Write to file", [("output", format!("{res_name}.svg"))])
     )
 }
 
@@ -151,20 +137,13 @@ fn pdf_resource_tree(r: &ResourceAttrs, p: &PdfProfile) -> Node {
     node!(
         r.label.to_string(),
         node!(
-            "Write to file",
-            [("file", format!("{res_name}.pdf"))],
-            node!(
-                "Download PDF",
-                node!(
-                    "Export PDF",
-                    [
-                        ("node", r.node_name.to_string()),
-                        ("scale", p.scale.to_string())
-                    ],
-                    node!(format!("Fetch remote {}", r.remote), [])
-                )
-            )
-        )
+            format!("📤 Export PDF from remote {}", r.remote),
+            [
+                ("node", r.node_name.to_string()),
+                ("scale", p.scale.to_string())
+            ]
+        ),
+        node!("💾 Write to file", [("output", format!("{res_name}.pdf"))])
     )
 }
 
@@ -173,24 +152,17 @@ fn webp_resource_tree(r: &ResourceAttrs, p: &WebpProfile) -> Node {
     node!(
         r.label.to_string(),
         node!(
-            "Write to file",
-            [("file", format!("{res_name}.webp"))],
-            node!(
-                "Transform PNG to WEBP",
-                [("quality", p.quality.to_string())],
-                node!(
-                    "Download PNG",
-                    node!(
-                        "Export PNG",
-                        [
-                            ("node", r.node_name.to_string()),
-                            ("scale", p.scale.to_string())
-                        ],
-                        node!(format!("Fetch remote {}", r.remote), [])
-                    )
-                )
-            )
-        )
+            format!("📤 Export PNG from remote {}", r.remote),
+            [
+                ("node", r.node_name.to_string()),
+                ("scale", p.scale.to_string())
+            ]
+        ),
+        node!(
+            "✨ Transform PNG to WEBP",
+            [("quality", p.quality.to_string())]
+        ),
+        node!("💾 Write to file", [("output", format!("{res_name}.webp"))])
     )
 }
 
@@ -217,26 +189,21 @@ fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
         res_name: &str,
         node_name: &str,
         package: &str,
-    ) -> Node {
-        node!(
-            "Write to file",
-            [("file", format!("{res_name}.kt"))],
+    ) -> Vec<Node> {
+        vec![
             node!(
-                "Transform SVG to Compose",
-                [("package", package.to_string())],
-                node!(
-                    "Download PNG",
-                    node!(
-                        "Export PNG",
-                        [
-                            ("node", node_name.to_string()),
-                            ("scale", p.scale.to_string())
-                        ],
-                        node!(format!("Fetch remote {}", r.remote), [])
-                    )
-                )
-            )
-        )
+                format!("📤 Export SVG from remote {}", r.remote),
+                [
+                    ("node", node_name.to_string()),
+                    ("scale", p.scale.to_string())
+                ]
+            ),
+            node!(
+                "✨ Transform SVG to Compose",
+                [("package", package.to_string())]
+            ),
+            node!("💾 Write to file", [("output", format!("{res_name}.kt"))]),
+        ]
     }
 
     if let Some(variants) = &p.variants {
@@ -250,14 +217,16 @@ fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
                 .figma_name
                 .replace("{base}", &r.node_name)
                 .replace("{variant}", &variant);
-            root_node
-                .children
-                .push(child_tree(r, p, &res_name, &node_name, &package));
+            root_node.children.push(Node {
+                name: format!("Variant '{variant}'"),
+                children: child_tree(r, p, &res_name, &node_name, &package),
+                params: Vec::new(),
+            });
         }
     } else {
         root_node
             .children
-            .push(child_tree(r, p, &res_name, &r.node_name, &package));
+            .append(&mut child_tree(r, p, &res_name, &r.node_name, &package));
     }
     root_node
 }
@@ -265,10 +234,13 @@ fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
 fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node {
     // region: generating all android variants
     let scales = &p.scales;
-    let themes: &[_] = if let Some(_) = &p.night {
-        &[(false), (true)]
+    let themes: &[_] = if let Some(night_variant) = &p.night {
+        let light_variant = &r.node_name;
+        let night_variant = expand_night_variant(light_variant, night_variant);
+        &[(light_variant.to_owned(), false), (night_variant, true)]
     } else {
-        &[(false)]
+        let light_variant = &r.node_name;
+        &[(light_variant.to_owned(), false)]
     };
     let all_variants = cartesian_product(scales, themes);
     // endregion: generating all android variants
@@ -278,7 +250,7 @@ fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node
         name: r.label.to_string(),
         children: all_variants
             .iter()
-            .map(|(d, is_night)| {
+            .map(|(d, (node_name, is_night))| {
                 let density_name = density_name(d);
                 let scale_factor = scale_factor(d);
                 let variant_name = if !*is_night {
@@ -287,22 +259,21 @@ fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node
                     format!("night-{density_name}")
                 };
                 node!(
-                    "Write to file",
-                    [("output", format!("drawable-{variant_name}/{res_name}.webp"))],
+                    format!("Variant '{variant_name}'"),
                     node!(
-                        "Transform PNG to WEBP",
-                        [("quality", p.quality.to_string())],
-                        node!(
-                            "Download PNG",
-                            node!(
-                                "Export PNG",
-                                [
-                                    ("node", r.node_name.clone()),
-                                    ("scale", scale_factor.to_string())
-                                ],
-                                node!(format!("Fetch remote {}", r.remote), [])
-                            )
-                        )
+                        format!("📤 Export PNG from remote {}", r.remote),
+                        [
+                            ("node", node_name.to_string()),
+                            ("scale", scale_factor.to_string())
+                        ]
+                    ),
+                    node!(
+                        "✨ Transform PNG to WEBP",
+                        [("quality", p.quality.to_string())]
+                    ),
+                    node!(
+                        "💾 Write to file",
+                        [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
                     )
                 )
             })

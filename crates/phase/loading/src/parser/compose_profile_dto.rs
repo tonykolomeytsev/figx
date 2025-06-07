@@ -94,7 +94,7 @@ pub(crate) struct ResourceVariantNamingDto {
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::util::{validate_figma_scale, validate_remote_id};
+    use crate::parser::util::{validate_figma_scale, validate_non_empty, validate_remote_id};
     use toml_span::Deserialize;
     use toml_span::de_helpers::TableHelper;
 
@@ -119,7 +119,7 @@ mod de {
             let color_mappings = th.optional("color_mappings");
             let preview = th.optional("preview");
             let variant_naming = th.optional("variant_naming");
-            let variants = th.optional("variants");
+            let variants = th.optional_s("variants");
             let composable_get = th.optional("composable_get");
             th.finalize(None)?;
             // endregion: extract
@@ -127,6 +127,7 @@ mod de {
             // region: validate
             let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
             let scale = validate_figma_scale(scale)?;
+            let variants = validate_non_empty(variants, || "variants cannot be empty".to_string())?;
             // endregion: validate
 
             Ok(Self {
@@ -153,7 +154,7 @@ mod de {
             let to = th.required("to")?;
             let imports = th.optional("imports").unwrap_or_default();
             th.finalize(None)?;
-            
+
             Ok(Self { from, to, imports })
         }
     }

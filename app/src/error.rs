@@ -71,7 +71,6 @@ fn handle_cmd_equery_error(err: command_explain::Error) {
     match err {
         Pattern(err) => handle_pattern_error(err),
         Workspace(err) => handle_phase_loading_error(err),
-        Analysis(err) => handle_evaluation_error(err),
     }
 }
 
