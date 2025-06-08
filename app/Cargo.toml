@@ -2,6 +2,10 @@
 name = "figx"
 version.workspace = true
 edition.workspace = true
+authors = ["Anton Kolomeytsev <tonykolomeytsev@gmail.com>"]
+repository = "https://github.com/tonykolomeytsev/figx"
+description = "Pragmatic CLI tool for importing design assets from Figma into your codebase."
+license = "GPL-3.0"
 
 [dependencies]
 # Internal

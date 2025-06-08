@@ -18,15 +18,10 @@ Easiest way for MacOS is to install from homebrew:
 brew tap tonykolomeytsev/figx
 brew install figx
 ```
+
 ### For other OSs
 
 See instructions in [docs](https://tonykolomeytsev.github.io/figx/user_guide/1-installation.html).
-
-### Build from source on any OS
-
-```bash
-cargo install --release --locked --path app
-```
 
 ## Run your first import
 
