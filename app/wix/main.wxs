@@ -61,7 +61,7 @@
     <Product
         Id='*'
         Name='figx'
-        UpgradeCode='CDD8DA16-BB24-4B58-86A2-9DDC7F923FE7'
+        UpgradeCode='95DB4C60-7C41-412C-9A1C-E6CD152F03C9'
         Manufacturer='Anton Kolomeytsev'
         Language='1033'
         Codepage='1252'
@@ -103,7 +103,7 @@
                     </Component>
                     
                     <Directory Id='Bin' Name='bin'>
-                        <Component Id='Path' Guid='09023A8B-914C-43E7-9510-FB0834E6DDD6' KeyPath='yes'>
+                        <Component Id='Path' Guid='457F9D2B-168A-4074-BD54-C5229778729D' KeyPath='yes'>
                             <Environment
                                 Id='PATH'
                                 Name='PATH'

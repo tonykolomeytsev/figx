@@ -62,8 +62,24 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           strip: false
 
-      - name: Publish artifacts and release
+      - name: Publish artifacts and release (Linux / MacOS)
+        if: ${{ !startsWith(matrix.platform.os-name, 'Windows') }}
         uses: houseabsolute/actions-rust-release@v0
         with:
           executable-name: figx
           target: ${{ matrix.platform.target }}
+      
+      - name: Glob match
+        uses: tj-actions/glob@v22
+        id: glob
+        with:
+          files: '**\*.msi'
+
+      - name: Publish artifacts and release (Windows)
+        if: ${{ startsWith(matrix.platform.os-name, 'Windows') }}
+        uses: houseabsolute/actions-rust-release@v0
+        with:
+          executable-name: figx
+          extra-files: ${{ steps.glob.outputs.paths }}
+          target: ${{ matrix.platform.target }}
+
