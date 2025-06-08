@@ -73,8 +73,8 @@ jobs:
             target/${{ matrix.platform.target }}/release/figx.exe
             target/**/*.msi
   
-  release-deploy:
-    name: "Deploy"
+  release-prepare:
+    name: "Prepare for Deploy"
     needs: release-build
     runs-on: ubuntu-latest
     strategy:
@@ -97,19 +97,55 @@ jobs:
       - name: Rename Artifacts
         run: |
           tree -L 3 ./target
-          mv ./target/wix/figx-*.msi figx-installer.msi || true
+          mkdir -p ./target/release
+          mv ./target/wix/figx-*.msi ./target/release/figx-installer.msi || true
+          mv ./target/${{ matrix.target }}/release/figx ./target/release/figx || true
+          mv ./target/${{ matrix.target }}/release/figx.exe ./target/release/figx.exe || true
+
+      - name: Store Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-binary-simplified (${{ matrix.target }})
+          path: ./target
+  
+  release-deploy:
+    name: "Deploy"
+    needs: release-prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - runs-on: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runs-on: windows-latest
+            target: x86_64-pc-windows-msvc
+          - runs-on: macOS-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.platform.runs-on }}
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-binary-simplified (${{ matrix.platform.target }})
+          path: ./target
 
       - name: Publish artifacts and release (Windows)
-        if: ${{ contains(matrix.target, 'windows') }}
-        uses: houseabsolute/actions-rust-release@v0
-        with:
-          executable-name: figx.exe
-          target: ${{ matrix.target }}
-          extra-files: figx-installer.msi
-
-      - name: Publish artifacts and release (Linux / MacOS)
-        if: ${{ !contains(matrix.target, 'windows') }}
+        if: ${{ contains(matrix.platform.target, 'windows') }}
         uses: houseabsolute/actions-rust-release@v0
         with:
           executable-name: figx
-          target: ${{ matrix.target }}
+          target: ${{ matrix.platform.target }}
+          extra-files: ./target/release/figx-installer.msi
+
+      - name: Publish artifacts and release (Linux / MacOS)
+        if: ${{ !contains(matrix.platform.target, 'windows') }}
+        uses: houseabsolute/actions-rust-release@v0
+        with:
+          executable-name: figx
+          target: ${{ matrix.platform.target }}
