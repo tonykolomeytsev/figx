@@ -12,48 +12,27 @@ FigX is a no-nonsense CLI tool for importing design assets from Figma into your 
 
 ### For MacOS
 
-Easiest way for MacOS is to install from homebrew:
+The easiest way to install on macOS is via Homebrew:
 
 ```bash
 brew tap tonykolomeytsev/figx
 brew install figx
 ```
 
-### For other OSs
+### For Windows
 
-See instructions in [docs](https://tonykolomeytsev.github.io/figx/user_guide/1-installation.html).
+Download the latest `.msi` installer from the [releases page](https://github.com/tonykolomeytsev/figx/releases/latest), then run the installer to complete the setup.
+
+Download installer latest version MSI installer and then install.
+Releases latest release: 
+
+### For Linux
+
+Follow the detailed installation instructions available in the [documentation](https://tonykolomeytsev.github.io/figx/user_guide/1-installation.html).
 
 ## Run your first import
 
-Full explanation in the [docs](https://tonykolomeytsev.github.io/figx/user_guide/2.2.1-minimal-example.html).
-
-```toml
-# .figxconfig.toml
-[remotes.design]
-file_key = "MhjeA23R15tAR3PO2JamCv"
-container_node_ids = ["30788-66292"]
-```
-
-And:
-
-```toml
-# .fig.toml
-[svg]
-puzzle = "Environment / Puzzle"
-```
-
-Then just run:
-```bash
-figx import //...
-```
-
-# Philosophy
-
-FigX follows these core principles:
-1. **Explicit over implicit**: All behavior is defined in configuration
-2. **Minimal assumptions**: Works with your project structure
-3. **Deterministic outputs**: Same inputs → same outputs, every time. Now only the designer can screw things up.
-4. **Developer experience**: Fast, cache-aware, and CI-friendly
+- TODO
 
 # Documentation
 Full documentation available at: [tonykolomeytsev.github.io/figx](https://tonykolomeytsev.github.io/figx)
