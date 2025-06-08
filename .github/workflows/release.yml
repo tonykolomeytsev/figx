@@ -33,7 +33,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Build binary
+
+      - name: Build binary (Linux / macOS)
+        if: ${{ !startsWith(matrix.platform.os-name, 'Windows') }}
         uses: houseabsolute/actions-rust-cross@v1
         with:
           command: build
@@ -41,6 +43,25 @@ jobs:
           args: "--locked --release"
           toolchain: ${{ matrix.toolchain }}
           strip: true
+
+      - name: Install WIX (Windows)
+        if: ${{ startsWith(matrix.platform.os-name, 'Windows') }}
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cargo-wix
+          version: "0.3.9"
+
+      - name: Build binary (Windows)
+        if: ${{ startsWith(matrix.platform.os-name, 'Windows') }}
+        uses: houseabsolute/actions-rust-cross@v1
+        with:
+          working-directory: ./app
+          command: wix
+          target: ${{ matrix.platform.target }}
+          args: "-p figx --nocapture"
+          toolchain: ${{ matrix.toolchain }}
+          strip: false
+
       - name: Publish artifacts and release
         uses: houseabsolute/actions-rust-release@v0
         with:
