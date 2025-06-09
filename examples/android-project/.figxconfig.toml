@@ -1,0 +1,26 @@
+[remotes.icons]
+file_key = "MhjeA23R15tAR3PO2JamCv"
+container_node_ids = ["30788-66292"]
+default = true
+
+[remotes.illustrations]
+file_key = "rqeqh3mlmLVTDS0OEan67m"
+container_node_ids = ["4-0"]
+
+
+
+[profiles.illustrations]
+extends = "android-webp"
+remote = "illustrations"
+densities = ["hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
+
+[profiles.icons]
+extends = "compose"
+remote = "icons"
+color_mappings = [
+    # Replace all colors because our icons are monochrome
+    # just because we can
+    { from = "*", to = "Color.Black" },
+]
+# Access our icons via FigxDemoIcons.{IconName}
+extension_target = "com.example.figxdemo.ui.theme.FigxDemoIcons"
