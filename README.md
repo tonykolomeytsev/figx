@@ -88,7 +88,7 @@ Follow the detailed installation instructions available in the [documentation](h
 5. You will get the result:<br>
    | Compose ImageVector | Android Drawable WEBP |
    | --- | --- |
-   | <img src=".github/example-result-3.png" width=400 /> <br> [**See the Kotlin code of imported icons**](https://github.com/tonykolomeytsev/figx/tree/master/examples/android-project/app/src/main/java/com/example/figxdemo/ui/icons) | <img src=".github/example-result-2.png" width=400 /> |
+   | <img src=".github/example-result-3.png" width=400 /> <br> [**See the generated Kotlin code for the icons**](https://github.com/tonykolomeytsev/figx/tree/master/examples/android-project/app/src/main/java/com/example/figxdemo/ui/icons) | <img src=".github/example-result-2.png" width=400 /> |
 
 
 # Documentation
