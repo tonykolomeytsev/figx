@@ -63,6 +63,9 @@ Follow the detailed installation instructions available in the [documentation](h
    ```bash
    figx import //...
    ```
+5. You will get the result:<br>
+   <img src=".github/example-result-1.png" width=500/>
+
 ### Android project with FigX
 - TODO
 
