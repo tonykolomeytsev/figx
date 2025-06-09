@@ -1,8 +1,8 @@
 # Installation
 
-You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figx/releases).
+## Any OS
 
-Or build the tool from source:
+Build the tool from source:
 
 ```bash
 cargo install --release --locked --path app
@@ -21,7 +21,7 @@ brew install figx
 
 ## Windows
 
-You can install the CLI tool by hand by downloading the [latest release from the releases page](https://github.com/tonykolomeytsev/figx/releases).
+Download the latest `.msi` installer from the [releases page](https://github.com/tonykolomeytsev/figx/releases/latest), then run the installer to complete the setup.
 
 ## Linux
 
