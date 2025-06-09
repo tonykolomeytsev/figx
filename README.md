@@ -1,3 +1,7 @@
+<p align="center">
+<img src=".github/color-logo.svg" width=100>
+</p>
+
 # FigX - Pragmatic Design Asset Management
 
 FigX is a no-nonsense CLI tool for importing design assets from Figma into your codebase. Built for developers who value explicit control and reproducibility.
