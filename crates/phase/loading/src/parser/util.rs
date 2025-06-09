@@ -6,7 +6,7 @@ pub(crate) fn validate_figma_scale(
 ) -> Result<Option<f32>, toml_span::DeserError> {
     if let Some(scale) = scale {
         match scale.value {
-            0.1..4.0 => Ok(Some(scale.value)),
+            0.1..=4.0 => Ok(Some(scale.value)),
             _ => Err(toml_span::Error {
                 kind: ErrorKind::Custom("scale mut be a number from 0.1 to 4".into()),
                 span: scale.span,

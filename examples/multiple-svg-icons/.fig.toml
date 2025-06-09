@@ -1,0 +1,14 @@
+[svg]
+puzzle = "Environment / Puzzle"
+sun = "Environment / Sun"
+bulb = "Environment / Bulb"
+planet = "Environment / Planet"
+leaf = "Environment / Leaf"
+first_aid = "Environment / First_Aid"
+moon = "Environment / Moon"
+cookie = "Environment / Cookie"
+water_drop = "Environment / Water_Drop"
+cupcake = "Environment / Cupcake"
+rainbow = "Environment / Rainbow"
+# Override scale (profile default is 1.0)
+coffee = { name = "Environment / Coffee", scale = 4.0 }
