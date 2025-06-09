@@ -49,6 +49,21 @@ Follow the detailed installation instructions available in the [documentation](h
 
 ## Run your first import
 
+### Minimal example with FigX
+1. Clone this repository and open it in terminal.
+2. Go to [examples/multiple-svg-icons](https://github.com/tonykolomeytsev/figx/tree/master/examples/multiple-svg-icons)
+   ```bash
+   cd examples/multiple-svg-icons
+   ```
+3. [Get temporary access token](https://www.figma.com/developers/api#access-tokens) for Figma and add it to your env:
+   ```bash
+   export FIGMA_PERSONAL_TOKEN="<token from url above>"
+   ```
+4. Run import and wait for complete
+   ```bash
+   figx import //...
+   ```
+### Android project with FigX
 - TODO
 
 # Documentation
