@@ -22,6 +22,12 @@ Import a specific icon:
 figx import :planet
 ```
 
+List all **figx resources** in the project without importing them:
+
+```bash
+figx query //...
+```
+
 Explain the import flow of a specific icon:
 
 ```bash
