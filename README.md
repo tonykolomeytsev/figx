@@ -50,6 +50,7 @@ Follow the detailed installation instructions available in the [documentation](h
 ## Run your first import
 
 ### Minimal example with FigX
+
 1. Clone this repository and open it in terminal.
 2. Go to [examples/multiple-svg-icons](https://github.com/tonykolomeytsev/figx/tree/master/examples/multiple-svg-icons)
    ```bash
@@ -66,8 +67,29 @@ Follow the detailed installation instructions available in the [documentation](h
 5. You will get the result:<br>
    <img src=".github/example-result-1.png" width=500/>
 
+
 ### Android project with FigX
-- TODO
+
+> The example demonstrates importing icons in the Compose `ImageVector` format and importing illustrations in the WEBP format for different screen densities (from `hdpi` to `xxxhdpi`).
+
+1. Clone this repository and open it in terminal.
+2. Go to [examples/android-project](https://github.com/tonykolomeytsev/figx/tree/master/examples/android-project)
+   ```bash
+   cd examples/android-project
+   ```
+3. [Get temporary access token](https://www.figma.com/developers/api#access-tokens) for Figma and add it to your env:
+   ```bash
+   export FIGMA_PERSONAL_TOKEN="<token from url above>"
+   ```
+4. Run import and wait for complete
+   ```bash
+   figx import //...
+   ```
+5. You will get the result:<br>
+   | Compose ImageVector | Android Drawable WEBP |
+   | --- | --- |
+   | <img src=".github/example-result-3.png" width=400 /> | <img src=".github/example-result-2.png" width=400 /> |
+
 
 # Documentation
 Full documentation available at: [tonykolomeytsev.github.io/figx](https://tonykolomeytsev.github.io/figx)
