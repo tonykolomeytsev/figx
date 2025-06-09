@@ -168,7 +168,7 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             labels: &[CliInputLabel::Tip(&unindent::unindent(
                 "
                     A `workspace` is the root directory of a project/repository that contains 
-                    the marker file `figxconfig.toml` and all its child directories.
+                    the marker file `.figxconfig.toml` and all its child directories.
                 ",
             ))],
         }),

@@ -8,6 +8,6 @@ Whether you're working in a large codebase or building a design system, FigX hel
 
 Start here to:
 - Understand the core concepts (workspace, packages, remotes, profiles)
-- Configure your first `figxconfig.toml` and `.fig.toml` files.
+- Configure your first `.figxconfig.toml` and `.fig.toml` files.
 - Import your first assets
 
