@@ -12,7 +12,7 @@ use retry::delay::Exponential;
 use retry::retry_with_index;
 use retry::{OperationResult, delay::jitter};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::Duration;
 use std::{
     collections::{HashMap, VecDeque},
@@ -28,6 +28,7 @@ static RATE_LIMIT_NOTIFICATION: LazyLock<()> = LazyLock::new(
 pub struct FigmaRepository {
     api: FigmaApi,
     batched_api: Arc<DashMap<BatchKey, ExportImgBatcher>>,
+    batcher_timeout: Arc<AtomicU64>,
     cache: Cache,
     locks: KeyMutex<CacheKey, ()>,
     refetch_done: Arc<AtomicBool>,
@@ -62,6 +63,7 @@ impl FigmaRepository {
         Self {
             api,
             batched_api: Arc::new(DashMap::new()),
+            batcher_timeout: Arc::new(AtomicU64::new(100)), // first batch is fast
             cache,
             locks: KeyMutex::new(),
             refetch_done: Arc::new(AtomicBool::new(false)),
@@ -103,17 +105,15 @@ impl FigmaRepository {
 
         // otherwise, request value from remote
         on_fetch_start();
-        let response = self
-            .api
-            .get_file_nodes(
-                &remote.access_token,
-                &remote.file_key,
-                GetFileNodesQueryParameters {
-                    ids: Some(&remote.container_node_ids),
-                    geometry: Some("paths"),
-                    ..Default::default()
-                },
-            )?;
+        let response = self.api.get_file_nodes(
+            &remote.access_token,
+            &remote.file_key,
+            GetFileNodesQueryParameters {
+                ids: Some(&remote.container_node_ids),
+                geometry: Some("paths"),
+                ..Default::default()
+            },
+        )?;
 
         let metadata = {
             let all_nodes: Vec<Node> = response
@@ -171,7 +171,7 @@ impl FigmaRepository {
             // Build batcher outside DashMap lock
             let new_batcher = Batcher::new(
                 10,
-                Duration::from_millis(1000),
+                Duration::from_millis(self.batcher_timeout.swap(1000, Ordering::SeqCst)),
                 BatchedApi {
                     api: self.api.clone(),
                     remote: remote.clone(),
