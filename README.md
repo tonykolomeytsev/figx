@@ -43,9 +43,6 @@ brew install figx
 
 Download the latest `.msi` installer from the [releases page](https://github.com/tonykolomeytsev/figx/releases/latest), then run the installer to complete the setup.
 
-Download installer latest version MSI installer and then install.
-Releases latest release: 
-
 ### For Linux
 
 Follow the detailed installation instructions available in the [documentation](https://tonykolomeytsev.github.io/figx/user_guide/1-installation.html).
