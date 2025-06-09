@@ -10,16 +10,32 @@ pub fn map_colors(
 ) -> Result<Vec<String>> {
     let mut used_imports = Vec::new();
     for node in image_vector.nodes.iter_mut() {
-        match node {
-            Node::Group(_) => (),
-            Node::Path(path) => {
-                if let Some(color) = path.fill_color.as_mut() {
-                    replace_color_if_needed(color, color_mappings, &mut used_imports)?;
-                }
+        replace_in_node(color_mappings, &mut used_imports, node)?;
+    }
+    Ok(used_imports)
+}
+
+fn replace_in_node(
+    color_mappings: &[ColorMapping],
+    used_imports: &mut Vec<String>,
+    node: &mut Node,
+) -> Result<()> {
+    match node {
+        Node::Group(group) => {
+            for node in group.nodes.iter_mut() {
+                replace_in_node(color_mappings, used_imports, node)?;
+            }
+        }
+        Node::Path(path) => {
+            if let Some(color) = path.fill_color.as_mut() {
+                replace_color_if_needed(color, color_mappings, used_imports)?;
+            }
+            if let Some(color) = path.stroke.color.as_mut() {
+                replace_color_if_needed(color, color_mappings, used_imports)?;
             }
         }
     }
-    Ok(used_imports)
+    Ok(())
 }
 
 fn replace_color_if_needed(

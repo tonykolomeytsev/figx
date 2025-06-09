@@ -25,7 +25,7 @@ val FigxDemoIcons.Rainbow: ImageVector
             viewportHeight = 24f,
         ).apply {
             path(
-                stroke = SolidColor(Color(0xFFFFFFFF)),
+                stroke = SolidColor(Color.Black),
                 strokeLineWidth = 2f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
