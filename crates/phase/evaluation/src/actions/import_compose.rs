@@ -29,6 +29,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
     let variants = generate_variants(
         &args.attrs.label.name.to_string(),
         &args.attrs.node_name,
+        args.profile.scale,
         &args.profile.variants,
     );
 
@@ -42,7 +43,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     remote: &args.attrs.remote,
                     node_name: &variant.node_name,
                     format: "svg",
-                    scale: args.profile.scale,
+                    scale: variant.scale,
                 },
             )?;
 

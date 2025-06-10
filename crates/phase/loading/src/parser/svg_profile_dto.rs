@@ -25,11 +25,12 @@ impl CanBeExtendedBy<Self> for SvgProfileDto {
                 .as_ref()
                 .or(self.output_dir.as_ref())
                 .cloned(),
-            variants: another
-                .variants
-                .as_ref()
-                .or(self.variants.as_ref())
-                .cloned(),
+            variants: match (another.variants.as_ref(), self.variants.as_ref()) {
+                (Some(another), Some(this)) => Some(another.extend(this)),
+                (Some(another), None) => Some(another.clone()),
+                (None, Some(this)) => Some(this.clone()),
+                _ => None,
+            },
         }
     }
 }
@@ -41,7 +42,6 @@ pub(crate) struct SvgProfileDtoContext<'a> {
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::de::parse_variants;
     use crate::parser::util::{validate_figma_scale, validate_remote_id};
     use toml_span::de_helpers::TableHelper;
 
@@ -57,7 +57,7 @@ mod de {
             let remote_id = th.optional_s::<String>("remote");
             let scale = th.optional_s::<f32>("scale");
             let output_dir = th.optional::<String>("output_dir").map(PathBuf::from);
-            let variants = parse_variants(&mut th)?;
+            let variants = th.optional::<VariantsDto>("variants");
             th.finalize(None)?;
             // endregion: extract
 

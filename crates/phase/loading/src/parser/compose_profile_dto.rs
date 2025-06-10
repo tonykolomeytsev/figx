@@ -51,11 +51,12 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfileDto {
                 .or(self.color_mappings.as_ref())
                 .cloned(),
             preview: another.preview.as_ref().or(self.preview.as_ref()).cloned(),
-            variants: another
-                .variants
-                .as_ref()
-                .or(self.variants.as_ref())
-                .cloned(),
+            variants: match (another.variants.as_ref(), self.variants.as_ref()) {
+                (Some(another), Some(this)) => Some(another.extend(this)),
+                (Some(another), None) => Some(another.clone()),
+                (None, Some(this)) => Some(this.clone()),
+                _ => None,
+            },
             composable_get: another.composable_get.or(self.composable_get),
         }
     }
@@ -83,7 +84,6 @@ pub(crate) struct ComposePreviewDto {
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::de::parse_variants;
     use crate::parser::util::{validate_figma_scale, validate_remote_id};
     use toml_span::Deserialize;
     use toml_span::de_helpers::TableHelper;
@@ -108,7 +108,7 @@ mod de {
             let extension_target = th.optional("extension_target");
             let color_mappings = th.optional("color_mappings");
             let preview = th.optional("preview");
-            let variants = parse_variants(&mut th)?;
+            let variants = th.optional::<VariantsDto>("variants");
             let composable_get = th.optional("composable_get");
             th.finalize(None)?;
             // endregion: extract

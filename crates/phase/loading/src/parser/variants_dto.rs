@@ -1,50 +1,81 @@
-#[derive(Clone)]
-#[cfg_attr(test, derive(PartialEq, Debug))]
+use std::collections::BTreeMap;
+use crate::CanBeExtendedBy;
+
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct VariantsDto {
-    pub naming: Option<VariantNamingDto>,
-    pub list: Option<Vec<String>>,
+    pub all_variants: Option<BTreeMap<String, VariantDto>>,
+    pub use_variants: Option<Vec<String>>,
 }
 
-#[derive(Clone)]
-#[cfg_attr(test, derive(PartialEq, Debug))]
-pub(crate) struct VariantNamingDto {
-    pub local_name: String,
+impl CanBeExtendedBy<VariantsDto> for VariantsDto {
+    fn extend(&self, another: &VariantsDto) -> Self {
+        Self {
+            all_variants: another
+                .all_variants
+                .as_ref()
+                .or(self.all_variants.as_ref())
+                .cloned(),
+            use_variants: another
+                .use_variants
+                .as_ref()
+                .or(self.use_variants.as_ref())
+                .cloned(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+pub(crate) struct VariantDto {
+    pub output_name: String,
     pub figma_name: String,
+    pub scale: Option<f32>,
 }
 
 pub(super) mod de {
     use super::*;
-    use crate::parser::util::validate_non_empty;
+    use crate::parser::util::{validate_figma_scale, validate_non_empty};
     use toml_span::{Deserialize, ErrorKind, de_helpers::TableHelper};
 
-    pub fn parse_variants(
-        th: &mut TableHelper,
-    ) -> std::result::Result<Option<VariantsDto>, toml_span::DeserError> {
-        // region: extract
-        let naming = th.optional::<VariantNamingDto>("variant_naming");
-        let variants = th.optional_s::<Vec<String>>("variants");
-        // endregion: extract
-
-        // region: validate
-        match (naming, variants) {
-            (None, None) => Ok(None),
-            (naming, None) => Ok(Some(VariantsDto { naming, list: None })),
-            (naming, Some(list)) => {
-                let list = validate_non_empty(Some(list), || {
-                    "`variants` list cannot be empty".to_string()
-                })?;
-                Ok(Some(VariantsDto { naming, list }))
-            }
-        }
-        // endregion: validate
-    }
-
-    impl<'de> Deserialize<'de> for VariantNamingDto {
+    impl<'de> Deserialize<'de> for VariantsDto {
         fn deserialize(value: &mut toml_span::Value<'de>) -> Result<Self, toml_span::DeserError> {
             // region: extract
             let mut th = TableHelper::new(value)?;
-            let local_name = th.required_s::<String>("local_name")?;
+            let use_variants = th.optional_s::<Vec<String>>("use");
+            let mut variants = th.table;
+            // endregion: extract
+
+            // region: validate
+            let mut all_variants = BTreeMap::new();
+            for (k, v) in variants.iter_mut() {
+                let variant_key = k.name.to_string();
+                let variant_value = VariantDto::deserialize(v)?;
+                all_variants.insert(variant_key, variant_value);
+            }
+            let all_variants = if all_variants.is_empty() {
+                None
+            } else {
+                Some(all_variants)
+            };
+            let r#use =
+                validate_non_empty(use_variants, || "variants list cannot be empty".to_string())?;
+            // endregion: validate
+
+            Ok(Self {
+                all_variants,
+                use_variants: r#use,
+            })
+        }
+    }
+
+    impl<'de> Deserialize<'de> for VariantDto {
+        fn deserialize(value: &mut toml_span::Value<'de>) -> Result<Self, toml_span::DeserError> {
+            // region: extract
+            let mut th = TableHelper::new(value)?;
+            let local_name = th.required_s::<String>("output_name")?;
             let figma_name = th.required_s::<String>("figma_name")?;
+            let scale = th.optional_s::<f32>("scale");
             th.finalize(None)?;
             // endregion: extract
 
@@ -53,13 +84,6 @@ pub(super) mod de {
                 n if !n.value.contains("{base}") => {
                     return Err(toml_span::Error::from((
                         ErrorKind::Custom("expected string pattern with `{base}` marker".into()),
-                        n.span,
-                    ))
-                    .into());
-                }
-                n if !n.value.contains("{variant}") => {
-                    return Err(toml_span::Error::from((
-                        ErrorKind::Custom("expected string pattern with `{variant}` marker".into()),
                         n.span,
                     ))
                     .into());
@@ -74,20 +98,15 @@ pub(super) mod de {
                     ))
                     .into());
                 }
-                n if !n.value.contains("{variant}") => {
-                    return Err(toml_span::Error::from((
-                        ErrorKind::Custom("expected string pattern with `{variant}` marker".into()),
-                        n.span,
-                    ))
-                    .into());
-                }
                 n => n.value,
             };
+            let scale = validate_figma_scale(scale)?;
             // endregion: validate
 
             Ok(Self {
-                local_name,
+                output_name: local_name,
                 figma_name,
+                scale,
             })
         }
     }

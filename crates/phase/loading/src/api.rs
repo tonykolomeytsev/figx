@@ -1,4 +1,5 @@
 use std::{
+    collections::{BTreeMap, HashSet},
     fmt::{Debug, Display},
     path::PathBuf,
     sync::Arc,
@@ -200,24 +201,16 @@ pub struct ComposePreview {
 #[derive(Clone)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct ResourceVariants {
-    pub naming: ResourceVariantNaming,
-    pub list: Option<Vec<String>>,
+    pub all_variants: BTreeMap<String, ResourceVariant>,
+    pub use_variants: Option<HashSet<String>>,
 }
 
 #[derive(Clone)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
-pub struct ResourceVariantNaming {
-    pub local_name: String,
+pub struct ResourceVariant {
+    pub output_name: String,
     pub figma_name: String,
-}
-
-impl Default for ResourceVariantNaming {
-    fn default() -> Self {
-        Self {
-            local_name: "{base}{variant}".to_string(),
-            figma_name: "{base}_{variant}".to_string(),
-        }
-    }
+    pub scale: Option<f32>,
 }
 
 impl Default for ComposeProfile {

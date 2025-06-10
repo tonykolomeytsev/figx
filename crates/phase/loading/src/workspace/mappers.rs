@@ -1,10 +1,10 @@
 use crate::{
-    AndroidWebpProfile, CanBeExtendedBy, ComposeProfile, PdfProfile, PngProfile, SvgProfile,
-    WebpProfile,
+    AndroidWebpProfile, CanBeExtendedBy, ComposeProfile, PdfProfile, PngProfile, ResourceVariants,
+    SvgProfile, WebpProfile,
     parser::{
         AndroidDensityDto, AndroidWebpProfileDto, ColorMappingDto, ComposePreviewDto,
-        ComposeProfileDto, PdfProfileDto, PngProfileDto, SvgProfileDto, VariantNamingDto,
-        VariantsDto, WebpProfileDto,
+        ComposeProfileDto, PdfProfileDto, PngProfileDto, SvgProfileDto, VariantDto, VariantsDto,
+        WebpProfileDto,
     },
 };
 
@@ -22,11 +22,12 @@ impl CanBeExtendedBy<PngProfileDto> for PngProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
-            variants: another
-                .variants
-                .clone()
-                .map(Into::into)
-                .or(self.variants.clone()),
+            variants: match (another.variants.as_ref(), self.variants.as_ref()) {
+                (Some(dto), Some(domain)) => Some(domain.extend(dto)),
+                (Some(dto), None) => Some(dto.clone().into()),
+                (None, Some(domain)) => Some(domain.clone()),
+                _ => None,
+            },
         }
     }
 }
@@ -45,11 +46,12 @@ impl CanBeExtendedBy<SvgProfileDto> for SvgProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
-                variants: another
-                    .variants
-                    .clone()
-                    .map(Into::into)
-                    .or(self.variants.clone()),
+            variants: match (another.variants.as_ref(), self.variants.as_ref()) {
+                (Some(dto), Some(domain)) => Some(domain.extend(dto)),
+                (Some(dto), None) => Some(dto.clone().into()),
+                (None, Some(domain)) => Some(domain.clone()),
+                _ => None,
+            },
         }
     }
 }
@@ -68,11 +70,12 @@ impl CanBeExtendedBy<PdfProfileDto> for PdfProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
-                variants: another
-                    .variants
-                    .clone()
-                    .map(Into::into)
-                    .or(self.variants.clone()),
+            variants: match (another.variants.as_ref(), self.variants.as_ref()) {
+                (Some(dto), Some(domain)) => Some(domain.extend(dto)),
+                (Some(dto), None) => Some(dto.clone().into()),
+                (None, Some(domain)) => Some(domain.clone()),
+                _ => None,
+            },
         }
     }
 }
@@ -92,11 +95,12 @@ impl CanBeExtendedBy<WebpProfileDto> for WebpProfile {
                 .as_ref()
                 .unwrap_or(&self.output_dir)
                 .clone(),
-                variants: another
-                    .variants
-                    .clone()
-                    .map(Into::into)
-                    .or(self.variants.clone()),
+            variants: match (another.variants.as_ref(), self.variants.as_ref()) {
+                (Some(dto), Some(domain)) => Some(domain.extend(dto)),
+                (Some(dto), None) => Some(dto.clone().into()),
+                (None, Some(domain)) => Some(domain.clone()),
+                _ => None,
+            },
         }
     }
 }
@@ -134,11 +138,12 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .clone()
                 .map(Into::into)
                 .or_else(|| self.preview.clone()),
-            variants: another
-                .variants
-                .clone()
-                .map(Into::into)
-                .or_else(|| self.variants.clone()),
+            variants: match (another.variants.as_ref(), self.variants.as_ref()) {
+                (Some(dto), Some(domain)) => Some(domain.extend(dto)),
+                (Some(dto), None) => Some(dto.clone().into()),
+                (None, Some(domain)) => Some(domain.clone()),
+                _ => None,
+            },
             composable_get: another.composable_get.unwrap_or(self.composable_get),
         }
     }
@@ -204,17 +209,42 @@ impl From<ComposePreviewDto> for crate::ComposePreview {
 impl From<VariantsDto> for crate::ResourceVariants {
     fn from(value: VariantsDto) -> Self {
         Self {
-            naming: value.naming.map(Into::into).unwrap_or_default(),
-            list: value.list,
+            all_variants: match value.all_variants {
+                Some(variants) => variants
+                    .into_iter()
+                    .map(|(k, v)| (k, v.clone().into()))
+                    .collect(),
+                None => Default::default(),
+            },
+            use_variants: value.use_variants.map(|it| it.into_iter().collect()),
         }
     }
 }
 
-impl From<VariantNamingDto> for crate::ResourceVariantNaming {
-    fn from(value: VariantNamingDto) -> Self {
+impl From<VariantDto> for crate::ResourceVariant {
+    fn from(value: VariantDto) -> Self {
         Self {
-            local_name: value.local_name,
+            output_name: value.output_name,
             figma_name: value.figma_name,
+            scale: value.scale,
+        }
+    }
+}
+
+impl CanBeExtendedBy<VariantsDto> for ResourceVariants {
+    fn extend(&self, another: &VariantsDto) -> Self {
+        Self {
+            all_variants: match another.all_variants.as_ref() {
+                Some(variants) => variants
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.clone().into()))
+                    .collect(),
+                None => self.all_variants.clone(),
+            },
+            use_variants: another
+                .use_variants
+                .clone()
+                .map(|it| it.into_iter().collect()),
         }
     }
 }

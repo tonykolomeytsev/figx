@@ -139,10 +139,14 @@ mod de {
                         Webp(_) => {
                             ProfileDto::Webp(WebpProfileDto::parse_with_ctx(value, ctx.into())?)
                         }
-                        Compose(_) => ProfileDto::Compose(ComposeProfileDto::parse_with_ctx(
-                            value,
-                            ctx.into(),
-                        )?),
+                        Compose(_) => {
+                            let p = ComposeProfileDto::parse_with_ctx(
+                                value,
+                                ctx.into(),
+                            )?;
+                            dbg!(&p.variants);
+                            ProfileDto::Compose(p)
+                    },
                         AndroidWebp(_) => ProfileDto::AndroidWebp(
                             AndroidWebpProfileDto::parse_with_ctx(value, ctx.into())?,
                         ),
@@ -151,7 +155,6 @@ mod de {
                 }
             };
             // endregion: extract
-
             Ok(Self {
                 node_name,
                 profile: ctx.profile.clone(),
