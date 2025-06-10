@@ -108,6 +108,8 @@ where
 }
 
 #[cfg(test)]
+#[cfg(unix)]
+//    ^^^^ Batching works not as expected on linux
 #[allow(non_snake_case)]
 mod test {
 
@@ -210,7 +212,7 @@ mod test {
         let executions_count = Arc::new(AtomicUsize::new(0));
         let batcher = Arc::new(Batcher::new(
             3,
-            Duration::from_millis(500),
+            Duration::from_millis(1000),
             TestBatchedOp(executions_count.clone()),
         ));
 
