@@ -17,7 +17,7 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
     let variants = generate_variants(
         &args.attrs.label.name.to_string(),
         &args.attrs.node_name,
-        args.profile.scale,
+        1.0,
         &args.profile.variants,
     );
 

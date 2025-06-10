@@ -34,7 +34,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
     let scales = &args.profile.scales;
     let themes: &[_] = if let Some(night_variant) = &args.profile.night {
         let light_variant = &args.attrs.node_name;
-        let night_variant = expand_night_variant(light_variant, night_variant);
+        let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
         &[(light_variant.to_owned(), false), (night_variant, true)]
     } else {
         let light_variant = &args.attrs.node_name;
@@ -61,7 +61,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
             let webp = convert_png_to_webp(
                 ctx,
                 ConvertPngToWebpArgs {
-                    quality: args.profile.quality,
+                    quality: *args.profile.quality,
                     bytes: &png,
                     label: &args.attrs.label,
                 },

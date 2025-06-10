@@ -21,7 +21,7 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
     let variants = generate_variants(
         &args.attrs.label.name.to_string(),
         &args.attrs.node_name,
-        args.profile.scale,
+        *args.profile.scale,
         &args.profile.variants,
     );
 
@@ -41,7 +41,7 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
             let webp = &convert_png_to_webp(
                 ctx,
                 ConvertPngToWebpArgs {
-                    quality: args.profile.quality,
+                    quality: *args.profile.quality,
                     bytes: png,
                     label: &args.attrs.label,
                 },

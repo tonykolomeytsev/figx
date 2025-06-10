@@ -21,7 +21,10 @@ pub fn generate_variants(
     };
 
     match variants {
-        Some(ResourceVariants { all_variants: dict, use_variants: r#use }) => dict
+        Some(ResourceVariants {
+            all_variants: dict,
+            use_variants: r#use,
+        }) => dict
             .iter()
             .filter(|(k, _)| match r#use {
                 Some(variants) => variants.contains(*k),
@@ -30,16 +33,21 @@ pub fn generate_variants(
             .map(|(_, variant)| {
                 let res_name = variant
                     .output_name
+                    .as_ref()
                     .replace("{base}", &base_variant.res_name);
                 let node_name = variant
                     .figma_name
+                    .as_ref()
                     .replace("{base}", &base_variant.node_name);
 
                 ResourceVariant {
                     default: false,
                     res_name,
                     node_name,
-                    scale: variant.scale.unwrap_or(base_variant.scale),
+                    scale: match variant.scale {
+                        Some(scale) => *scale,
+                        None => base_variant.scale,
+                    },
                 }
             })
             .collect::<Vec<_>>(),

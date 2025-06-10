@@ -112,7 +112,7 @@ fn png_resource_tree(r: &ResourceAttrs, p: &PngProfile) -> Node {
     let variants = generate_variants(
         &r.label.name.to_string(),
         &r.node_name,
-        p.scale,
+        *p.scale,
         &p.variants,
     );
     for v in variants {
@@ -150,20 +150,12 @@ fn svg_resource_tree(r: &ResourceAttrs, p: &SvgProfile) -> Node {
         children: Vec::new(),
         params: Vec::new(),
     };
-    let variants = generate_variants(
-        &r.label.name.to_string(),
-        &r.node_name,
-        p.scale,
-        &p.variants,
-    );
+    let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
     for v in variants {
         let mut child_nodes = vec![
             node!(
                 format!("📤 Export SVG from remote {}", r.remote),
-                [
-                    ("node", v.node_name.to_string()),
-                    ("scale", v.scale.to_string())
-                ]
+                [("node", v.node_name.to_string())]
             ),
             node!(
                 "💾 Write to file",
@@ -191,20 +183,12 @@ fn pdf_resource_tree(r: &ResourceAttrs, p: &PdfProfile) -> Node {
         children: Vec::new(),
         params: Vec::new(),
     };
-    let variants = generate_variants(
-        &r.label.name.to_string(),
-        &r.node_name,
-        p.scale,
-        &p.variants,
-    );
+    let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
     for v in variants {
         let mut child_nodes = vec![
             node!(
                 format!("📤 Export PDF from remote {}", r.remote),
-                [
-                    ("node", v.node_name.to_string()),
-                    ("scale", v.scale.to_string())
-                ]
+                [("node", v.node_name.to_string())]
             ),
             node!(
                 "💾 Write to file",
@@ -235,17 +219,14 @@ fn webp_resource_tree(r: &ResourceAttrs, p: &WebpProfile) -> Node {
     let variants = generate_variants(
         &r.label.name.to_string(),
         &r.node_name,
-        p.scale,
+        *p.scale,
         &p.variants,
     );
     for v in variants {
         let mut child_nodes = vec![
             node!(
                 format!("📤 Export PNG from remote {}", r.remote),
-                [
-                    ("node", v.node_name.to_string()),
-                    ("scale", v.scale.to_string())
-                ]
+                [("node", v.node_name.to_string())]
             ),
             node!(
                 "✨ Transform PNG to WEBP",
@@ -287,20 +268,12 @@ fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
         children: Vec::new(),
         params: Vec::new(),
     };
-    let variants = generate_variants(
-        &r.label.name.to_string(),
-        &r.node_name,
-        p.scale,
-        &p.variants,
-    );
+    let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
     for v in variants {
         let mut child_nodes = vec![
             node!(
                 format!("📤 Export SVG from remote {}", r.remote),
-                [
-                    ("node", v.node_name.to_string()),
-                    ("scale", v.scale.to_string())
-                ]
+                [("node", v.node_name.to_string())]
             ),
             node!(
                 "✨ Transform SVG to Compose",
@@ -331,7 +304,7 @@ fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node
     let scales = &p.scales;
     let themes: &[_] = if let Some(night_variant) = &p.night {
         let light_variant = &r.node_name;
-        let night_variant = expand_night_variant(light_variant, night_variant);
+        let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
         &[(light_variant.to_owned(), false), (night_variant, true)]
     } else {
         let light_variant = &r.node_name;
