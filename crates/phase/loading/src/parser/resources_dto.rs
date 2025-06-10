@@ -139,14 +139,10 @@ mod de {
                         Webp(_) => {
                             ProfileDto::Webp(WebpProfileDto::parse_with_ctx(value, ctx.into())?)
                         }
-                        Compose(_) => {
-                            let p = ComposeProfileDto::parse_with_ctx(
-                                value,
-                                ctx.into(),
-                            )?;
-                            dbg!(&p.variants);
-                            ProfileDto::Compose(p)
-                    },
+                        Compose(_) => ProfileDto::Compose(ComposeProfileDto::parse_with_ctx(
+                            value,
+                            ctx.into(),
+                        )?),
                         AndroidWebp(_) => ProfileDto::AndroidWebp(
                             AndroidWebpProfileDto::parse_with_ctx(value, ctx.into())?,
                         ),
