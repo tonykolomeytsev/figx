@@ -8,144 +8,97 @@ on:
 name: Release
 
 jobs:
-  release-build:
-    name: Release Build - ${{ matrix.platform.os-name }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - os-name: Linux-x86_64
-            runs-on: ubuntu-24.04
-            target: x86_64-unknown-linux-gnu
-
-          - os-name: Windows-x86_64
-            runs-on: windows-latest
-            target: x86_64-pc-windows-msvc
-
-          - os-name: macOS-aarch64
-            runs-on: macOS-latest
-            target: aarch64-apple-darwin
-        toolchain:
-          - stable
-
-    runs-on: ${{ matrix.platform.runs-on }}
-    permissions:
-      id-token: write
-      contents: write
+  build-macos:
+    runs-on: macOS-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build binary (Linux / macOS)
-        if: ${{ !startsWith(matrix.platform.os-name, 'Windows') }}
-        uses: houseabsolute/actions-rust-cross@v1
+      - uses: actions/checkout@v4
+      - uses: houseabsolute/actions-rust-cross@v1
         with:
           command: build
-          target: ${{ matrix.platform.target }}
+          target: aarch64-apple-darwin
           args: "--locked --release"
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: stable
           strip: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-binary (macos)
+          path: target/aarch64-apple-darwin/release/figx
 
-      - name: Install WIX (Windows)
-        if: ${{ startsWith(matrix.platform.os-name, 'Windows') }}
-        uses: baptiste0928/cargo-install@v3
+  build-linux:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: houseabsolute/actions-rust-cross@v1
+      with:
+        command: build
+        target: x86_64-unknown-linux-gnu
+        args: "--locked --release"
+        toolchain: stable
+        strip: true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: release-binary (linux)
+        path: target/x86_64-unknown-linux-gnu/release/figx
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: baptiste0928/cargo-install@v3
         with:
           crate: cargo-wix
           version: "0.3.9"
-
-      - name: Build binary (Windows)
-        if: ${{ startsWith(matrix.platform.os-name, 'Windows') }}
-        uses: houseabsolute/actions-rust-cross@v1
+      - uses: houseabsolute/actions-rust-cross@v1
         with:
           working-directory: ./app
           command: wix
-          target: ${{ matrix.platform.target }}
+          target: x86_64-pc-windows-msvc
           args: "-p figx --nocapture"
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: stable
           strip: false
-      
-      - name: Store Artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: release-binary (${{ matrix.platform.target }})
-          path: |
-            target/${{ matrix.platform.target }}/release/figx
-            target/${{ matrix.platform.target }}/release/figx.exe
-            target/**/*.msi
-  
-  release-prepare:
-    name: "Prepare for Deploy"
-    needs: release-build
+          name: release-binary (windows)
+          path: target/**/figx-*.msi
+
+  publish-artifacts:
+    name: "Publish Artifacts"
+    needs: 
+      - build-macos
+      - build-linux
+      - build-windows
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [ x86_64-unknown-linux-gnu, x86_64-pc-windows-msvc, aarch64-apple-darwin ]
     permissions:
       id-token: write
       contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Load Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: release-binary (${{ matrix.target }})
           path: ./target
       
-      - name: Rename Artifacts
+      - name: Collecting artifacts
         run: |
+          set -euo pipefail
           tree -L 3 ./target
-          mkdir -p ./target/release
-          mv ./target/wix/figx-*.msi ./target/release/figx-installer.msi || true
-          mv ./target/${{ matrix.target }}/release/figx ./target/release/figx || true
-          mv ./target/${{ matrix.target }}/release/figx.exe ./target/release/figx.exe || true
 
-      - name: Store Artifacts
-        uses: actions/upload-artifact@v4
+          echo "Packaging Windows MSI to figx-windows-x86_64.zip"
+          cp "./target/release-binary (windows)/wix/"figx-*.msi ./figx-installer.msi
+          zip -j figx-windows-x86_64.zip ./figx-installer.msi
+      
+          echo "Packaging Linux binary to figx-linux-gnu-x86_64.tar.gz"
+          tar -czf figx-linux-gnu-x86_64.tar.gz -C "./target/release-binary (linux)" figx
+      
+          echo "Packaging macOS ARM64 binary to figx-macos-arm64.tar.gz"
+          tar -czf figx-macos-arm64.tar.gz -C "./target/release-binary (macos)" figx
+      
+          echo "Final workspace contents:"
+          ls -lh
+
+      - uses: softprops/action-gh-release@v2.2.2
         with:
-          name: release-binary-simplified (${{ matrix.target }})
-          path: ./target
+          files: |
+            figx-windows-x86_64.zip
+            figx-linux-gnu-x86_64.tar.gz
+            figx-macos-arm64.tar.gz
   
-  release-deploy:
-    name: "Deploy"
-    needs: release-prepare
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - runs-on: ubuntu-24.04
-            target: x86_64-unknown-linux-gnu
-          - runs-on: windows-latest
-            target: x86_64-pc-windows-msvc
-          - runs-on: macOS-latest
-            target: aarch64-apple-darwin
-    runs-on: ${{ matrix.platform.runs-on }}
-    permissions:
-      id-token: write
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Load Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-binary-simplified (${{ matrix.platform.target }})
-          path: ./target
-
-      - name: Publish artifacts and release (Windows)
-        if: ${{ contains(matrix.platform.target, 'windows') }}
-        uses: houseabsolute/actions-rust-release@v0
-        with:
-          executable-name: figx
-          target: ${{ matrix.platform.target }}
-          extra-files: ./target/release/figx-installer.msi
-
-      - name: Publish artifacts and release (Linux / MacOS)
-        if: ${{ !contains(matrix.platform.target, 'windows') }}
-        uses: houseabsolute/actions-rust-release@v0
-        with:
-          executable-name: figx
-          target: ${{ matrix.platform.target }}
