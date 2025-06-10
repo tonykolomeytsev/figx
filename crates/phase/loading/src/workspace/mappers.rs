@@ -40,7 +40,6 @@ impl CanBeExtendedBy<SvgProfileDto> for SvgProfile {
                 .as_ref()
                 .unwrap_or(&self.remote_id)
                 .clone(),
-            scale: another.scale.unwrap_or(self.scale),
             output_dir: another
                 .output_dir
                 .as_ref()
@@ -64,7 +63,6 @@ impl CanBeExtendedBy<PdfProfileDto> for PdfProfile {
                 .as_ref()
                 .unwrap_or(&self.remote_id)
                 .clone(),
-            scale: another.scale.unwrap_or(self.scale),
             output_dir: another
                 .output_dir
                 .as_ref()
@@ -113,7 +111,6 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfile {
                 .as_ref()
                 .unwrap_or(&self.remote_id)
                 .clone(),
-            scale: another.scale.unwrap_or(self.scale),
             src_dir: another.src_dir.as_ref().unwrap_or(&self.src_dir).clone(),
             package: another.package.clone().or(self.package.clone()),
             kotlin_explicit_api: another

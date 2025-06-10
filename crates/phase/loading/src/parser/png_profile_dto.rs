@@ -1,12 +1,12 @@
 use super::VariantsDto;
-use crate::CanBeExtendedBy;
+use crate::{CanBeExtendedBy, ExportScale};
 use std::{collections::HashSet, path::PathBuf};
 
 #[derive(Default)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) struct PngProfileDto {
     pub remote_id: Option<String>,
-    pub scale: Option<f32>,
+    pub scale: Option<ExportScale>,
     pub output_dir: Option<PathBuf>,
     pub variants: Option<VariantsDto>,
 }
@@ -42,7 +42,7 @@ pub(crate) struct PngProfileDtoContext<'a> {
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::util::{validate_figma_scale, validate_remote_id};
+    use crate::parser::util::{validate_remote_id};
     use toml_span::de_helpers::TableHelper;
 
     impl<'de> ParseWithContext<'de> for PngProfileDto {
@@ -55,7 +55,7 @@ mod de {
             // region: extract
             let mut th = TableHelper::new(value)?;
             let remote_id = th.optional_s::<String>("remote");
-            let scale = th.optional_s::<f32>("scale");
+            let scale = th.optional::<ExportScale>("scale");
             let output_dir = th.optional::<String>("output_dir").map(PathBuf::from);
             let variants = th.optional::<VariantsDto>("variants");
             th.finalize(None)?;
@@ -63,7 +63,6 @@ mod de {
 
             // region: validate
             let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
-            let scale = validate_figma_scale(scale)?;
             // endregion: validate
 
             Ok(Self {
@@ -81,7 +80,8 @@ mod de {
 mod test {
 
     use super::*;
-    use crate::ParseWithContext;
+    use crate::{ParseWithContext, variant_dto};
+    use ordermap::ordermap;
     use toml_span::Span;
     use unindent::unindent;
 
@@ -92,13 +92,23 @@ mod test {
         remote = "figma"
         scale = 0.42
         output_dir = "images"
+        variants.small = { output_name = "{base}Small", figma_name = "{base} / small", scale = 1.0 }
+        variants.big = { output_name = "{base}Big", figma_name = "{base} / big", scale = 2.0 }
+        variants.use = ["small", "big"]
         "#;
         let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
         let expected_dto = PngProfileDto {
             remote_id: Some("figma".to_string()),
-            scale: Some(0.42),
+            scale: Some(ExportScale(0.42)),
             output_dir: Some(PathBuf::from("images")),
-            variants: None,
+            variants: Some(VariantsDto {
+                all_variants: Some(ordermap! {
+                    // alphabetic keys sorting because of BTreeMap under the hood of the toml parser
+                    "big".to_string() => variant_dto! { "{base}Big" <- "{base} / big" (x 2.0) },
+                    "small".to_string() => variant_dto! { "{base}Small" <- "{base} / small" (x 1.0) },
+                }),
+                use_variants: Some(vec!["small".to_string(), "big".to_string()]),
+            }),
         };
 
         // When
@@ -113,58 +123,7 @@ mod test {
     }
 
     #[test]
-    fn PngProfileDto__valid_partially_defined_toml_v1__EXPECT__valid_dto() {
-        // Given
-        let toml = r#"
-        remote = "figma"
-        output_dir = "images"
-        "#;
-        let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
-        let expected_dto = PngProfileDto {
-            remote_id: Some("figma".to_string()),
-            scale: None,
-            output_dir: Some(PathBuf::from("images")),
-            variants: None,
-        };
-
-        // When
-        let mut value = toml_span::parse(toml).unwrap();
-        let ctx = PngProfileDtoContext {
-            declared_remote_ids: &declared_remote_ids,
-        };
-        let actual_dto = PngProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
-
-        // Then
-        assert_eq!(expected_dto, actual_dto);
-    }
-
-    #[test]
-    fn PngProfileDto__valid_partially_defined_toml_v2__EXPECT__valid_dto() {
-        // Given
-        let toml = r#"
-        remote = "figma"
-        "#;
-        let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
-        let expected_dto = PngProfileDto {
-            remote_id: Some("figma".to_string()),
-            scale: None,
-            output_dir: None,
-            variants: None,
-        };
-
-        // When
-        let mut value = toml_span::parse(toml).unwrap();
-        let ctx = PngProfileDtoContext {
-            declared_remote_ids: &declared_remote_ids,
-        };
-        let actual_dto = PngProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
-
-        // Then
-        assert_eq!(expected_dto, actual_dto);
-    }
-
-    #[test]
-    fn PngProfileDto__valid_partially_defined_toml_v3__EXPECT__valid_dto() {
+    fn PngProfileDto__valid_empty_toml__EXPECT__valid_dto() {
         // Given
         let toml = r#"
         "#;
@@ -208,6 +167,7 @@ mod test {
         let actual_err = PngProfileDto::parse_with_ctx(&mut value, ctx).unwrap_err();
 
         // Then
+        assert_eq!(err_spans.len(), actual_err.errors.len());
         for (expected_span, actual_err) in err_spans.into_iter().zip(actual_err.errors) {
             assert_eq!(expected_span, actual_err.span);
         }

@@ -1,4 +1,3 @@
-mod de;
 mod parser;
 mod resources;
 

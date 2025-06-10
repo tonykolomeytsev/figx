@@ -1,6 +1,6 @@
 use std::{collections::HashSet, path::PathBuf};
 
-use crate::CanBeExtendedBy;
+use crate::{CanBeExtendedBy, ExportScale, WebpQuality};
 
 use super::VariantsDto;
 
@@ -8,8 +8,8 @@ use super::VariantsDto;
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) struct WebpProfileDto {
     pub remote_id: Option<String>,
-    pub scale: Option<f32>,
-    pub quality: Option<f32>,
+    pub scale: Option<ExportScale>,
+    pub quality: Option<WebpQuality>,
     pub output_dir: Option<PathBuf>,
     pub variants: Option<VariantsDto>,
 }
@@ -45,8 +45,8 @@ pub(crate) struct WebpProfileDtoContext<'a> {
 
 mod de {
     use super::*;
-    use crate::ParseWithContext;
-    use crate::parser::util::{validate_figma_scale, validate_remote_id, validate_webp_quality};
+    use crate::parser::util::validate_remote_id;
+    use crate::{ExportScale, ParseWithContext, WebpQuality};
     use toml_span::de_helpers::TableHelper;
 
     impl<'de> ParseWithContext<'de> for WebpProfileDto {
@@ -59,8 +59,8 @@ mod de {
             // region: extract
             let mut th = TableHelper::new(value)?;
             let remote_id = th.optional_s::<String>("remote");
-            let scale = th.optional_s::<f32>("scale");
-            let quality = th.optional_s::<f32>("quality");
+            let scale = th.optional::<ExportScale>("scale");
+            let quality = th.optional::<WebpQuality>("quality");
             let output_dir = th.optional::<String>("output_dir").map(PathBuf::from);
             let variants = th.optional::<VariantsDto>("variants");
             th.finalize(None)?;
@@ -68,8 +68,6 @@ mod de {
 
             // region: validate
             let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
-            let scale = validate_figma_scale(scale)?;
-            let quality = validate_webp_quality(quality)?;
             // endregion: validate
 
             Ok(Self {
@@ -98,14 +96,14 @@ mod test {
         let toml = r#"
         remote = "figma"
         scale = 0.42
-        quality = 100,
+        quality = 100
         output_dir = "images"
         "#;
         let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
         let expected_dto = WebpProfileDto {
             remote_id: Some("figma".to_string()),
-            scale: Some(0.42),
-            quality: Some(100.0),
+            scale: Some(ExportScale(0.42)),
+            quality: Some(WebpQuality(100.0)),
             output_dir: Some(PathBuf::from("images")),
             variants: None,
         };
@@ -122,60 +120,7 @@ mod test {
     }
 
     #[test]
-    fn WebpProfileDto__valid_partially_defined_toml_v1__EXPECT__valid_dto() {
-        // Given
-        let toml = r#"
-        remote = "figma"
-        output_dir = "images"
-        "#;
-        let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
-        let expected_dto = WebpProfileDto {
-            remote_id: Some("figma".to_string()),
-            scale: None,
-            quality: None,
-            output_dir: Some(PathBuf::from("images")),
-            variants: None,
-        };
-
-        // When
-        let mut value = toml_span::parse(toml).unwrap();
-        let ctx = WebpProfileDtoContext {
-            declared_remote_ids: &declared_remote_ids,
-        };
-        let actual_dto = WebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
-
-        // Then
-        assert_eq!(expected_dto, actual_dto);
-    }
-
-    #[test]
-    fn WebpProfileDto__valid_partially_defined_toml_v2__EXPECT__valid_dto() {
-        // Given
-        let toml = r#"
-        remote = "figma"
-        "#;
-        let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
-        let expected_dto = WebpProfileDto {
-            remote_id: Some("figma".to_string()),
-            scale: None,
-            quality: None,
-            output_dir: None,
-            variants: None,
-        };
-
-        // When
-        let mut value = toml_span::parse(toml).unwrap();
-        let ctx = WebpProfileDtoContext {
-            declared_remote_ids: &declared_remote_ids,
-        };
-        let actual_dto = WebpProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
-
-        // Then
-        assert_eq!(expected_dto, actual_dto);
-    }
-
-    #[test]
-    fn WebpProfileDto__valid_partially_defined_toml_v3__EXPECT__valid_dto() {
+    fn WebpProfileDto__valid_empty_toml__EXPECT__valid_dto() {
         // Given
         let toml = r#"
         "#;

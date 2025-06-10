@@ -1,14 +1,17 @@
 mod android_webp_profile_dto;
 mod compose_profile_dto;
+mod export_scale;
 mod pdf_profile_dto;
 mod png_profile_dto;
 mod profiles_dto;
 mod remotes_dto;
 mod resources_dto;
+mod single_name_pattern;
 mod svg_profile_dto;
 mod util;
 mod variants_dto;
 mod webp_profile_dto;
+mod webp_quality;
 mod workspace_dto;
 
 pub(crate) use android_webp_profile_dto::*;
