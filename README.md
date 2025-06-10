@@ -4,11 +4,12 @@
 
 # FigX - Pragmatic Design Asset Management
 
-FigX is a no-nonsense CLI tool for importing design assets from Figma into your codebase. Built for developers who value explicit control and reproducibility.
+FigX is a no-nonsense CLI tool for importing design assets from Figma into your codebase. Built for developers who value explicit control and reproducibility. 
 
 See also:
 - [**🚀 GitHub Action Available**](https://github.com/marketplace/actions/figx-action)
 - [**🐳 Docker Image Available**](https://github.com/tonykolomeytsev/figx/pkgs/container/figx)
+
 
 [**See full documentation**](https://tonykolomeytsev.github.io/figx)
 
@@ -101,6 +102,22 @@ Follow the detailed installation instructions available in the [documentation](h
 
 # Documentation
 Full documentation available at: [tonykolomeytsev.github.io/figx](https://tonykolomeytsev.github.io/figx)
+
+# Differences from [figma-export](https://github.com/RedMadRobot/figma-export)
+
+The figma-export tool was the catalyst for creating this project. FigX draws inspiration from its predecessor but completely reimagines the resource processing approach, incorporating lessons learned from negative experiences with figma-export.
+
+Key distinctions between the tools:
+
+| **figma-export** | **figx** |
+| --- | --- |
+| macOS-only | Cross-platform: runs on macOS, Windows, Linux. Easily compilable for other platforms |
+| Requires external graphic tools for Android assets (vd-tool, cwebp) | Built-in libwebp for WEBP compression and native SVG-to-Android vector conversion without Java-based vd-tool legacy |
+| No Jetpack Compose `ImageVector` support | Generates native `ImageVector` graphics as ready-to-use Kotlin code |
+| Resource imports determined by Figma file contents or CLI arguments | Granular resource specification via dedicated manifest files per project package/module |
+| Limited built-in import profiles (icons/illustrations) without project domain consideration | Extensible profile system supporting unlimited custom profiles with configurable import flows and identifiers |
+| Complex multi-module resource targeting - tends toward hardcoded monolithic output directories | Designed for modular projects - immune to refactoring and path changes through proper package isolation |
+| Optimized primarily for local developer use | CI-optimized with aggressive caching to minimize resource waste in pipelines |
 
 # License
 
