@@ -136,5 +136,5 @@ pub fn cartesian_product<'a, A, B>(list_a: &'a [A], list_b: &'a [B]) -> Vec<(&'a
 }
 
 pub fn expand_night_variant(light_variant: &str, night_variant: &str) -> String {
-    night_variant.replacen("{name}", light_variant, 1)
+    night_variant.replacen("{base}", light_variant, 1)
 }
