@@ -6,8 +6,6 @@ The svg profile is configured in the `.figtree.toml` file, where it's specified 
 
 The root of this project is also a FigX package because it contains a `.fig.toml` file that lists the icons.
 
-One resource in `.fig.toml` overrides the scale value from the `svg` profile and sets it to `4.0`. As a result, one icon appears larger than the others after import.
-
 ### Example Commands
 
 Import all icons:
