@@ -2,7 +2,7 @@
 
 This example uses the default `svg` profile to import icons in SVG format.
 
-The svg profile is configured in the `.figxconfig.toml` file, where it's specified that icons will be placed in the `./img` directory relative to their package.
+The svg profile is configured in the `.figtree.toml` file, where it's specified that icons will be placed in the `./img` directory relative to their package.
 
 The root of this project is also a FigX package because it contains a `.fig.toml` file that lists the icons.
 

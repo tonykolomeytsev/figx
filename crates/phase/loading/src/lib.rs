@@ -15,7 +15,7 @@ mod workspace;
 pub use api::*;
 pub use error::*;
 
-static WORKSPACE_FILE_NAME: &str = ".figxconfig.toml";
+static WORKSPACE_FILE_NAME: &str = ".figtree.toml";
 static RESOURCES_FILE_NAME: &str = ".fig.toml";
 static CACHE_DIR: &str = ".figx-out/caches";
 

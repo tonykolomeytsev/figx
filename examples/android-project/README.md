@@ -2,7 +2,7 @@
 
 This project demonstrates how to integrate FigX into an Android project.
 
-In the root of the project, two custom import profiles are defined in the `.figxconfig.toml` file:
+In the root of the project, two custom import profiles are defined in the `.figtree.toml` file:
 1. icons profile — Inherits all properties from the built-in compose profile, which is designed for importing icons from Figma into the ImageVector format for Jetpack Compose.
 2. illustrations profile — Inherits all properties from the android-webp profile, which supports importing illustrations from Figma into all drawable-*dpi directories and compresses them into the WEBP format.
 

@@ -168,7 +168,7 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             labels: &[CliInputLabel::Tip(&unindent::unindent(
                 "
                     A `workspace` is the root directory of a project/repository that contains 
-                    the marker file `.figxconfig.toml` and all its child directories.
+                    the marker file `.figtree.toml` and all its child directories.
                 ",
             ))],
         }),
@@ -179,13 +179,13 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             )],
         }),
         WorkspaceRead(err) => cli_input_error(CliInputDiagnostics {
-            message: &format!("unable to read workspace file '.figxconfig.toml': {err}"),
+            message: &format!("unable to read workspace file '.figtree.toml': {err}"),
             labels: &[],
         }),
         WorkspaceParse(err, path) => handle_toml_parsing_error(
             err,
             &path,
-            "failed to parse workspace file `.figxconfig.toml`",
+            "failed to parse workspace file `.figtree.toml`",
         ),
         WorkspaceRemoteNoAccessToken(id, path) => {
             let file = create_simple_file(&path);
