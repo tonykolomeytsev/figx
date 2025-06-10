@@ -9,7 +9,7 @@ FigX is a no-nonsense CLI tool for importing design assets from Figma into your 
 See also:
 - [**🚀 GitHub Action Available**](https://github.com/marketplace/actions/figx-action)
 - [**🐳 Docker Image Available**](https://github.com/tonykolomeytsev/figx/pkgs/container/figx)
-
+- [Differences from figma-export](#differences-from-figma-export)
 
 [**See full documentation**](https://tonykolomeytsev.github.io/figx)
 
