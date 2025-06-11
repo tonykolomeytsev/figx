@@ -1,25 +1,22 @@
 use std::{
     hash::Hash,
-    sync::{
-        Arc, Condvar, Mutex,
-        atomic::{AtomicBool, Ordering},
-    },
-    time::Duration,
+    marker::PhantomData,
+    sync::Arc,
+    thread,
+    time::{Duration, Instant},
 };
+
+use crossbeam_channel::{Receiver, Sender, bounded};
+use log::warn;
 
 pub struct Batcher<V, B, R>
 where
-    V: Eq + Hash + Clone,
-    B: Batched<V, R>,
+    V: Eq + Hash + Clone + Send + 'static,
+    R: Send + Sync + 'static,
+    B: Batched<V, R> + Send + Sync + 'static,
 {
-    buffer: Arc<Mutex<Vec<V>>>,
-    buffer_cond: Arc<Condvar>,
-    timeout: Duration,
-    max_batch_size: usize,
-    batched_op: B,
-    in_progress: Arc<AtomicBool>,
-    result_cond: Arc<Condvar>,
-    result: Arc<Mutex<Option<Arc<R>>>>,
+    tx: Sender<(V, Sender<Arc<R>>)>,
+    _marker: PhantomData<B>,
 }
 
 pub trait Batched<V, R> {
@@ -28,88 +25,71 @@ pub trait Batched<V, R> {
 
 impl<V, B, R> Batcher<V, B, R>
 where
-    V: Eq + Hash + Clone,
-    B: Batched<V, R>,
+    V: Eq + Hash + Clone + Send + 'static,
+    R: Send + Sync + 'static,
+    B: Batched<V, R> + Send + Sync + 'static,
 {
     pub fn new(max_batch_size: usize, timeout: Duration, batched_op: B) -> Self {
+        let (tx, rx) = bounded::<(V, Sender<Arc<R>>)>(1024);
+        let op = Arc::new(batched_op);
+        thread::spawn(move || batch_loop(rx, max_batch_size, timeout, op));
         Self {
-            buffer: Arc::new(Mutex::new(Vec::with_capacity(max_batch_size))),
-            buffer_cond: Arc::new(Condvar::new()),
-            timeout,
-            max_batch_size,
-            batched_op,
-            result: Arc::new(Mutex::new(None)),
-            in_progress: Arc::new(AtomicBool::new(false)),
-            result_cond: Arc::new(Condvar::new()),
+            tx,
+            _marker: Default::default(),
         }
     }
 
     pub fn batch(&self, value: V) -> Arc<R> {
-        let mut buffer = self.buffer.lock().unwrap();
-        while buffer.len() >= self.max_batch_size {
-            buffer = self.buffer_cond.wait(buffer).unwrap();
-        }
+        let (resp_tx, resp_rx) = bounded(1);
+        self.tx
+            .send((value, resp_tx))
+            .expect("Batcher thread crashed");
+        resp_rx.recv().expect("Batcher thread crashed")
+    }
+}
 
-        buffer.push(value);
+fn batch_loop<V, R, B>(
+    rx: Receiver<(V, Sender<Arc<R>>)>,
+    max_batch_size: usize,
+    timeout: Duration,
+    batched_op: Arc<B>,
+) where
+    V: Eq + Hash + Clone + Send + 'static,
+    R: Send + Sync + 'static,
+    B: Batched<V, R> + Send + Sync + 'static,
+{
+    let mut buffer: Vec<(V, Sender<Arc<R>>)> = Vec::with_capacity(max_batch_size);
 
-        // Notify others that buffer changed (in case batcher is sleeping)
-        self.buffer_cond.notify_all();
-        drop(buffer); // release buffer lock early
+    loop {
+        let start = Instant::now();
+        match rx.recv() {
+            Ok(first) => {
+                buffer.push(first);
 
-        // Try to become the batch leader
-        let is_batcher = self
-            .in_progress
-            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
-            .is_ok();
+                // Try to fill up the rest of the batch or until timeout
+                while buffer.len() < max_batch_size {
+                    let remaining = timeout
+                        .checked_sub(start.elapsed())
+                        .unwrap_or(Duration::ZERO);
+                    match rx.recv_timeout(remaining) {
+                        Ok(item) => buffer.push(item),
+                        Err(_) => break, // timeout
+                    }
+                }
 
-        if is_batcher {
-            // Clear any old result
-            {
-                let mut result = self.result.lock().unwrap();
-                *result = None;
+                let values: Vec<V> = buffer.iter().map(|(v, _)| v.clone()).collect();
+                warn!(target: "Batcher", "Executing batched operation...");
+                let result = Arc::new(batched_op.execute(values));
+                for (_, tx) in buffer.drain(..) {
+                    let _ = tx.send(result.clone());
+                }
             }
-
-            // Only sleep if buffer not full yet
-            let sleep_needed = {
-                let buffer = self.buffer.lock().unwrap();
-                buffer.len() < self.max_batch_size
-            };
-            if sleep_needed {
-                // Wait to collect more values
-                std::thread::sleep(self.timeout);
-            }
-
-            let mut buffer = self.buffer.lock().unwrap();
-            let mut values = Vec::new();
-            values.append(&mut buffer);
-
-            // Notify threads blocked on full buffer
-            self.buffer_cond.notify_all();
-
-            let response = self.batched_op.execute(values);
-            let response = Arc::new(response);
-
-            let mut result = self.result.lock().unwrap();
-            *result = Some(response.clone());
-
-            self.in_progress.store(false, Ordering::SeqCst);
-            self.result_cond.notify_all(); // notify waiting threads
-
-            response
-        } else {
-            // Wait for result to be available
-            let mut result = self.result.lock().unwrap();
-            while result.is_none() {
-                result = self.result_cond.wait(result).unwrap();
-            }
-            result.clone().unwrap()
+            Err(_) => break, // Channel closed
         }
     }
 }
 
 #[cfg(test)]
-#[cfg(unix)]
-//    ^^^^ Batching works not as expected on linux
 #[allow(non_snake_case)]
 mod test {
 
@@ -148,7 +128,7 @@ mod test {
         ));
 
         // When
-        let handles = (0..5)
+        let handles = (0..10)
             .into_iter()
             .map(|i| {
                 let batcher = Arc::clone(&batcher);
@@ -162,10 +142,13 @@ mod test {
 
         // Then
         assert_eq!(1, executions_count.load(Ordering::SeqCst));
-        assert_eq!(5, results.len());
+        assert_eq!(10, results.len());
         let first_value = results.first().unwrap();
         assert!(results.iter().all(|it| it == first_value));
-        assert_eq!(&hash_set![0, 1, 2, 3, 4], first_value.as_ref());
+        assert_eq!(
+            &hash_set![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            first_value.as_ref()
+        );
     }
 
     #[test]
@@ -174,7 +157,7 @@ mod test {
         let executions_count = Arc::new(AtomicUsize::new(0));
         let batcher = Arc::new(Batcher::new(
             10,
-            Duration::from_millis(500),
+            Duration::from_millis(150),
             TestBatchedOp(executions_count.clone()),
         ));
 
@@ -185,7 +168,7 @@ mod test {
                 let batcher = Arc::clone(&batcher);
                 std::thread::spawn(move || {
                     if i > 1 {
-                        std::thread::sleep(Duration::from_millis(1000));
+                        std::thread::sleep(Duration::from_millis(200));
                     }
                     batcher.batch(i)
                 })
@@ -212,7 +195,7 @@ mod test {
         let executions_count = Arc::new(AtomicUsize::new(0));
         let batcher = Arc::new(Batcher::new(
             3,
-            Duration::from_millis(1000),
+            Duration::from_millis(500),
             TestBatchedOp(executions_count.clone()),
         ));
 
