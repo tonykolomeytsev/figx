@@ -2,9 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ master ]
-    paths: [ 'Dockerfile', 'Cargo.toml', 'app/**', 'crates/**' ]
-    tags: [ "v*" ]
+    tags:
+      - "v*" # Run when tag matches v*, i.e. v1.0, v20.15.10
 
 env:
   REGISTRY: ghcr.io
