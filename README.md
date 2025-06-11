@@ -6,6 +6,8 @@
 
 FigX is a no-nonsense CLI tool for importing design assets from Figma into your codebase. Built for developers who value explicit control and reproducibility. 
 
+> 🚧 The project is in the active development phase 🚧
+
 See also:
 - [**🚀 GitHub Action Available**](https://github.com/marketplace/actions/figx-action)
 - [**🐳 Docker Image Available**](https://github.com/tonykolomeytsev/figx/pkgs/container/figx)
