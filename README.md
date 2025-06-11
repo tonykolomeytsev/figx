@@ -37,7 +37,7 @@ FigX comes with built-in import profiles for various formats, enabling immediate
 | `webp` | 1. Downloads PNG from Figma<br> 2. Converts PNG to WebP using [libwebp](https://developers.google.com/speed/webp) |
 | `png` | Downloads PNG assets directly from Figma |
 | `svg` | Downloads SVG assets directly from Figma | 
-| `pdf` | Downloads ЗВА assets directly from Figma | 
+| `pdf` | Downloads PDF assets directly from Figma | 
 
 > Profiles `png`, `svg`, `pdf` and `compose` support matrix-like import configurations — multiple variants (e.g. `light`/`night`, sizes `16`/`20`/`24`) for a single resource, similar to GitHub Actions matrices.
 
