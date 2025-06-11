@@ -3,7 +3,7 @@ name: "Pull Request"
 on:
   push:
     branches: [ master ]
-    paths: [ 'Cargo.toml', 'src/**' ]
+    paths: [ 'Cargo.toml', 'app/**', 'crates/**' ]
   pull_request:
 
 jobs:
