@@ -28,6 +28,8 @@ At a high level, FigX is a straightforward and reliable CLI tool designed for:
 - 🔧 Seamless integration into CI/CD pipelines
 - 💻 Cross-platform support: macOS, Windows, and Linux
 
+## Importing graphic resources
+
 FigX comes with built-in import profiles for various formats, enabling immediate use without additional setup:
 
 | Profile | Description |
@@ -40,6 +42,41 @@ FigX comes with built-in import profiles for various formats, enabling immediate
 | `pdf` | Downloads PDF assets directly from Figma | 
 
 > Profiles `png`, `svg`, `pdf` and `compose` support matrix-like import configurations — multiple variants (e.g. `light`/`night`, sizes `16`/`20`/`24`) for a single resource, similar to GitHub Actions matrices.
+
+## Help in resource control
+
+FigX can show you which resources are already declared in the project, which packages/modules exist, or what flow specific resources follow during import before they are included in the project.
+
+List all **figx resources** in the project without importing them:
+
+```bash
+figx query //...
+```
+
+List all **figx packages** in the project:
+
+```bash
+figx query -o package //...
+```
+
+Explain the import flow for specific resources:
+
+```bash
+figx explain //.../ui/icons:Sun
+```
+
+Example output:
+
+```text
+//app/src/main/java/com/example/figxdemo/ui/icons:Sun
+├── 📤 Export SVG from remote @icons/MhjeA23R15tAR3PO2JamCv
+│      ┆ node: Environment / Sun
+│      ┆ scale: 1
+├── ✨ Transform SVG to Compose
+│      ┆ package: com.example.figxdemo.ui.icons
+╰── 💾 Write to file
+       ┆ output: Sun.kt
+```
 
 # Quick Start
 
