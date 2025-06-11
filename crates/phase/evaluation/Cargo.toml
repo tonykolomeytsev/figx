@@ -24,7 +24,6 @@ retry.workspace = true
 ureq.workspace = true
 num_cpus.workspace = true
 crossbeam-channel.workspace = true
-oneshot.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
