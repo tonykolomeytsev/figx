@@ -7,7 +7,7 @@ use std::{
 };
 
 use crossbeam_channel::{Receiver, Sender, bounded};
-use log::warn;
+use log::debug;
 
 pub struct Batcher<V, B, R>
 where
@@ -78,7 +78,7 @@ fn batch_loop<V, R, B>(
                 }
 
                 let values: Vec<V> = buffer.iter().map(|(v, _)| v.clone()).collect();
-                warn!(target: "Batcher", "Executing batched operation...");
+                debug!(target: "Batcher", "Executing batched operation...");
                 let result = Arc::new(batched_op.execute(values));
                 for (_, tx) in buffer.drain(..) {
                     let _ = tx.send(result.clone());
