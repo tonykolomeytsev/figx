@@ -2,8 +2,8 @@ name: "Pull Request"
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
+    paths: [ 'Cargo.toml', 'src/**' ]
   pull_request:
 
 jobs:

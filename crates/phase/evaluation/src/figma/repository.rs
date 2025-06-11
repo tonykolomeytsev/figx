@@ -12,7 +12,7 @@ use retry::delay::Exponential;
 use retry::retry_with_index;
 use retry::{OperationResult, delay::jitter};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 use std::{
     collections::{HashMap, VecDeque},
@@ -28,7 +28,6 @@ static RATE_LIMIT_NOTIFICATION: LazyLock<()> = LazyLock::new(
 pub struct FigmaRepository {
     api: FigmaApi,
     batched_api: Arc<DashMap<BatchKey, ExportImgBatcher>>,
-    batcher_timeout: Arc<AtomicU64>,
     cache: Cache,
     locks: KeyMutex<CacheKey, ()>,
     refetch_done: Arc<AtomicBool>,
@@ -63,7 +62,6 @@ impl FigmaRepository {
         Self {
             api,
             batched_api: Arc::new(DashMap::new()),
-            batcher_timeout: Arc::new(AtomicU64::new(100)), // first batch is fast
             cache,
             locks: KeyMutex::new(),
             refetch_done: Arc::new(AtomicBool::new(false)),
@@ -170,8 +168,8 @@ impl FigmaRepository {
         if let None = self.batched_api.get(&batch_key) {
             // Build batcher outside DashMap lock
             let new_batcher = Batcher::new(
-                10,
-                Duration::from_millis(self.batcher_timeout.swap(1000, Ordering::SeqCst)),
+                16,
+                Duration::from_millis(1000),
                 BatchedApi {
                     api: self.api.clone(),
                     remote: remote.clone(),
