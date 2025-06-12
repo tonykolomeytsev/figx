@@ -32,6 +32,7 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
                     node_name: &variant.node_name,
                     format: "png",
                     scale: variant.scale,
+                    variant_name: &variant.id,
                 },
             )?;
             materialize(
@@ -42,8 +43,12 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
                     file_extension: "png",
                     bytes: png,
                 },
-                || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
-            )
+                || {
+                    info!(target: "Writing", "`{label}`{variant} to file",
+                        label = args.attrs.label.fitted(50),
+                        variant = if variant.default { String::new() } else { format!(" ({})", variant.id) },
+                    )
+                },            )
         })
         .collect::<Result<Vec<_>>>()?;
 
