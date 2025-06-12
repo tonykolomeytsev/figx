@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::Label;
 
 impl Label {
@@ -32,12 +30,14 @@ impl Label {
                     }
                     skip
                 })
-                .collect::<PathBuf>();
+                .map(|p| p.to_str().expect("always valid UTF-8").to_owned())
+                .collect::<Vec<String>>()
+                .join("/");
 
-            if path.as_os_str().is_empty() {
+            if path.is_empty() {
                 return format!("//...:{}", self.name);
             } else {
-                return format!("//.../{}:{}", path.display(), self.name);
+                return format!("//.../{path}:{}", self.name);
             }
         }
     }
@@ -105,7 +105,10 @@ mod test {
 
     #[test]
     fn long_compose_label() {
-        let l = label("jason/components/src/main/kotlin/io/cc/photo/jason/component", "ChevronLeft");
+        let l = label(
+            "jason/components/src/main/kotlin/io/cc/photo/jason/component",
+            "ChevronLeft",
+        );
         let result = l.fitted(40);
         assert_eq!(result, "//.../photo/jason/component:ChevronLeft");
         assert!(result.len() <= 40);
