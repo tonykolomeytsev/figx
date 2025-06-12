@@ -4,6 +4,7 @@ use toml_span::{ErrorKind, Spanned};
 pub(crate) fn validate_remote_id(
     remote_id: Option<Spanned<String>>,
     declared_remote_ids: &HashSet<String>,
+    restricted_remote_ids: Option<&HashSet<String>>,
 ) -> std::result::Result<Option<String>, toml_span::DeserError> {
     if let Some(remote_id) = &remote_id {
         if !declared_remote_ids.contains(&remote_id.value) {
@@ -24,6 +25,23 @@ pub(crate) fn validate_remote_id(
                 line_info: None,
             }
             .into());
+        }
+        match restricted_remote_ids {
+            Some(ids) if ids.contains(&remote_id.value) => {
+                return Err(toml_span::Error {
+                    kind: ErrorKind::Custom(
+                        format!(
+                            "remote `{}` marked as `raster_only`, you cannot use it for profile that work with vector graphics",
+                            remote_id.value,
+                        )
+                        .into(),
+                    ),
+                    span: remote_id.span,
+                    line_info: None,
+                }
+                .into());
+            }
+            _ => (),
         }
     }
     Ok(remote_id.map(|it| it.value))

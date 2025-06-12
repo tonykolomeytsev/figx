@@ -62,6 +62,7 @@ impl CanBeExtendedBy<ComposeProfileDto> for ComposeProfileDto {
 
 pub(crate) struct ComposeProfileDtoContext<'a> {
     pub declared_remote_ids: &'a HashSet<String>,
+    pub raster_only_remote_ids: &'a HashSet<String>,
 }
 
 #[derive(Clone)]
@@ -111,7 +112,11 @@ mod de {
             // endregion: extract
 
             // region: validate
-            let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
+            let remote_id = validate_remote_id(
+                remote_id,
+                ctx.declared_remote_ids,
+                Some(ctx.raster_only_remote_ids),
+            )?;
             // endregion: validate
 
             Ok(Self {
@@ -213,6 +218,7 @@ mod test {
         let mut value = toml_span::parse(toml).unwrap();
         let ctx = ComposeProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_dto = ComposeProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
 
@@ -243,6 +249,7 @@ mod test {
         let mut value = toml_span::parse(toml).unwrap();
         let ctx = ComposeProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_dto = ComposeProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
 
@@ -266,6 +273,7 @@ mod test {
         let mut value = toml_span::parse(&toml).unwrap();
         let ctx = ComposeProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_err = ComposeProfileDto::parse_with_ctx(&mut value, ctx).unwrap_err();
 
@@ -295,6 +303,7 @@ mod test {
         let mut value = toml_span::parse(&toml).unwrap();
         let ctx = ComposeProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_err = ComposeProfileDto::parse_with_ctx(&mut value, ctx).unwrap_err();
 

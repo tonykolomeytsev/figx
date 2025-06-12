@@ -22,6 +22,7 @@ pub(crate) fn parse_remotes(
                     Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), dto.key_span)
                 })?,
             },
+            raster_only: dto.raster_only.unwrap_or(false),
         };
         all_remotes.insert(id.to_owned(), Arc::new(remote));
     }

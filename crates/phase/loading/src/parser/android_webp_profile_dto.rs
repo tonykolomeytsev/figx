@@ -81,7 +81,7 @@ mod de {
             // endregion: extract
 
             // region: validate
-            let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
+            let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids, None)?;
             // endregion: validate
 
             Ok(Self {

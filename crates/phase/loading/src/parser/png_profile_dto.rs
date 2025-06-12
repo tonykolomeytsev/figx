@@ -42,7 +42,7 @@ pub(crate) struct PngProfileDtoContext<'a> {
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::util::{validate_remote_id};
+    use crate::parser::util::validate_remote_id;
     use toml_span::de_helpers::TableHelper;
 
     impl<'de> ParseWithContext<'de> for PngProfileDto {
@@ -62,7 +62,7 @@ mod de {
             // endregion: extract
 
             // region: validate
-            let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
+            let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids, None)?;
             // endregion: validate
 
             Ok(Self {

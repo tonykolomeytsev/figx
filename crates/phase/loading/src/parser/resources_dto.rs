@@ -2,7 +2,7 @@ use super::{
     AndroidWebpProfileDtoContext, ComposeProfileDtoContext, PdfProfileDtoContext,
     PngProfileDtoContext, ProfileDto, SvgProfileDtoContext, WebpProfileDtoContext,
 };
-use crate::Profile;
+use crate::{from_ctx_impl, Profile};
 use ordermap::OrderMap;
 use std::{collections::HashSet, sync::Arc};
 
@@ -12,6 +12,7 @@ pub(crate) struct ResourcesDto(pub OrderMap<String, OrderMap<String, ResourceDto
 
 pub(crate) struct ResourcesDtoContext<'de> {
     pub declared_remote_ids: &'de HashSet<String>,
+    pub raster_only_remote_ids: &'de HashSet<String>,
     pub profiles: &'de OrderMap<String, Arc<Profile>>,
 }
 
@@ -25,27 +26,16 @@ pub(crate) struct ResourceDto {
 #[derive(Clone, Copy)]
 pub(crate) struct ResourceDtoContext<'de> {
     pub declared_remote_ids: &'de HashSet<String>,
+    pub raster_only_remote_ids: &'de HashSet<String>,
     pub profile: &'de Arc<Profile>,
 }
 
-macro_rules! from_ctx_impl {
-    ($from:tt, $to:tt) => {
-        impl<'de> From<$from<'de>> for $to<'de> {
-            fn from(value: $from<'de>) -> Self {
-                Self {
-                    declared_remote_ids: value.declared_remote_ids,
-                }
-            }
-        }
-    };
-}
-
-from_ctx_impl!(ResourceDtoContext, PngProfileDtoContext);
-from_ctx_impl!(ResourceDtoContext, SvgProfileDtoContext);
-from_ctx_impl!(ResourceDtoContext, PdfProfileDtoContext);
-from_ctx_impl!(ResourceDtoContext, WebpProfileDtoContext);
-from_ctx_impl!(ResourceDtoContext, ComposeProfileDtoContext);
-from_ctx_impl!(ResourceDtoContext, AndroidWebpProfileDtoContext);
+from_ctx_impl!(raster_only: ResourceDtoContext, PngProfileDtoContext);
+from_ctx_impl!(any: ResourceDtoContext, SvgProfileDtoContext);
+from_ctx_impl!(any: ResourceDtoContext, PdfProfileDtoContext);
+from_ctx_impl!(raster_only: ResourceDtoContext, WebpProfileDtoContext);
+from_ctx_impl!(any: ResourceDtoContext, ComposeProfileDtoContext);
+from_ctx_impl!(raster_only: ResourceDtoContext, AndroidWebpProfileDtoContext);
 
 mod de {
     use toml_span::{ErrorKind, de_helpers::TableHelper};
@@ -99,6 +89,7 @@ mod de {
                             res_value,
                             ResourceDtoContext {
                                 declared_remote_ids: ctx.declared_remote_ids,
+                                raster_only_remote_ids: ctx.raster_only_remote_ids,
                                 profile: profile,
                             },
                         )?,

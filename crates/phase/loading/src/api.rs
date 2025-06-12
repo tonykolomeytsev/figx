@@ -42,6 +42,15 @@ pub struct RemoteSource {
     pub file_key: String,
     pub container_node_ids: Vec<String>,
     pub access_token: String,
+
+    /// Indicates whether this remote source contains only raster resources.
+    ///
+    /// If `true`, the source does not support vector resources, and attempts to load
+    /// vector data from it will result in failure.
+    /// 
+    /// This setting allows the CLI tool to optimize REST API requests to Figma 
+    /// by avoiding unnecessary vector-related queries, improving performance.
+    pub raster_only: bool,
 }
 
 pub type RemoteId = String;

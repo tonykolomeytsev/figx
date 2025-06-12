@@ -35,12 +35,13 @@ impl CanBeExtendedBy<Self> for PdfProfileDto {
 
 pub(crate) struct PdfProfileDtoContext<'a> {
     pub declared_remote_ids: &'a HashSet<String>,
+    pub raster_only_remote_ids: &'a HashSet<String>,
 }
 
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::util::{validate_remote_id};
+    use crate::parser::util::validate_remote_id;
     use toml_span::de_helpers::TableHelper;
 
     impl<'de> ParseWithContext<'de> for PdfProfileDto {
@@ -59,7 +60,11 @@ mod de {
             // endregion: extract
 
             // region: validate
-            let remote_id = validate_remote_id(remote_id, ctx.declared_remote_ids)?;
+            let remote_id = validate_remote_id(
+                remote_id,
+                ctx.declared_remote_ids,
+                Some(ctx.raster_only_remote_ids),
+            )?;
             // endregion: validate
 
             Ok(Self {
@@ -76,7 +81,7 @@ mod de {
 mod test {
 
     use super::*;
-    use crate::{variant_dto, ParseWithContext};
+    use crate::{ParseWithContext, variant_dto};
     use ordermap::ordermap;
     use toml_span::Span;
     use unindent::unindent;
@@ -109,6 +114,7 @@ mod test {
         let mut value = toml_span::parse(toml).unwrap();
         let ctx = PdfProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_dto = PdfProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
 
@@ -132,6 +138,7 @@ mod test {
         let mut value = toml_span::parse(toml).unwrap();
         let ctx = PdfProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_dto = PdfProfileDto::parse_with_ctx(&mut value, ctx).unwrap();
 
@@ -155,6 +162,7 @@ mod test {
         let mut value = toml_span::parse(&toml).unwrap();
         let ctx = PdfProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_err = PdfProfileDto::parse_with_ctx(&mut value, ctx).unwrap_err();
 
@@ -183,6 +191,7 @@ mod test {
         let mut value = toml_span::parse(&toml).unwrap();
         let ctx = PdfProfileDtoContext {
             declared_remote_ids: &declared_remote_ids,
+            raster_only_remote_ids: &HashSet::new(),
         };
         let actual_err = PdfProfileDto::parse_with_ctx(&mut value, ctx).unwrap_err();
 

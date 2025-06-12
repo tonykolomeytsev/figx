@@ -14,10 +14,22 @@ pub(crate) struct ProfilesDto(pub OrderMap<String, ProfileDto>);
 #[derive(Clone, Copy)]
 pub(crate) struct ProfilesDtoContext<'a> {
     pub declared_remote_ids: &'a HashSet<String>,
+    pub raster_only_remote_ids: &'a HashSet<String>,
 }
 
+#[macro_export]
 macro_rules! from_ctx_impl {
-    ($from:tt, $to:tt) => {
+    (any: $from:tt, $to:tt) => {
+        impl<'de> From<$from<'de>> for $to<'de> {
+            fn from(value: $from<'de>) -> Self {
+                Self {
+                    declared_remote_ids: value.declared_remote_ids,
+                    raster_only_remote_ids: value.raster_only_remote_ids,
+                }
+            }
+        }
+    };
+    (raster_only: $from:tt, $to:tt) => {
         impl<'de> From<$from<'de>> for $to<'de> {
             fn from(value: $from<'de>) -> Self {
                 Self {
@@ -28,12 +40,12 @@ macro_rules! from_ctx_impl {
     };
 }
 
-from_ctx_impl!(ProfilesDtoContext, PngProfileDtoContext);
-from_ctx_impl!(ProfilesDtoContext, SvgProfileDtoContext);
-from_ctx_impl!(ProfilesDtoContext, PdfProfileDtoContext);
-from_ctx_impl!(ProfilesDtoContext, WebpProfileDtoContext);
-from_ctx_impl!(ProfilesDtoContext, ComposeProfileDtoContext);
-from_ctx_impl!(ProfilesDtoContext, AndroidWebpProfileDtoContext);
+from_ctx_impl!(raster_only: ProfilesDtoContext, PngProfileDtoContext);
+from_ctx_impl!(any: ProfilesDtoContext, SvgProfileDtoContext);
+from_ctx_impl!(any: ProfilesDtoContext, PdfProfileDtoContext);
+from_ctx_impl!(raster_only: ProfilesDtoContext, WebpProfileDtoContext);
+from_ctx_impl!(any: ProfilesDtoContext, ComposeProfileDtoContext);
+from_ctx_impl!(raster_only: ProfilesDtoContext, AndroidWebpProfileDtoContext);
 
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) enum ProfileDto {

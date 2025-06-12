@@ -42,6 +42,11 @@ pub(crate) fn parse_fig(
                 .keys()
                 .map(|it| it.to_string())
                 .collect::<HashSet<_>>(),
+            raster_only_remote_ids: &remotes
+                .iter()
+                .filter(|(_, it)| it.raster_only)
+                .map(|(k, _)| k.to_string())
+                .collect::<HashSet<String>>(),
             profiles,
         },
     )?;

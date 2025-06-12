@@ -79,6 +79,7 @@ impl FigmaRepository {
             .set_tag(Self::REMOTE_SOURCE_TAG)
             .write_str(&remote.file_key)
             .write_str(&remote.container_node_ids.join(","))
+            .write_bool(remote.raster_only)
             .build();
 
         // return cached value if it exists
@@ -108,7 +109,10 @@ impl FigmaRepository {
             &remote.file_key,
             GetFileNodesQueryParameters {
                 ids: Some(&remote.container_node_ids),
-                geometry: Some("paths"),
+                geometry: match remote.raster_only {
+                    true => None,
+                    false => Some("paths"),
+                },
                 ..Default::default()
             },
         )?;

@@ -16,6 +16,7 @@ pub(crate) struct RemoteDto {
     pub container_node_ids: Vec<String>,
     pub access_token: AccessTokenDefinitionDto,
     pub default: Option<bool>,
+    pub raster_only: Option<bool>,
     pub key_span: Span,
 }
 
@@ -114,6 +115,7 @@ mod de {
                 AccessTokenDefinitionDto::default()
             };
             let default = th.optional("default");
+            let raster_only = th.optional::<bool>("raster_only");
             th.finalize(None)?;
             // endregion: extract
 
@@ -157,6 +159,7 @@ mod de {
                 container_node_ids,
                 access_token,
                 default,
+                raster_only,
                 key_span: Default::default(),
             })
         }
@@ -220,6 +223,7 @@ mod test {
                 file_key = "hijklmno"
                 container_node_ids = ["0-1"]
                 access_token = "fig_987654321"
+                raster_only = true
             "#,
         );
         let expected_dto = {
@@ -231,6 +235,7 @@ mod test {
                     container_node_ids: vec!["42-42".to_string()],
                     access_token: AccessTokenDefinitionDto::Explicit("fig_123456789".to_string()),
                     default: Some(true),
+                    raster_only: None,
                     key_span: Span::new(1, 6),
                 },
             );
@@ -241,6 +246,7 @@ mod test {
                     container_node_ids: vec!["0-1".to_string()],
                     access_token: AccessTokenDefinitionDto::Explicit("fig_987654321".to_string()),
                     default: None,
+                    raster_only: Some(true),
                     key_span: Span::new(108, 121),
                 },
             );
@@ -328,6 +334,7 @@ mod test {
             container_node_ids: vec!["42-42".to_string()],
             access_token: AccessTokenDefinitionDto::Explicit("fig_123456789".to_string()),
             default: Some(true),
+            raster_only: None,
             key_span: Default::default(),
         };
 

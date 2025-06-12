@@ -56,6 +56,12 @@ mod de {
                 Some((_, mut value)) => {
                     let ctx = ProfilesDtoContext {
                         declared_remote_ids: &remotes.0.iter().map(|(k, _)| k.clone()).collect(),
+                        raster_only_remote_ids: &remotes
+                            .0
+                            .iter()
+                            .filter(|(_, it)| it.raster_only.unwrap_or_default())
+                            .map(|(k, _)| k.to_owned())
+                            .collect(),
                     };
                     ProfilesDto::parse_with_ctx(&mut value, ctx)?
                 }
