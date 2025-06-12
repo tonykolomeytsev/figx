@@ -44,6 +44,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     node_name: &variant.node_name,
                     format: "svg",
                     scale: variant.scale,
+                    variant_name: &variant.id,
                 },
             )?;
 
@@ -56,6 +57,8 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     bytes: &convert_svg_to_compose(
                         ctx,
                         ConvertSvgToComposeArgs {
+                            label: &args.attrs.label,
+                            variant_name: &variant.id,
                             name: &variant.res_name,
                             package: match args.profile.package.as_ref() {
                                 None => &package,
@@ -71,8 +74,12 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                         },
                     )?,
                 },
-                || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
-            )
+                || {
+                    info!(target: "Writing", "`{label}`{variant} to file",
+                        label = args.attrs.label.fitted(50),
+                        variant = if variant.default { String::new() } else { format!(" ({})", variant.id) },
+                    )
+                },            )
         })
         .collect::<Result<Vec<_>>>()?;
 

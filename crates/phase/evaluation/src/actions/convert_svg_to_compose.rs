@@ -1,6 +1,7 @@
 use crate::EvalContext;
 use crate::Result;
 use lib_cache::CacheKey;
+use lib_label::Label;
 use lib_svg2compose::SvgToComposeOptions;
 use log::info;
 use phase_loading::ColorMapping;
@@ -36,7 +37,14 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
     }
 
     // otherwise, do transform
-    info!(target: "Converting", "SVG to Compose: {}", args.name);
+    info!(target: "Converting", "SVG to Compose: `{label}`{variant}",
+        label = args.label.fitted(40),
+        variant = if args.variant_name.is_empty() {
+            String::new()
+        } else {
+            format!(" ({})", args.variant_name)
+        }
+    );
     let compose = lib_svg2compose::transform_svg_to_compose(
         args.svg,
         SvgToComposeOptions {
@@ -71,6 +79,8 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
 }
 
 pub struct ConvertSvgToComposeArgs<'a> {
+    pub label: &'a Label,
+    pub variant_name: &'a str,
     pub name: &'a str,
     pub package: &'a str,
     pub kotlin_explicit_api: bool,

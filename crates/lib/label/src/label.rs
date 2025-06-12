@@ -39,15 +39,6 @@ impl Label {
             name: Name::from_str(name.as_ref())?,
         })
     }
-
-    pub fn truncated_display(&self, len: usize) -> String {
-        let s = self.to_string();
-        if s.len() > len {
-            format!("//...{}", &s[s.len() - len..])
-        } else {
-            s
-        }
-    }
 }
 
 impl From<(Package, Name)> for Label {

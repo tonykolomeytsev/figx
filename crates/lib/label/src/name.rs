@@ -4,7 +4,7 @@ pub type TargetName = Name;
 pub type ResourceName = Name;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Name(String);
+pub struct Name(pub(crate) String);
 
 impl FromStr for Name {
     type Err = NameParsingError;

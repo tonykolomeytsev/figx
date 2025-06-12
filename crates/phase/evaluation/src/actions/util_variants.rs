@@ -2,6 +2,7 @@ use phase_loading::ResourceVariants;
 
 pub struct ResourceVariant {
     pub default: bool,
+    pub id: String,
     pub res_name: String,
     pub node_name: String,
     pub scale: f32,
@@ -15,6 +16,7 @@ pub fn generate_variants(
 ) -> Vec<ResourceVariant> {
     let base_variant = ResourceVariant {
         default: true,
+        id: String::new(),
         res_name: res_name.to_owned(),
         node_name: node_name.to_owned(),
         scale,
@@ -30,7 +32,7 @@ pub fn generate_variants(
                 Some(variants) => variants.contains(*k),
                 None => true,
             })
-            .map(|(_, variant)| {
+            .map(|(k, variant)| {
                 let res_name = variant
                     .output_name
                     .as_ref()
@@ -42,6 +44,7 @@ pub fn generate_variants(
 
                 ResourceVariant {
                     default: false,
+                    id: k.to_owned(),
                     res_name,
                     node_name,
                     scale: match variant.scale {

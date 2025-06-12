@@ -19,7 +19,15 @@ pub fn convert_png_to_webp(ctx: &EvalContext, args: ConvertPngToWebpArgs) -> Res
     }
 
     // otherwise, do transform
-    info!(target: "Converting", "PNG to WEBP: {}", args.label.truncated_display(50));
+    info!(
+        target: "Converting", "PNG to WEBP: `{label}`{variant}",
+        label = args.label.fitted(50),
+        variant = if args.variant_name.is_empty() {
+            String::new()
+        } else {
+            format!(" ({})", args.variant_name)
+        }
+    );
     let png = image::load_from_memory_with_format(args.bytes, image::ImageFormat::Png)?;
     let encoder = webp::Encoder::from_image(&png).map_err(|_| Error::WebpCreate)?; // fails if img is not RBG8 or RBGA8
     let webp = if args.quality == 100.0 {
@@ -37,4 +45,5 @@ pub struct ConvertPngToWebpArgs<'a> {
     pub quality: f32,
     pub bytes: &'a [u8],
     pub label: &'a Label,
+    pub variant_name: &'a str,
 }

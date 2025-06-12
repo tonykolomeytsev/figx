@@ -30,6 +30,7 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
                     node_name: &variant.node_name,
                     format: "pdf",
                     scale: variant.scale,
+                    variant_name: &variant.id,
                 },
             )?;
             materialize(
@@ -40,8 +41,12 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
                     file_extension: "pdf",
                     bytes: pdf,
                 },
-                || info!(target: "Writing", "`{}` to file", args.attrs.label.truncated_display(60)),
-            )
+                || {
+                    info!(target: "Writing", "`{label}`{variant} to file",
+                        label = args.attrs.label.fitted(50),
+                        variant = if variant.default { String::new() } else { format!(" ({})", variant.id) },
+                    )
+                },            )
         })
         .collect::<Result<Vec<_>>>()?;
 

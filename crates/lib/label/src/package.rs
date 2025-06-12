@@ -4,7 +4,7 @@ use std::{
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Package(PathBuf);
+pub struct Package(pub(crate) PathBuf);
 
 impl Package {
     pub fn with_path<P>(path: P) -> Result<Self, PackageParsingError>

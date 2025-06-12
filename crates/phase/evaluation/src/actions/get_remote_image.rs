@@ -36,11 +36,21 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
                             FetchRemoteArgs {
                                 remote: args.remote,
                             },
-                            || info!(target: "Fetching", "remote {}", args.remote),
+                            || info!(target: "Updating", "remote {} index", args.remote),
                         )?,
                     })?,
                 },
-                || info!(target: "Downloading", "{} of scale {} for `{}`", args.format, args.scale, args.label.truncated_display(50)),
+                || {
+                    info!(target: "Downloading", "{format} for `{label}`{variant} to file",
+                        format = args.format,
+                        label = args.label.fitted(50),
+                        variant = if args.variant_name.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" ({})", args.variant_name)
+                        }
+                    )
+                },
             )?,
         },
     )
@@ -52,4 +62,5 @@ pub struct GetRemoteImageArgs<'a> {
     pub node_name: &'a str,
     pub format: &'a str,
     pub scale: f32,
+    pub variant_name: &'a str,
 }

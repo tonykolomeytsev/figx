@@ -43,7 +43,8 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
     let all_variants = cartesian_product(scales, themes);
     // endregion: generating all android variants
 
-    all_variants.par_iter()
+    all_variants
+        .par_iter()
         .map(|(density, (node_name, is_night))| {
             let factor = scale_factor(density);
             let density_name = density_name(density);
@@ -56,6 +57,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     node_name,
                     format: "png",
                     scale: factor,
+                    variant_name: density_name,
                 },
             )?;
             let webp = convert_png_to_webp(
@@ -64,6 +66,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     quality: *args.profile.quality,
                     bytes: &png,
                     label: &args.attrs.label,
+                    variant_name: density_name,
                 },
             )?;
             drop(png);
@@ -86,7 +89,12 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     file_extension: "webp",
                     bytes: &webp,
                 },
-                || info!(target: "Writing", "`{}` ({variant_name}) to file", args.attrs.label.truncated_display(50)),
+                || {
+                    info!(target: "Writing", "`{label}` ({variant}) to file",
+                        label = args.attrs.label.fitted(50),
+                        variant = density_name,
+                    )
+                },
             )
         })
         .collect::<Result<()>>()?;
