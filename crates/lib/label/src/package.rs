@@ -110,4 +110,17 @@ mod test {
         assert!(Package::with_path("#foo/bar").is_err());
         assert!(Package::with_path("foo/+bar").is_err());
     }
+
+    #[test]
+    fn display_valid_package__EXPECT__predictable_result() {
+        assert_eq!(
+            "//path/to/package",
+            Package::with_path("path/to/package").unwrap().to_string(),
+        )
+    }
+
+    #[test]
+    fn display_empty_package__EXPECT__predictable_result() {
+        assert_eq!("//", Package::empty().to_string(),)
+    }
 }
