@@ -5,6 +5,11 @@ use toml_span::Spanned;
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) struct RemotesDto(pub OrderMap<String, RemoteDto>);
 
+#[derive(Default)]
+pub struct RemotesDtoContext {
+    pub ignore_missing_access_token: bool,
+}
+
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) struct RemoteDto {
     pub file_key: String,
@@ -32,7 +37,7 @@ mod de {
     use toml_span::{ErrorKind, de_helpers::TableHelper};
 
     impl<'de> ParseWithContext<'de> for RemotesDto {
-        type Context = ();
+        type Context = RemotesDtoContext;
 
         fn parse_with_ctx(
             value: &mut toml_span::Value<'de>,
@@ -45,7 +50,7 @@ mod de {
                 let remote_id = key.to_string();
                 remotes.insert(
                     remote_id,
-                    (key.clone(), RemoteDto::parse_with_ctx(value, ctx)?),
+                    (key.clone(), RemoteDto::parse_with_ctx(value, ())?),
                 );
             }
             th.finalize(Some(value))?;
@@ -77,7 +82,18 @@ mod de {
             }
             // endregion: validate
 
-            Ok(Self(remotes.into_iter().map(|(k, v)| (k, v.1)).collect()))
+            Ok(Self(
+                remotes
+                    .into_iter()
+                    .map(|(k, (_, mut remote))| {
+                        if ctx.ignore_missing_access_token {
+                            remote.access_token =
+                                AccessTokenDefinitionDto::Explicit(":)".to_owned());
+                        }
+                        (k, remote)
+                    })
+                    .collect(),
+            ))
         }
     }
 
@@ -228,7 +244,7 @@ mod test {
 
         // When
         let mut value = toml_span::parse(toml).unwrap();
-        let actual_dto = RemotesDto::parse_with_ctx(&mut value, ()).unwrap();
+        let actual_dto = RemotesDto::parse_with_ctx(&mut value, Default::default()).unwrap();
 
         // Then
         assert_eq!(expected_dto, actual_dto);
@@ -255,7 +271,7 @@ mod test {
 
         // When
         let mut value = toml_span::parse(&toml).unwrap();
-        let actual_err = RemotesDto::parse_with_ctx(&mut value, ()).unwrap_err();
+        let actual_err = RemotesDto::parse_with_ctx(&mut value, Default::default()).unwrap_err();
 
         // Then
         for (err, expected_span) in actual_err.errors.iter().zip(expected_spans) {
@@ -285,7 +301,7 @@ mod test {
 
         // When
         let mut value = toml_span::parse(&toml).unwrap();
-        let actual_err = RemotesDto::parse_with_ctx(&mut value, ()).unwrap_err();
+        let actual_err = RemotesDto::parse_with_ctx(&mut value, Default::default()).unwrap_err();
 
         // Then
         for (err, expected_span) in actual_err.errors.iter().zip(expected_spans) {

@@ -12,7 +12,7 @@ pub struct FeatureImportOptions {
 
 pub fn import(opts: FeatureImportOptions) -> Result<()> {
     let pattern = LabelPattern::try_from(opts.pattern)?;
-    let ws = phase_loading::load_workspace(pattern)?;
+    let ws = phase_loading::load_workspace(pattern, false)?;
     {
         phase_evaluation::evaluate(
             ws,

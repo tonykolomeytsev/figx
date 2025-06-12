@@ -11,7 +11,7 @@ pub struct FeatureFetchOptions {
 
 pub fn fetch(opts: FeatureFetchOptions) -> Result<()> {
     let pattern = LabelPattern::try_from(opts.pattern)?;
-    let ws = phase_loading::load_workspace(pattern)?;
+    let ws = phase_loading::load_workspace(pattern, false)?;
     {
         phase_evaluation::evaluate(
             ws,

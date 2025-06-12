@@ -37,7 +37,7 @@ macro_rules! node {
 
 pub fn explain(opts: FeatureExplainOptions) -> Result<()> {
     let pattern = LabelPattern::try_from(opts.pattern)?;
-    let ws = phase_loading::load_workspace(pattern)?;
+    let ws = phase_loading::load_workspace(pattern, true)?;
 
     let mut nodes = Vec::with_capacity(1024);
     for res in ws.packages.iter().flat_map(|pkg| &pkg.resources) {

@@ -19,7 +19,7 @@ pub enum QueryOutputType {
 
 pub fn query(opts: FeatureQueryOptions) -> Result<()> {
     let pattern = LabelPattern::try_from(opts.pattern)?;
-    let ws = phase_loading::load_workspace(pattern)?;
+    let ws = phase_loading::load_workspace(pattern, true)?;
     use QueryOutputType::*;
     match &opts.output {
         Label => print_labels(ws)?,

@@ -1,5 +1,5 @@
 use super::fig::parse_fig;
-use crate::parser::WorkspaceDto;
+use crate::parser::{WorkspaceDto, WorkspaceDtoContext};
 use crate::workspace::profiles::parse_profiles;
 use crate::workspace::remotes::parse_remotes;
 use crate::{Error, RemoteSource};
@@ -13,22 +13,32 @@ use std::path::Path;
 use std::sync::Arc;
 
 impl WorkspaceDto {
-    pub fn from_file(file: &Path) -> Result<Self> {
+    pub fn from_file(file: &Path, ignore_missing_access_token: bool) -> Result<Self> {
         let string = std::fs::read_to_string(file).map_err(Error::WorkspaceRead)?;
-        Self::from_str(&string).map_err(|e| Error::WorkspaceParse(e, file.to_owned()))
+        Self::from_str(&string, ignore_missing_access_token)
+            .map_err(|e| Error::WorkspaceParse(e, file.to_owned()))
     }
 
-    pub fn from_str(string: &str) -> std::result::Result<Self, toml_span::DeserError> {
-        WorkspaceDto::parse_with_ctx(&mut toml_span::parse(&string)?, ())
+    pub fn from_str(
+        string: &str,
+        ignore_missing_access_token: bool,
+    ) -> std::result::Result<Self, toml_span::DeserError> {
+        WorkspaceDto::parse_with_ctx(
+            &mut toml_span::parse(&string)?,
+            WorkspaceDtoContext {
+                ignore_missing_access_token,
+            },
+        )
     }
 }
 
 pub(crate) fn parse_workspace(
     context: InvocationContext,
     pattern: LabelPattern,
+    ignore_missing_access_token: bool,
 ) -> Result<Workspace> {
     debug!("Parsing workspace config...");
-    let ws_dto = WorkspaceDto::from_file(&context.workspace_file)?;
+    let ws_dto = WorkspaceDto::from_file(&context.workspace_file, ignore_missing_access_token)?;
     let remotes = parse_remotes(ws_dto.remotes)?;
     let profiles = parse_profiles(ws_dto.profiles)?;
     let packages = parse_packages(&context, pattern, &remotes, &profiles)?;

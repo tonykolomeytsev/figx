@@ -1,3 +1,5 @@
+use crate::parser::RemotesDtoContext;
+
 use super::{ProfilesDto, RemotesDto};
 
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -6,17 +8,29 @@ pub(crate) struct WorkspaceDto {
     pub profiles: ProfilesDto,
 }
 
+pub struct WorkspaceDtoContext {
+    pub ignore_missing_access_token: bool,
+}
+
+impl From<WorkspaceDtoContext> for RemotesDtoContext {
+    fn from(value: WorkspaceDtoContext) -> Self {
+        Self {
+            ignore_missing_access_token: value.ignore_missing_access_token,
+        }
+    }
+}
+
 mod de {
     use super::*;
-    use crate::{parser::ProfilesDtoContext, ParseWithContext};
+    use crate::{ParseWithContext, parser::ProfilesDtoContext};
     use toml_span::{ErrorKind, de_helpers::TableHelper};
 
     impl<'de> ParseWithContext<'de> for WorkspaceDto {
-        type Context = ();
+        type Context = WorkspaceDtoContext;
 
         fn parse_with_ctx(
             value: &mut toml_span::Value<'de>,
-            _ctx: Self::Context,
+            ctx: Self::Context,
         ) -> std::result::Result<Self, toml_span::DeserError> {
             // region: extract
             let mut th = TableHelper::new(value)?;
@@ -27,7 +41,7 @@ mod de {
 
             // region: validate
             let remotes = match remotes {
-                Some((_, mut value)) => RemotesDto::parse_with_ctx(&mut value, ())?,
+                Some((_, mut value)) => RemotesDto::parse_with_ctx(&mut value, ctx.into())?,
                 None => {
                     return Err(toml_span::Error::from((
                         ErrorKind::Custom(
