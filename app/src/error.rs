@@ -187,7 +187,7 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             &path,
             "failed to parse workspace file `.figtree.toml`",
         ),
-        WorkspaceRemoteNoAccessToken(id, path) => {
+        WorkspaceRemoteNoAccessToken(id, path, span) => {
             let file = create_simple_file(&path);
             let diagnostic = Diagnostic::error()
                 .with_message(format!("remote `{id}` has no access token specified"))
@@ -197,7 +197,7 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                         or specify FIGMA_PERSONAL_TOKEN in your environment
                     ",
                 ))
-                .with_label(Label::primary((), 0..0));
+                .with_label(Label::primary((), span));
             print_codespan_diag(diagnostic, &file);
         }
         FigTraversing(err) => cli_input_error(CliInputDiagnostics {
@@ -215,27 +215,19 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
         FigParse(err, path) => {
             handle_toml_parsing_error(err, &path, "failed to parse fig-file `.fig.toml`")
         }
-        FigInvalidResourceName(err) => handle_name_parsing_error(err),
         FigInvalidPackage(err) => handle_package_parsing_error(err),
-        FigInvalidRemoteName(remote) => {
-            eprintln!(
-                "{err_label} invalid remote name '{name}'\n",
-                err_label = "error:".red().bold(),
-                name = remote.yellow(),
-            );
-        }
     }
 }
 
-fn handle_name_parsing_error(err: lib_label::NameParsingError) {
-    eprintln!(
-        "{err_label} invalid resource name: '{res_name}'\n\n\
-        {tip_label} valid resource name contains only numbers, latin letters, underlines and dashes\n",
-        err_label = "error:".red().bold(),
-        res_name = err.0.yellow(),
-        tip_label = "  tip:".green(),
-    );
-}
+// fn handle_name_parsing_error(err: lib_label::NameParsingError) {
+//     eprintln!(
+//         "{err_label} invalid resource name: '{res_name}'\n\n\
+//         {tip_label} valid resource name contains only numbers, latin letters, underlines and dashes\n",
+//         err_label = "error:".red().bold(),
+//         res_name = err.0.yellow(),
+//         tip_label = "  tip:".green(),
+//     );
+// }
 
 fn handle_package_parsing_error(err: lib_label::PackageParsingError) {
     eprintln!(

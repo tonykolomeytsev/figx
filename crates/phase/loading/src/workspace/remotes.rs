@@ -19,7 +19,7 @@ pub(crate) fn parse_remotes(
             access_token: match &dto.access_token {
                 AccessTokenDefinitionDto::Explicit(token) => token.to_owned(),
                 AccessTokenDefinitionDto::Env(env) => std::env::var(env).map_err(|_| {
-                    Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new())
+                    Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), dto.key_span)
                 })?,
             },
         };

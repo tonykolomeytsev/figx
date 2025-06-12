@@ -63,14 +63,17 @@ pub fn load_invocation_context() -> Result<InvocationContext> {
     })
 }
 
-pub fn load_workspace(pattern: LabelPattern) -> Result<Workspace> {
+pub fn load_workspace(
+    pattern: LabelPattern,
+    ignore_missing_access_token: bool,
+) -> Result<Workspace> {
     let invocation_ctx = load_invocation_context()?;
     debug!("Loading workspace...");
     let ws_file = invocation_ctx.workspace_file.clone();
-    parse_workspace(invocation_ctx, pattern).map_err(|e| match e {
+    parse_workspace(invocation_ctx, pattern, ignore_missing_access_token).map_err(|e| match e {
         Error::WorkspaceParse(e, _) => Error::WorkspaceParse(e, ws_file),
-        Error::WorkspaceRemoteNoAccessToken(id, _) => {
-            Error::WorkspaceRemoteNoAccessToken(id, ws_file)
+        Error::WorkspaceRemoteNoAccessToken(id, _, span) => {
+            Error::WorkspaceRemoteNoAccessToken(id, ws_file, span)
         }
         e => e,
     })
