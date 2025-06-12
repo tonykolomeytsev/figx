@@ -1,7 +1,7 @@
 use derive_more::From;
-use lib_label::{NameParsingError, PackageParsingError};
-use toml_span::Span;
+use lib_label::PackageParsingError;
 use std::path::PathBuf;
+use toml_span::Span;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
@@ -13,23 +13,19 @@ pub enum Error {
     // region: Init
     InitInaccessibleCurrentWorkDir,
     InitNotInWorkspace,
-
     // endregion: Init
 
     // region: Workspace
     WorkspaceRead(std::io::Error),
     WorkspaceParse(toml_span::DeserError, PathBuf),
     WorkspaceRemoteNoAccessToken(String, PathBuf, Span),
-
     // endregion: Workspace
 
     // region: FigFiles
     FigTraversing(String),
     FigRead(std::io::Error),
     FigParse(toml_span::DeserError, PathBuf),
-    FigInvalidResourceName(NameParsingError),
     FigInvalidPackage(PackageParsingError),
-    FigInvalidRemoteName(String),
     // endregion: FigFiles
 }
 
