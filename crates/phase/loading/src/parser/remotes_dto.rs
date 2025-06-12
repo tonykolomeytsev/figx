@@ -1,5 +1,5 @@
 use ordermap::OrderMap;
-use toml_span::Spanned;
+use toml_span::{Span, Spanned};
 
 #[derive(Default)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -16,6 +16,7 @@ pub(crate) struct RemoteDto {
     pub container_node_ids: Vec<String>,
     pub access_token: AccessTokenDefinitionDto,
     pub default: Option<bool>,
+    pub key_span: Span,
 }
 
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -48,10 +49,9 @@ mod de {
             let mut remotes = OrderMap::with_capacity(th.table.len()); // ordermap for deterministic order
             for (key, value) in th.table.iter_mut() {
                 let remote_id = key.to_string();
-                remotes.insert(
-                    remote_id,
-                    (key.clone(), RemoteDto::parse_with_ctx(value, ())?),
-                );
+                let mut remote = RemoteDto::parse_with_ctx(value, ())?;
+                remote.key_span = key.span;
+                remotes.insert(remote_id, (key.clone(), remote));
             }
             th.finalize(Some(value))?;
             // endregion: extract
@@ -157,6 +157,7 @@ mod de {
                 container_node_ids,
                 access_token,
                 default,
+                key_span: Default::default(),
             })
         }
     }
@@ -207,18 +208,20 @@ mod test {
     #[test]
     fn RemotesDto__parse_fully_defined_remotes__EXPECT__valid_dto() {
         // Given
-        let toml = r#"
-        [icons]
-        file_key = "abcdefg"
-        container_node_ids = ["42-42"]
-        access_token = "fig_123456789"
-        default = true
+        let toml = unindent(
+            r#"
+                [icons]
+                file_key = "abcdefg"
+                container_node_ids = ["42-42"]
+                access_token = "fig_123456789"
+                default = true
 
-        [illustrations]
-        file_key = "hijklmno"
-        container_node_ids = ["0-1"]
-        access_token = "fig_987654321"
-        "#;
+                [illustrations]
+                file_key = "hijklmno"
+                container_node_ids = ["0-1"]
+                access_token = "fig_987654321"
+            "#,
+        );
         let expected_dto = {
             let mut remotes = OrderMap::new();
             remotes.insert(
@@ -228,6 +231,7 @@ mod test {
                     container_node_ids: vec!["42-42".to_string()],
                     access_token: AccessTokenDefinitionDto::Explicit("fig_123456789".to_string()),
                     default: Some(true),
+                    key_span: Span::new(1, 6),
                 },
             );
             remotes.insert(
@@ -237,13 +241,14 @@ mod test {
                     container_node_ids: vec!["0-1".to_string()],
                     access_token: AccessTokenDefinitionDto::Explicit("fig_987654321".to_string()),
                     default: None,
+                    key_span: Span::new(108, 121),
                 },
             );
             RemotesDto(remotes)
         };
 
         // When
-        let mut value = toml_span::parse(toml).unwrap();
+        let mut value = toml_span::parse(&toml).unwrap();
         let actual_dto = RemotesDto::parse_with_ctx(&mut value, Default::default()).unwrap();
 
         // Then
@@ -323,6 +328,7 @@ mod test {
             container_node_ids: vec!["42-42".to_string()],
             access_token: AccessTokenDefinitionDto::Explicit("fig_123456789".to_string()),
             default: Some(true),
+            key_span: Default::default(),
         };
 
         // When

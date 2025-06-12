@@ -72,8 +72,8 @@ pub fn load_workspace(
     let ws_file = invocation_ctx.workspace_file.clone();
     parse_workspace(invocation_ctx, pattern, ignore_missing_access_token).map_err(|e| match e {
         Error::WorkspaceParse(e, _) => Error::WorkspaceParse(e, ws_file),
-        Error::WorkspaceRemoteNoAccessToken(id, _) => {
-            Error::WorkspaceRemoteNoAccessToken(id, ws_file)
+        Error::WorkspaceRemoteNoAccessToken(id, _, span) => {
+            Error::WorkspaceRemoteNoAccessToken(id, ws_file, span)
         }
         e => e,
     })

@@ -1,5 +1,6 @@
 use derive_more::From;
 use lib_label::{NameParsingError, PackageParsingError};
+use toml_span::Span;
 use std::path::PathBuf;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
@@ -18,7 +19,7 @@ pub enum Error {
     // region: Workspace
     WorkspaceRead(std::io::Error),
     WorkspaceParse(toml_span::DeserError, PathBuf),
-    WorkspaceRemoteNoAccessToken(String, PathBuf),
+    WorkspaceRemoteNoAccessToken(String, PathBuf, Span),
 
     // endregion: Workspace
 

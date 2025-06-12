@@ -187,7 +187,7 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             &path,
             "failed to parse workspace file `.figtree.toml`",
         ),
-        WorkspaceRemoteNoAccessToken(id, path) => {
+        WorkspaceRemoteNoAccessToken(id, path, span) => {
             let file = create_simple_file(&path);
             let diagnostic = Diagnostic::error()
                 .with_message(format!("remote `{id}` has no access token specified"))
@@ -197,7 +197,7 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                         or specify FIGMA_PERSONAL_TOKEN in your environment
                     ",
                 ))
-                .with_label(Label::primary((), 0..0));
+                .with_label(Label::primary((), span));
             print_codespan_diag(diagnostic, &file);
         }
         FigTraversing(err) => cli_input_error(CliInputDiagnostics {
