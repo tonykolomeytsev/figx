@@ -48,6 +48,11 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
         .map(|(density, (node_name, is_night))| {
             let factor = scale_factor(density);
             let density_name = density_name(density);
+            let variant_name = if !is_night {
+                format!("{density_name}")
+            } else {
+                format!("night-{density_name}")
+            };
 
             let png = get_remote_image(
                 ctx,
@@ -57,7 +62,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     node_name,
                     format: "png",
                     scale: factor,
-                    variant_name: density_name,
+                    variant_name: &variant_name,
                 },
             )?;
             let webp = convert_png_to_webp(
@@ -66,15 +71,10 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     quality: *args.profile.quality,
                     bytes: &png,
                     label: &args.attrs.label,
-                    variant_name: density_name,
+                    variant_name: &variant_name,
                 },
             )?;
             drop(png);
-            let variant_name = if !is_night {
-                format!("{density_name}")
-            } else {
-                format!("night-{density_name}")
-            };
             let output_dir = args
                 .attrs
                 .package_dir
@@ -92,7 +92,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 || {
                     info!(target: "Writing", "`{label}` ({variant}) to file",
                         label = args.attrs.label.fitted(50),
-                        variant = density_name,
+                        variant = &variant_name,
                     )
                 },
             )
