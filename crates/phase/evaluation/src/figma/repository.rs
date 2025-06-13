@@ -168,7 +168,7 @@ impl FigmaRepository {
         if let None = self.batched_api.get(&batch_key) {
             // Build batcher outside DashMap lock
             let new_batcher = Batcher::new(
-                16,
+                100,
                 Duration::from_millis(1000),
                 BatchedApi {
                     api: self.api.clone(),

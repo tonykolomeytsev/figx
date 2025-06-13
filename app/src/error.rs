@@ -182,11 +182,9 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             message: &format!("unable to read workspace file '.figtree.toml': {err}"),
             labels: &[],
         }),
-        WorkspaceParse(err, path) => handle_toml_parsing_error(
-            err,
-            &path,
-            "failed to parse workspace file `.figtree.toml`",
-        ),
+        WorkspaceParse(err, path) => {
+            handle_toml_parsing_error(err, &path, "failed to parse workspace file `.figtree.toml`")
+        }
         WorkspaceRemoteNoAccessToken(id, path, span) => {
             let file = create_simple_file(&path);
             let diagnostic = Diagnostic::error()
@@ -296,6 +294,9 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
             err_label = "error:".red().bold(),
         ),
         SvgToCompose(err) => {
+            eprintln!("{err_label} {err:?}", err_label = "error:".red().bold());
+        }
+        RenderSvg(err) => {
             eprintln!("{err_label} {err:?}", err_label = "error:".red().bold());
         }
         Interrupted(err) => {

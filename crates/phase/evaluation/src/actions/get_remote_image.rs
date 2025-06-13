@@ -36,7 +36,7 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
                             FetchRemoteArgs {
                                 remote: args.remote,
                             },
-                            || info!(target: "Updating", "remote {} index", args.remote),
+                            || info!(target: "Updating", "remote index: {}", args.remote),
                         )?,
                     })?,
                 },

@@ -15,6 +15,8 @@ use crate::actions::convert_png_to_webp::convert_png_to_webp;
 use crate::actions::get_remote_image;
 use crate::actions::materialize::MaterializeArgs;
 use crate::actions::materialize::materialize;
+use crate::actions::render_svg_to_png::RenderSvgToPngArgs;
+use crate::actions::render_svg_to_png::render_svg_to_png;
 
 pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Result<()> {
     debug!(
@@ -54,15 +56,44 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 format!("night-{density_name}")
             };
 
-            let png = get_remote_image(
+            // let png = get_remote_image(
+            //     ctx,
+            //     GetRemoteImageArgs {
+            //         label: &args.attrs.label,
+            //         remote: &args.attrs.remote,
+            //         node_name,
+            //         format: "png",
+            //         scale: factor,
+            //         variant_name: &variant_name,
+            //     },
+            // )?;
+            // let webp = convert_png_to_webp(
+            //     ctx,
+            //     ConvertPngToWebpArgs {
+            //         quality: *args.profile.quality,
+            //         bytes: &png,
+            //         label: &args.attrs.label,
+            //         variant_name: &variant_name,
+            //     },
+            // )?;
+            let svg = get_remote_image(
                 ctx,
                 GetRemoteImageArgs {
                     label: &args.attrs.label,
                     remote: &args.attrs.remote,
                     node_name,
-                    format: "png",
-                    scale: factor,
+                    format: "svg",
+                    scale: 1.0,
+                    variant_name: "",
+                },
+            )?;
+            let png = render_svg_to_png(
+                ctx,
+                RenderSvgToPngArgs {
+                    label: &args.attrs.label,
                     variant_name: &variant_name,
+                    svg: &svg,
+                    zoom: if factor != 1.0 { Some(factor) } else { None },
                 },
             )?;
             let webp = convert_png_to_webp(

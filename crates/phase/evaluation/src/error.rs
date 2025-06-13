@@ -14,6 +14,7 @@ pub enum Error {
     ActionSingleInputAbsent,
     ActionTaggedInputAbsent,
     SvgToCompose(lib_svg2compose::Error),
+    RenderSvg(String),
     Interrupted(String),
 }
 
