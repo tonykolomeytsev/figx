@@ -41,7 +41,7 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
                     })?,
                 },
                 || {
-                    info!(target: "Downloading", "{format} for `{label}`{variant} to file",
+                    info!(target: "Downloading", "{format} for `{label}`{variant}",
                         format = args.format.to_ascii_uppercase(),
                         label = args.label.fitted(50),
                         variant = if args.variant_name.is_empty() {
