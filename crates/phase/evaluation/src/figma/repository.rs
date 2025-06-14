@@ -8,7 +8,7 @@ use lib_figma::{
 };
 use log::{debug, warn};
 use phase_loading::RemoteSource;
-use retry::delay::Exponential;
+use retry::delay::Fixed;
 use retry::retry_with_index;
 use retry::{OperationResult, delay::jitter};
 use std::sync::Arc;
@@ -18,10 +18,14 @@ use std::{
     collections::{HashMap, VecDeque},
     sync::LazyLock,
 };
+use ureq::Error::Io;
 use ureq::Error::StatusCode;
 
 static RATE_LIMIT_NOTIFICATION: LazyLock<()> = LazyLock::new(
     || warn!(target: "FigmaRepository", "REST API rate limit has been hit. Subsequent requests will be throttled."),
+);
+static FIGMA_500_NOTIFICATION: LazyLock<()> = LazyLock::new(
+    || warn!(target: "FigmaRepository", "It looks like we DDoSed the Figma REST API — slowing down a bit..."),
 );
 
 #[derive(Clone)]
@@ -187,37 +191,44 @@ impl FigmaRepository {
             .get(&batch_key)
             .expect("Value always exists");
         let no_requested_node_attempts = Arc::new(AtomicUsize::new(0));
-        let response = retry_with_index(
-            Exponential::from_millis_with_factor(5000, 2.0).map(jitter),
-            |attempt| {
-                if attempt > 1 {
-                    debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
-                };
-                match batched_api.batch(node.id.to_owned()).as_ref() {
-                    Ok(result) if !result.images.contains_key(node_id) => {
-                        debug!(target: "FigmaRepository", "response has no requested node '{node_name}' with id '{node_id}'");
-                        no_requested_node_attempts.fetch_add(1, Ordering::SeqCst);
-                        let err = Error::ExportImage(format!(
-                            "response has no requested node '{node_name}' with id '{node_id}'",
-                        ));
-                        if no_requested_node_attempts.load(Ordering::SeqCst) < 3 {
-                            OperationResult::Retry(err)
-                        } else {
-                            OperationResult::Err(err)
-                        }
+        let response = retry_with_index(Fixed::from_millis(5000).map(jitter), |attempt| {
+            if attempt > 1 {
+                debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
+            };
+            match batched_api.batch(node.id.to_owned()).as_ref() {
+                Ok(result) if !result.images.contains_key(node_id) => {
+                    debug!(target: "FigmaRepository", "response has no requested node '{node_name}' with id '{node_id}'");
+                    no_requested_node_attempts.fetch_add(1, Ordering::SeqCst);
+                    let err = Error::ExportImage(format!(
+                        "response has no requested node '{node_name}' with id '{node_id}'",
+                    ));
+                    if no_requested_node_attempts.load(Ordering::SeqCst) < 3 {
+                        OperationResult::Retry(err)
+                    } else {
+                        OperationResult::Err(err)
                     }
-                    Ok(result) => OperationResult::Ok(result.to_owned()),
-                    Err(e) => match e.0 {
-                        StatusCode(code) if code == 429 => {
-                            debug!(target: "FigmaRepository", "rate limit encountered");
-                            let _ = &*RATE_LIMIT_NOTIFICATION;
-                            OperationResult::Retry(Error::ExportImage(e.to_string()))
-                        }
-                        _ => OperationResult::Err(Error::ExportImage(e.to_string())),
-                    },
                 }
-            },
-        );
+                Ok(result) => OperationResult::Ok(result.to_owned()),
+                Err(e) => match &e.0 {
+                    StatusCode(429) => {
+                        debug!(target: "FigmaRepository", "rate limit encountered");
+                        let _ = &*RATE_LIMIT_NOTIFICATION;
+                        OperationResult::Retry(Error::ExportImage(e.to_string()))
+                    }
+                    StatusCode(500..=599) => {
+                        debug!(target: "FigmaRepository", "figma server error: {e}");
+                        let _ = &*FIGMA_500_NOTIFICATION;
+                        OperationResult::Retry(Error::ExportImage(e.to_string()))
+                    }
+                    Io(err) if matches!(err.kind(), std::io::ErrorKind::UnexpectedEof) => {
+                        debug!(target: "FigmaRepository", "figma disconnected: {e}");
+                        let _ = &*FIGMA_500_NOTIFICATION;
+                        OperationResult::Retry(Error::ExportImage(e.to_string()))
+                    }
+                    _ => OperationResult::Err(Error::ExportImage(e.to_string())),
+                },
+            }
+        });
 
         let url = {
             let response = match response.as_ref() {
