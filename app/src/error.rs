@@ -246,7 +246,7 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
         ),
         Cache(err) => eprintln!(
             "{err_label} cache error: '{err}'\n\n\
-            {tip_label} if the problem persists, run 'figx clean'\n",
+            {tip_label} if the problem persists, run 'figx clean' or 'figx clean --all'\n",
             err_label = "error:".red().bold(),
             tip_label = "  tip:".green(),
         ),

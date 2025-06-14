@@ -299,6 +299,7 @@ fn extract_metadata(values: &[Node]) -> RemoteMetadata {
                     id: current.id.clone(),
                     name: current.name.clone(),
                     visible: current.visible,
+                    uses_raster_paints: !uses_only_vector_paints(current),
                     hash: current.hash,
                 },
             );
@@ -330,4 +331,9 @@ impl Batched<String, lib_figma::Result<GetImageResponse>> for BatchedApi {
             },
         )?)
     }
+}
+
+fn uses_only_vector_paints(node: &Node) -> bool {
+    node.fills.iter().all(|it| it.r#type != "IMAGE")
+        && node.children.iter().all(uses_only_vector_paints)
 }

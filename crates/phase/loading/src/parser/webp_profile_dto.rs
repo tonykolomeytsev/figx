@@ -12,6 +12,7 @@ pub(crate) struct WebpProfileDto {
     pub quality: Option<WebpQuality>,
     pub output_dir: Option<PathBuf>,
     pub variants: Option<VariantsDto>,
+    pub legacy_loader: Option<bool>,
 }
 
 impl CanBeExtendedBy<Self> for WebpProfileDto {
@@ -35,6 +36,7 @@ impl CanBeExtendedBy<Self> for WebpProfileDto {
                 (None, Some(this)) => Some(this.clone()),
                 _ => None,
             },
+            legacy_loader: another.legacy_loader.or(self.legacy_loader),
         }
     }
 }
@@ -63,6 +65,7 @@ mod de {
             let quality = th.optional::<WebpQuality>("quality");
             let output_dir = th.optional::<String>("output_dir").map(PathBuf::from);
             let variants = th.optional::<VariantsDto>("variants");
+            let legacy_loader = th.optional::<bool>("legacy_loader");
             th.finalize(None)?;
             // endregion: extract
 
@@ -76,6 +79,7 @@ mod de {
                 quality,
                 output_dir,
                 variants,
+                legacy_loader,
             })
         }
     }
@@ -98,6 +102,7 @@ mod test {
         scale = 0.42
         quality = 100
         output_dir = "images"
+        legacy_loader = false
         "#;
         let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
         let expected_dto = WebpProfileDto {
@@ -106,6 +111,7 @@ mod test {
             quality: Some(WebpQuality(100.0)),
             output_dir: Some(PathBuf::from("images")),
             variants: None,
+            legacy_loader: Some(false),
         };
 
         // When
@@ -131,6 +137,7 @@ mod test {
             quality: None,
             output_dir: None,
             variants: None,
+            legacy_loader: None,
         };
 
         // When

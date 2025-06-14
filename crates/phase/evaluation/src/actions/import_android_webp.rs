@@ -12,6 +12,9 @@ use crate::Result;
 use crate::actions::GetRemoteImageArgs;
 use crate::actions::convert_png_to_webp::ConvertPngToWebpArgs;
 use crate::actions::convert_png_to_webp::convert_png_to_webp;
+use crate::actions::get_node::GetNodeArgs;
+use crate::actions::get_node::ensure_is_vector_node;
+use crate::actions::get_node::get_node;
 use crate::actions::get_remote_image;
 use crate::actions::materialize::MaterializeArgs;
 use crate::actions::materialize::materialize;
@@ -56,46 +59,49 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 format!("night-{density_name}")
             };
 
-            // let png = get_remote_image(
-            //     ctx,
-            //     GetRemoteImageArgs {
-            //         label: &args.attrs.label,
-            //         remote: &args.attrs.remote,
-            //         node_name,
-            //         format: "png",
-            //         scale: factor,
-            //         variant_name: &variant_name,
-            //     },
-            // )?;
-            // let webp = convert_png_to_webp(
-            //     ctx,
-            //     ConvertPngToWebpArgs {
-            //         quality: *args.profile.quality,
-            //         bytes: &png,
-            //         label: &args.attrs.label,
-            //         variant_name: &variant_name,
-            //     },
-            // )?;
-            let svg = get_remote_image(
+            let node = get_node(
                 ctx,
-                GetRemoteImageArgs {
-                    label: &args.attrs.label,
+                GetNodeArgs {
+                    node_name: &node_name,
                     remote: &args.attrs.remote,
-                    node_name,
-                    format: "svg",
-                    scale: 1.0,
-                    variant_name: "",
                 },
             )?;
-            let png = render_svg_to_png(
-                ctx,
-                RenderSvgToPngArgs {
-                    label: &args.attrs.label,
-                    variant_name: &variant_name,
-                    svg: &svg,
-                    zoom: if factor != 1.0 { Some(factor) } else { None },
-                },
-            )?;
+            let png = if args.profile.legacy_loader {
+                get_remote_image(
+                    ctx,
+                    GetRemoteImageArgs {
+                        label: &args.attrs.label,
+                        remote: &args.attrs.remote,
+                        node: &node,
+                        format: "png",
+                        scale: factor,
+                        variant_name: &variant_name,
+                    },
+                )?
+            } else {
+                ensure_is_vector_node(&node, node_name, &args.attrs.label, true);
+                let svg = get_remote_image(
+                    ctx,
+                    GetRemoteImageArgs {
+                        label: &args.attrs.label,
+                        remote: &args.attrs.remote,
+                        node: &node,
+                        format: "svg",
+                        scale: 1.0,       // always the same yes
+                        variant_name: "", // no variant yes
+                    },
+                )?;
+                render_svg_to_png(
+                    ctx,
+                    RenderSvgToPngArgs {
+                        label: &args.attrs.label,
+                        variant_name: &variant_name,
+                        svg: &svg,
+                        zoom: if factor != 1.0 { Some(factor) } else { None },
+                    },
+                )?
+            };
+
             let webp = convert_png_to_webp(
                 ctx,
                 ConvertPngToWebpArgs {
@@ -105,7 +111,6 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     variant_name: &variant_name,
                 },
             )?;
-            drop(png);
             let output_dir = args
                 .attrs
                 .package_dir

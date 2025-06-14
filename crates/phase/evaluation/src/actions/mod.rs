@@ -4,6 +4,7 @@ pub mod download_image;
 pub mod export_image;
 pub mod fetch_remote;
 pub mod find_node_by_name;
+pub mod get_node;
 pub(super) mod get_remote_image;
 pub mod import_android_webp;
 pub mod import_compose;
