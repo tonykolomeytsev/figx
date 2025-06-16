@@ -1,4 +1,8 @@
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{Debug, Display},
+    ops::Range,
+    path::PathBuf,
+};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -10,7 +14,11 @@ pub enum Error {
     ImageDecode(image::ImageError),
     FigmaApiNetwork(lib_figma::Error),
     ExportImage(String),
-    FindNode { node_name: String },
+    FindNode {
+        node_name: String,
+        file: PathBuf,
+        span: Range<usize>,
+    },
     ActionSingleInputAbsent,
     ActionTaggedInputAbsent,
     SvgToCompose(lib_svg2compose::Error),
@@ -66,7 +74,6 @@ impl From<retry::Error<lib_figma::Error>> for Error {
         value.error.into()
     }
 }
-
 
 impl From<retry::Error<Error>> for Error {
     fn from(value: retry::Error<Error>) -> Self {

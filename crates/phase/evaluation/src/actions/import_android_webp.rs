@@ -64,6 +64,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 GetNodeArgs {
                     node_name: &node_name,
                     remote: &args.attrs.remote,
+                    diag: &args.attrs.diag,
                 },
             )?;
             let png = if args.profile.legacy_loader {

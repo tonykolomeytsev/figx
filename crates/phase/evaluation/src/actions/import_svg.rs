@@ -24,7 +24,8 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
         .map(|variant| {
             let node = get_node(ctx, GetNodeArgs { 
                 node_name: &variant.node_name, 
-                remote: &args.attrs.remote 
+                remote: &args.attrs.remote,
+                diag: &args.attrs.diag,
             })?;
             ensure_is_vector_node(&node, &variant.node_name, &args.attrs.label, false);
             let svg = get_remote_image(

@@ -1,5 +1,5 @@
 use crate::parser::ProfileDto;
-use crate::{CanBeExtendedBy, ResourceAttrs, Result};
+use crate::{CanBeExtendedBy, ResourceAttrs, ResourceDiagnostics, Result};
 use crate::{LoadedFigFile, Profile, RemoteSource, Resource, parser::ResourcesDto};
 use lib_label::Label;
 use ordermap::OrderMap;
@@ -12,6 +12,7 @@ pub(crate) fn parse_resources(
 ) -> Result<Vec<Resource>> {
     let ResourcesDto(resources) = resources_dto;
     let mut output = Vec::new();
+    let resource_location_file = Arc::new(fig_file.fig_file.to_owned());
 
     for (_, res_dto_list) in resources {
         for (res_id, res_dto) in res_dto_list {
@@ -28,6 +29,10 @@ pub(crate) fn parse_resources(
                     remote: parse_remote_by_id(remotes, profile.remote_id())?,
                     node_name: res_dto.node_name,
                     package_dir: fig_file.fig_dir.clone(),
+                    diag: ResourceDiagnostics {
+                        file: resource_location_file.clone(),
+                        definition_span: res_dto.def_span.start..res_dto.def_span.end,
+                    },
                 },
                 profile,
             };

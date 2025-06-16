@@ -1,6 +1,6 @@
 use lib_label::Label;
 use log::{info, warn};
-use phase_loading::RemoteSource;
+use phase_loading::{RemoteSource, ResourceDiagnostics};
 
 use crate::{
     EvalContext, Result,
@@ -22,6 +22,7 @@ pub fn get_node<'a, 'b>(ctx: &'a EvalContext, args: GetNodeArgs<'a>) -> Result<N
     find_node_by_name(FindNodeByNameArgs {
         name: args.node_name,
         remote: &remote,
+        diag: args.diag,
     })
     .cloned()
 }
@@ -29,6 +30,7 @@ pub fn get_node<'a, 'b>(ctx: &'a EvalContext, args: GetNodeArgs<'a>) -> Result<N
 pub struct GetNodeArgs<'a> {
     pub node_name: &'a str,
     pub remote: &'a RemoteSource,
+    pub diag: &'a ResourceDiagnostics,
 }
 
 pub fn ensure_is_vector_node(

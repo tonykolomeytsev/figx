@@ -281,10 +281,24 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
             "{err_label} while exporting image: {err}",
             err_label = "error:".red().bold(),
         ),
-        FindNode { node_name } => eprintln!(
-            "{err_label} cannot find node with name '{node_name}'",
-            err_label = "error:".red().bold(),
-        ),
+        FindNode {
+            node_name,
+            file,
+            span,
+        } => {
+            let file = create_simple_file(&file);
+            let diagnostic = Diagnostic::error()
+                .with_message(format!("cannot find node with name `{node_name}`"))
+                .with_note(unindent(
+                    "
+                        make sure a node with that name exists in the Figma file, 
+                        or fix the name locally
+                    ",
+                ))
+                .with_label(Label::primary((), span));
+            print_codespan_diag(diagnostic, &file);
+        }
+
         ActionSingleInputAbsent => eprintln!(
             "{err_label} internal: action input is absent",
             err_label = "error:".red().bold(),
