@@ -116,19 +116,29 @@ fn png_resource_tree(r: &ResourceAttrs, p: &PngProfile) -> Node {
         &p.variants,
     );
     for v in variants {
-        let mut child_nodes = vec![
-            node!(
+        let mut child_nodes = Vec::with_capacity(4);
+        if p.legacy_loader {
+            child_nodes.push(node!(
                 format!("📤 Export PNG from remote {}", r.remote),
                 [
                     ("node", v.node_name.to_string()),
                     ("scale", v.scale.to_string())
                 ]
-            ),
-            node!(
-                "💾 Write to file",
-                [("output", format!("{}.png", v.res_name))]
-            ),
-        ];
+            ));
+        } else {
+            child_nodes.push(node!(
+                format!("📤 Export SVG from remote {}", r.remote),
+                [("node", v.node_name.to_string())]
+            ));
+            child_nodes.push(node!(
+                "🎨 Render PNG locally",
+                [("scale", v.scale.to_string())]
+            ));
+        }
+        child_nodes.push(node!(
+            "💾 Write to file",
+            [("output", format!("{}.png", v.res_name))]
+        ));
 
         if v.default {
             root_node.children.append(&mut child_nodes);
@@ -223,20 +233,33 @@ fn webp_resource_tree(r: &ResourceAttrs, p: &WebpProfile) -> Node {
         &p.variants,
     );
     for v in variants {
-        let mut child_nodes = vec![
-            node!(
+        let mut child_nodes = Vec::with_capacity(4);
+        if p.legacy_loader {
+            child_nodes.push(node!(
                 format!("📤 Export PNG from remote {}", r.remote),
+                [
+                    ("node", v.node_name.to_string()),
+                    ("scale", v.scale.to_string())
+                ]
+            ));
+        } else {
+            child_nodes.push(node!(
+                format!("📤 Export SVG from remote {}", r.remote),
                 [("node", v.node_name.to_string())]
-            ),
-            node!(
-                "✨ Transform PNG to WEBP",
-                [("quality", p.quality.to_string())]
-            ),
-            node!(
-                "💾 Write to file",
-                [("output", format!("{}.webp", v.res_name))]
-            ),
-        ];
+            ));
+            child_nodes.push(node!(
+                "🎨 Render PNG locally",
+                [("scale", v.scale.to_string())]
+            ));
+        }
+        child_nodes.push(node!(
+            "✨ Transform PNG to WEBP",
+            [("quality", p.quality.to_string())]
+        ));
+        child_nodes.push(node!(
+            "💾 Write to file",
+            [("output", format!("{}.webp", v.res_name))]
+        ));
 
         if v.default {
             root_node.children.append(&mut child_nodes);
@@ -326,24 +349,38 @@ fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node
                 } else {
                     format!("night-{density_name}")
                 };
-                node!(
-                    format!("Variant '{variant_name}'"),
-                    node!(
+                let mut child_nodes = Vec::with_capacity(4);
+                if p.legacy_loader {
+                    child_nodes.push(node!(
                         format!("📤 Export PNG from remote {}", r.remote),
                         [
                             ("node", node_name.to_string()),
                             ("scale", scale_factor.to_string())
                         ]
-                    ),
-                    node!(
-                        "✨ Transform PNG to WEBP",
-                        [("quality", p.quality.to_string())]
-                    ),
-                    node!(
-                        "💾 Write to file",
-                        [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
-                    )
-                )
+                    ));
+                } else {
+                    child_nodes.push(node!(
+                        format!("📤 Export SVG from remote {}", r.remote),
+                        [("node", node_name.to_string())]
+                    ));
+                    child_nodes.push(node!(
+                        "🎨 Render PNG locally",
+                        [("scale", scale_factor.to_string())]
+                    ));
+                }
+                child_nodes.push(node!(
+                    "✨ Transform PNG to WEBP",
+                    [("quality", p.quality.to_string())]
+                ));
+                child_nodes.push(node!(
+                    "💾 Write to file",
+                    [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
+                ));
+                Node {
+                    name: format!("Variant '{variant_name}'"),
+                    children: child_nodes,
+                    params: Default::default(),
+                }
             })
             .collect(),
         ..Default::default()
