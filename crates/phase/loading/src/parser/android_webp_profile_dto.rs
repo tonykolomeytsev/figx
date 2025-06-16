@@ -147,7 +147,7 @@ mod test {
                 )
             },
             night: Some(SingleNamePattern("{base} / dark".to_string())),
-            legacy_loader: Some(true),
+            legacy_loader: Some(false),
         };
 
         // When
