@@ -173,7 +173,13 @@ pub struct Node {
     pub name: String,
     pub visible: bool,
     pub children: Vec<Node>,
+    pub fills: Vec<Paint>,
     pub hash: u64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Paint {
+    pub r#type: String,
 }
 
 impl<'de> Deserialize<'de> for Node {
@@ -214,11 +220,16 @@ impl<'de> Deserialize<'de> for Node {
             .map(|v| serde_json::from_value(v).map_err(serde::de::Error::custom))
             .unwrap_or(Ok(Vec::new()))?;
 
+        let fills = obj.remove("fills")
+            .map(|v| serde_json::from_value(v).map_err(serde::de::Error::custom))
+            .unwrap_or(Ok(Vec::new()))?;
+
         Ok(Node {
             id,
             name,
             visible,
             children,
+            fills,
             hash,
         })
     }

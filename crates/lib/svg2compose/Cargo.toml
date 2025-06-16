@@ -4,6 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-usvg = "0.45.1"
+usvg.workspace = true
 log.workspace = true
 colorsys = "0.6.7"

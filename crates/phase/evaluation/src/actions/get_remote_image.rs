@@ -3,16 +3,8 @@ use std::sync::Arc;
 use super::{
     download_image::DownloadImageArgs,
     export_image::{ExportImageArgs, export_image},
-    fetch_remote::FetchRemoteArgs,
-    find_node_by_name::FindNodeByNameArgs,
 };
-use crate::{
-    EvalContext, Result,
-    actions::{
-        download_image::download_image, fetch_remote::fetch_remote,
-        find_node_by_name::find_node_by_name,
-    },
-};
+use crate::{actions::download_image::download_image, figma::NodeMetadata, EvalContext, Result};
 use lib_label::Label;
 use log::info;
 use phase_loading::RemoteSource;
@@ -29,16 +21,7 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
                     remote: args.remote,
                     format: args.format,
                     scale: args.scale,
-                    node: find_node_by_name(FindNodeByNameArgs {
-                        name: args.node_name,
-                        remote: &fetch_remote(
-                            ctx,
-                            FetchRemoteArgs {
-                                remote: args.remote,
-                            },
-                            || info!(target: "Updating", "remote {} index", args.remote),
-                        )?,
-                    })?,
+                    node: args.node,
                 },
                 || {
                     info!(target: "Downloading", "{format} for `{label}`{variant}",
@@ -59,7 +42,7 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
 pub struct GetRemoteImageArgs<'a> {
     pub label: &'a Label,
     pub remote: &'a Arc<RemoteSource>,
-    pub node_name: &'a str,
+    pub node: &'a NodeMetadata,
     pub format: &'a str,
     pub scale: f32,
     pub variant_name: &'a str,

@@ -4,6 +4,7 @@ pub mod download_image;
 pub mod export_image;
 pub mod fetch_remote;
 pub mod find_node_by_name;
+pub mod get_node;
 pub(super) mod get_remote_image;
 pub mod import_android_webp;
 pub mod import_compose;
@@ -12,6 +13,7 @@ pub mod import_png;
 pub mod import_svg;
 pub mod import_webp;
 pub mod materialize;
+pub mod render_svg_to_png;
 pub mod util_variants;
 
 pub(super) use get_remote_image::*;

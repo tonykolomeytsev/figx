@@ -3,11 +3,11 @@ use super::{
     materialize::{MaterializeArgs, materialize},
 };
 use crate::{
-    EvalContext, Result,
     actions::{
-        convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
+        convert_svg_to_compose::{convert_svg_to_compose, ConvertSvgToComposeArgs},
+        get_node::{ensure_is_vector_node, get_node, GetNodeArgs},
         util_variants::generate_variants,
-    },
+    }, EvalContext, Result
 };
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info, warn};
@@ -36,12 +36,17 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
     variants
         .par_iter()
         .map(|variant| {
+            let node = get_node(ctx, GetNodeArgs { 
+                node_name: &variant.node_name, 
+                remote: &args.attrs.remote 
+            })?;
+            ensure_is_vector_node(&node, &variant.node_name, &args.attrs.label, false);
             let svg = &get_remote_image(
                 ctx,
                 GetRemoteImageArgs {
                     label: &args.attrs.label,
                     remote: &args.attrs.remote,
-                    node_name: &variant.node_name,
+                    node: &node,
                     format: "svg",
                     scale: variant.scale,
                     variant_name: &variant.id,

@@ -2,9 +2,7 @@ use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::{ResourceAttrs, SvgProfile};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-
-use crate::{EvalContext, Result, actions::util_variants::generate_variants};
-
+use crate::{actions::{get_node::{ensure_is_vector_node, get_node, GetNodeArgs}, util_variants::generate_variants}, EvalContext, Result};
 use super::{
     GetRemoteImageArgs, get_remote_image,
     materialize::{MaterializeArgs, materialize},
@@ -24,12 +22,17 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
     variants
         .par_iter()
         .map(|variant| {
+            let node = get_node(ctx, GetNodeArgs { 
+                node_name: &variant.node_name, 
+                remote: &args.attrs.remote 
+            })?;
+            ensure_is_vector_node(&node, &variant.node_name, &args.attrs.label, false);
             let svg = get_remote_image(
                 ctx,
                 GetRemoteImageArgs {
                     label: &args.attrs.label,
                     remote: &args.attrs.remote,
-                    node_name: &variant.node_name,
+                    node: &node,
                     format: "svg",
                     scale: variant.scale,
                     variant_name: &variant.id,

@@ -2,7 +2,7 @@ use super::{
     GetRemoteImageArgs, get_remote_image,
     materialize::{MaterializeArgs, materialize},
 };
-use crate::{EvalContext, Result, actions::util_variants::generate_variants};
+use crate::{actions::{get_node::{get_node, GetNodeArgs}, util_variants::generate_variants}, EvalContext, Result};
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::{PdfProfile, ResourceAttrs};
@@ -22,12 +22,16 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
     variants
         .par_iter()
         .map(|variant| {
+            let node = get_node(ctx, GetNodeArgs { 
+                node_name: &variant.node_name, 
+                remote: &args.attrs.remote 
+            })?;
             let pdf = &get_remote_image(
                 ctx,
                 GetRemoteImageArgs {
                     label: &args.attrs.label,
                     remote: &args.attrs.remote,
-                    node_name: &variant.node_name,
+                    node: &node,
                     format: "pdf",
                     scale: variant.scale,
                     variant_name: &variant.id,

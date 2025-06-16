@@ -6,10 +6,11 @@ pub struct RemoteMetadata {
     pub name_to_node: HashMap<String, NodeMetadata>,
 }
 
-#[derive(Debug, Encode, Decode)]
+#[derive(Debug, Encode, Decode, Clone)]
 pub struct NodeMetadata {
     pub id: String,
     pub name: String,
     pub visible: bool,
     pub hash: u64,
+    pub uses_raster_paints: bool,
 }
