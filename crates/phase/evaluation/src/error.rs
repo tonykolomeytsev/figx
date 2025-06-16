@@ -19,11 +19,8 @@ pub enum Error {
         file: PathBuf,
         span: Range<usize>,
     },
-    ActionSingleInputAbsent,
-    ActionTaggedInputAbsent,
     SvgToCompose(lib_svg2compose::Error),
     RenderSvg(String),
-    Interrupted(String),
 }
 
 impl Display for Error {
@@ -60,12 +57,6 @@ impl From<lib_figma::Error> for Error {
 impl From<lib_svg2compose::Error> for Error {
     fn from(value: lib_svg2compose::Error) -> Self {
         Self::SvgToCompose(value)
-    }
-}
-
-impl From<std::sync::mpsc::RecvError> for Error {
-    fn from(value: std::sync::mpsc::RecvError) -> Self {
-        Self::Interrupted(format!("channel unexpectedly closed: {value}"))
     }
 }
 

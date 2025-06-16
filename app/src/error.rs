@@ -298,23 +298,11 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
                 .with_label(Label::primary((), span));
             print_codespan_diag(diagnostic, &file);
         }
-
-        ActionSingleInputAbsent => eprintln!(
-            "{err_label} internal: action input is absent",
-            err_label = "error:".red().bold(),
-        ),
-        ActionTaggedInputAbsent => eprintln!(
-            "{err_label} internal: tagged action input is absent",
-            err_label = "error:".red().bold(),
-        ),
         SvgToCompose(err) => {
             eprintln!("{err_label} {err:?}", err_label = "error:".red().bold());
         }
         RenderSvg(err) => {
             eprintln!("{err_label} {err:?}", err_label = "error:".red().bold());
-        }
-        Interrupted(err) => {
-            eprintln!("{err_label} {err}", err_label = "error:".red().bold());
         }
     }
 }
