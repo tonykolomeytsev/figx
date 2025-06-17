@@ -30,7 +30,8 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
         .map(|variant| {
             let node = get_node(ctx, GetNodeArgs { 
                 node_name: &variant.node_name, 
-                remote: &args.attrs.remote 
+                remote: &args.attrs.remote,
+                diag: &args.attrs.diag,
             })?;
             let png = if args.profile.legacy_loader {
                 get_remote_image(

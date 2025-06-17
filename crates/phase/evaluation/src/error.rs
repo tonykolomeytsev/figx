@@ -1,4 +1,8 @@
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{Debug, Display},
+    ops::Range,
+    path::PathBuf,
+};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -10,12 +14,13 @@ pub enum Error {
     ImageDecode(image::ImageError),
     FigmaApiNetwork(lib_figma::Error),
     ExportImage(String),
-    FindNode { node_name: String },
-    ActionSingleInputAbsent,
-    ActionTaggedInputAbsent,
+    FindNode {
+        node_name: String,
+        file: PathBuf,
+        span: Range<usize>,
+    },
     SvgToCompose(lib_svg2compose::Error),
     RenderSvg(String),
-    Interrupted(String),
 }
 
 impl Display for Error {
@@ -55,18 +60,11 @@ impl From<lib_svg2compose::Error> for Error {
     }
 }
 
-impl From<std::sync::mpsc::RecvError> for Error {
-    fn from(value: std::sync::mpsc::RecvError) -> Self {
-        Self::Interrupted(format!("channel unexpectedly closed: {value}"))
-    }
-}
-
 impl From<retry::Error<lib_figma::Error>> for Error {
     fn from(value: retry::Error<lib_figma::Error>) -> Self {
         value.error.into()
     }
 }
-
 
 impl From<retry::Error<Error>> for Error {
     fn from(value: retry::Error<Error>) -> Self {
