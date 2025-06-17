@@ -34,7 +34,7 @@ FigX comes with built-in import profiles for various formats, enabling immediate
 
 | Profile | Description |
 | --- | --- |
-| `adroid-webp` | 1. Downloads PNG variants for themes (`night`/`light`) and screen densities (`hdpi`, `xhdpi`, etc.)<br> 2. Converts all variants to WebP using [libwebp](https://developers.google.com/speed/webp)<br> 3. Places the resulting images into the appropriate `drawable-*` directories for Android |
+| `android-webp` | 1. Downloads PNG variants for themes (`night`/`light`) and screen densities (`hdpi`, `xhdpi`, etc.)<br> 2. Converts all variants to WebP using [libwebp](https://developers.google.com/speed/webp)<br> 3. Places the resulting images into the appropriate `drawable-*` directories for Android |
 | `compose` | 1. Downloads SVG from Figma<br> 2. Simplifies SVG using [usvg](https://github.com/linebender/resvg/tree/main/crates/usvg)<br> 3. Converts to `ImageVector` for Jetpack Compose |
 | `webp` | 1. Downloads PNG from Figma<br> 2. Converts PNG to WebP using [libwebp](https://developers.google.com/speed/webp) |
 | `png` | Downloads PNG assets directly from Figma |
