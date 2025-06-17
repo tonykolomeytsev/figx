@@ -24,7 +24,8 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
         .map(|variant| {
             let node = get_node(ctx, GetNodeArgs { 
                 node_name: &variant.node_name, 
-                remote: &args.attrs.remote 
+                remote: &args.attrs.remote,
+                diag: &args.attrs.diag,
             })?;
             let pdf = &get_remote_image(
                 ctx,

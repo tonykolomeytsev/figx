@@ -1,7 +1,7 @@
 use std::{
     collections::{BTreeMap, HashSet},
     fmt::{Debug, Display},
-    ops::Deref,
+    ops::{Deref, Range},
     path::PathBuf,
     sync::Arc,
 };
@@ -316,6 +316,12 @@ pub struct ResourceAttrs {
     pub remote: Arc<RemoteSource>,
     pub node_name: String,
     pub package_dir: PathBuf,
+    pub diag: ResourceDiagnostics,
+}
+
+pub struct ResourceDiagnostics {
+    pub file: Arc<PathBuf>,
+    pub definition_span: Range<usize>,
 }
 
 // region: Validated primitives

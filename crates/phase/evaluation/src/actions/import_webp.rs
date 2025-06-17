@@ -28,7 +28,8 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
         .map(|variant| {
             let node = get_node(ctx, GetNodeArgs { 
                 node_name: &variant.node_name, 
-                remote: &args.attrs.remote 
+                remote: &args.attrs.remote,
+                diag: &args.attrs.diag,
             })?;
             let png = if args.profile.legacy_loader {
                 get_remote_image(

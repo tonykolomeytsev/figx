@@ -4,6 +4,7 @@ use super::{
 };
 use crate::Profile;
 use ordermap::OrderMap;
+use toml_span::Span;
 use std::{collections::HashSet, sync::Arc};
 
 #[derive(Default)]
@@ -20,6 +21,7 @@ pub(crate) struct ResourceDto {
     pub node_name: String,
     pub profile: Arc<Profile>,
     pub override_profile: Option<ProfileDto>,
+    pub def_span: Span,
 }
 
 #[derive(Clone, Copy)]
@@ -155,6 +157,7 @@ mod de {
                 node_name,
                 profile: ctx.profile.clone(),
                 override_profile,
+                def_span: value.span,
             })
         }
     }
