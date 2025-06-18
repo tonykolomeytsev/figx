@@ -3,7 +3,7 @@ use crate::{Error, Result};
 use dashmap::DashMap;
 use key_mutex::KeyMutex;
 use lib_cache::{Cache, CacheKey};
-use lib_figma::{
+use lib_figma_fluent::{
     FigmaApi, GetFileNodesQueryParameters, GetImageQueryParameters, GetImageResponse, Node,
 };
 use log::{debug, warn};
@@ -53,7 +53,7 @@ impl BatchKey {
     }
 }
 
-pub type ExportImgBatcher = Batcher<String, BatchedApi, lib_figma::Result<GetImageResponse>>;
+pub type ExportImgBatcher = Batcher<String, BatchedApi, lib_figma_fluent::Result<GetImageResponse>>;
 
 pub type DownloadUrl = String;
 
@@ -119,10 +119,7 @@ impl FigmaRepository {
 
         let metadata = {
             let all_nodes: Vec<Node> = response
-                .nodes
-                .into_values()
-                .map(|node| node.document)
-                .collect();
+                .collect::<std::result::Result<Vec<_>, _>>()?;
             extract_metadata(&all_nodes)
         };
 
@@ -235,11 +232,6 @@ impl FigmaRepository {
                 Ok(response) => response,
                 Err(e) => return Err(Error::ExportImage(e.to_string())),
             };
-            if let Some(error) = &response.err {
-                return Err(Error::ExportImage(format!(
-                    "got response with error while exporting '{node_name}': {error}"
-                )));
-            }
             let download_url = match response.images.get(node_id) {
                 Some(url) => url,
                 None => {
@@ -310,27 +302,27 @@ fn extract_metadata(values: &[Node]) -> RemoteMetadata {
                     id: current.id.clone(),
                     name: current.name.clone(),
                     visible: current.visible,
-                    uses_raster_paints: !uses_only_vector_paints(current),
+                    uses_raster_paints: current.has_raster_fills,
                     hash: current.hash,
                 },
             );
         }
-        for child in &current.children {
-            queue.push_back(child);
-        }
+        // for child in &current.children {
+        //     queue.push_back(child);
+        // }
     }
     RemoteMetadata { name_to_node }
 }
 
-impl Batched<String, lib_figma::Result<GetImageResponse>> for BatchedApi {
-    fn execute(&self, ids: Vec<String>) -> lib_figma::Result<GetImageResponse> {
+impl Batched<String, lib_figma_fluent::Result<GetImageResponse>> for BatchedApi {
+    fn execute(&self, ids: Vec<String>) -> lib_figma_fluent::Result<GetImageResponse> {
         let BatchedApi {
             api,
             remote,
             format,
             scale,
         } = self;
-        debug!(target: "FigmaRepository", "Batched request: ids={}; format={format}; scale={scale}", ids.join(","));
+        debug!(target: "FigmaRepository", "Batched request: ids=[{}]; format={format}; scale={scale}", ids.join(","));
         Ok(api.get_image(
             &remote.access_token,
             &remote.file_key,
@@ -342,9 +334,4 @@ impl Batched<String, lib_figma::Result<GetImageResponse>> for BatchedApi {
             },
         )?)
     }
-}
-
-fn uses_only_vector_paints(node: &Node) -> bool {
-    node.fills.iter().all(|it| it.r#type != "IMAGE")
-        && node.children.iter().all(uses_only_vector_paints)
 }

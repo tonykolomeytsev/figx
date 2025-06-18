@@ -8,7 +8,7 @@ use actions::{
 };
 use figma::FigmaRepository;
 use lib_cache::Cache;
-use lib_figma::FigmaApi;
+use lib_figma_fluent::FigmaApi;
 use lib_metrics::{Counter, Metrics};
 use lib_progress_bar::{set_progress_bar_maximum, set_progress_bar_visible};
 use log::{debug, info, trace};
