@@ -1,5 +1,4 @@
 use json_event_parser::{JsonEvent, JsonParseError, ReaderJsonParser};
-use log::warn;
 use std::{collections::VecDeque, fmt::Display, hash::Hasher, io::Read};
 
 #[cfg_attr(test, derive(Debug, Eq, PartialEq, Hash))]
@@ -157,13 +156,7 @@ impl<R: Read> Iterator for NodeStream<R> {
                         "fills" => self.state = ExpectingFills,
                         _ => (), // just ignore
                     },
-                    JsonEvent::Eof => {
-                        warn!("=== JSON PARSING FINISHED ===");
-                        warn!("=== JSON PARSING FINISHED ===");
-                        warn!("=== JSON PARSING FINISHED ===");
-                        warn!("=== JSON PARSING FINISHED ===");
-                        return None
-                    },
+                    JsonEvent::Eof => return None,
                     _ => (), // just ignore
                 },
                 ExpectingFills => match event {

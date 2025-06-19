@@ -2,7 +2,6 @@ pub mod convert_png_to_webp;
 pub mod convert_svg_to_compose;
 pub mod download_image;
 pub mod export_image;
-pub mod fetch_remote;
 pub mod find_node_by_name;
 pub mod get_node;
 pub(super) mod get_remote_image;

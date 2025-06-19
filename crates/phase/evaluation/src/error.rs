@@ -4,6 +4,8 @@ use std::{
     path::PathBuf,
 };
 
+use phase_loading::Resource;
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
@@ -76,5 +78,15 @@ impl From<retry::Error<Error>> for Error {
 impl From<lib_figma_fluent::NodeStreamError> for Error {
     fn from(value: lib_figma_fluent::NodeStreamError) -> Self {
         Self::ExportImage(value.0)
+    }
+}
+
+impl From<&Resource> for Error {
+    fn from(value: &Resource) -> Self {
+        Self::FindNode {
+            node_name: value.attrs.node_name.clone(),
+            file: value.attrs.diag.file.to_path_buf(),
+            span: value.attrs.diag.definition_span.clone(),
+        }
     }
 }
