@@ -296,7 +296,7 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
                 .with_note(unindent(
                     "
                         make sure a node with that name exists in the Figma file, 
-                        or fix the name locally
+                        fix the name locally, or run `fetch` command first
                     ",
                 ))
                 .with_label(Label::primary((), span));
