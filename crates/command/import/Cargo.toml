@@ -7,4 +7,3 @@ edition.workspace = true
 phase_loading.workspace = true
 phase_evaluation.workspace = true
 lib_label.workspace = true
-lib_figma.workspace = true

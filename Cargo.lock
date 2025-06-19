@@ -404,7 +404,6 @@ dependencies = [
 name = "command_import"
 version = "0.6.0"
 dependencies = [
- "lib_figma",
  "lib_label",
  "phase_evaluation",
  "phase_loading",
@@ -1212,18 +1211,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lib_figma"
-version = "0.6.0"
-dependencies = [
- "bytes",
- "log",
- "serde",
- "serde_json",
- "ureq",
- "xxhash-rust",
-]
-
-[[package]]
 name = "lib_figma_fluent"
 version = "0.6.0"
 dependencies = [
@@ -1563,7 +1550,6 @@ dependencies = [
  "image",
  "key-mutex",
  "lib_cache",
- "lib_figma",
  "lib_figma_fluent",
  "lib_label",
  "lib_progress_bar",
