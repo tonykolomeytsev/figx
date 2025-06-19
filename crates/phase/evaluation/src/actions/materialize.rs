@@ -57,13 +57,15 @@ pub fn materialize(
     std::fs::write(&output_file, args.bytes)?;
 
     // remember file digest
-    ctx.cache.put::<FileMetadata>(
-        &cache_key,
-        &FileMetadata {
-            fingerprint: get_file_fingerprint(&output_file)?,
-            digest: get_file_digest(&output_file)?,
-        },
-    )?;
+    ctx.cache
+        .put::<FileMetadata>(
+            &cache_key,
+            &FileMetadata {
+                fingerprint: get_file_fingerprint(&output_file)?,
+                digest: get_file_digest(&output_file)?,
+            },
+        )
+        .map_err(|it| it.with_context("file metadata"))?;
     Ok(())
 }
 

@@ -2,7 +2,7 @@ use super::{
     GetRemoteImageArgs, get_remote_image,
     materialize::{MaterializeArgs, materialize},
 };
-use crate::{actions::{get_node::{get_node, GetNodeArgs}, util_variants::generate_variants}, EvalContext, Result};
+use crate::{EvalContext, Result, actions::util_variants::generate_variants, figma::NodeMetadata};
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::{PdfProfile, ResourceAttrs};
@@ -22,17 +22,12 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
     variants
         .par_iter()
         .map(|variant| {
-            let node = get_node(ctx, GetNodeArgs { 
-                node_name: &variant.node_name, 
-                remote: &args.attrs.remote,
-                diag: &args.attrs.diag,
-            })?;
             let pdf = &get_remote_image(
                 ctx,
                 GetRemoteImageArgs {
                     label: &args.attrs.label,
                     remote: &args.attrs.remote,
-                    node: &node,
+                    node: &args.node,
                     format: "pdf",
                     scale: variant.scale,
                     variant_name: &variant.id,
@@ -59,12 +54,17 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
 }
 
 pub struct ImportPdfArgs<'a> {
+    node: &'a NodeMetadata,
     attrs: &'a ResourceAttrs,
     profile: &'a PdfProfile,
 }
 
 impl<'a> ImportPdfArgs<'a> {
-    pub fn new(attrs: &'a ResourceAttrs, profile: &'a PdfProfile) -> Self {
-        Self { attrs, profile }
+    pub fn new(node: &'a NodeMetadata, attrs: &'a ResourceAttrs, profile: &'a PdfProfile) -> Self {
+        Self {
+            node,
+            attrs,
+            profile,
+        }
     }
 }

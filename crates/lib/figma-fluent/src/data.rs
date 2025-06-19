@@ -1,6 +1,5 @@
 use crate::{
-    Result,
-    node_stream::{NodeStreamError, NodeStream},
+    node_stream::{NodeStream, NodeStreamError}, Node, Result
 };
 use bytes::Bytes;
 use log::debug;
@@ -63,7 +62,7 @@ impl FigmaApi {
         access_token: &str,
         file_key: &str,
         query: GetFileNodesQueryParameters,
-    ) -> Result<impl Iterator<Item = std::result::Result<crate::node_stream::Node, NodeStreamError>>>
+    ) -> Result<impl Iterator<Item = std::result::Result<Node, NodeStreamError>>>
     {
         debug!(target: "Figma API", "get_file_nodes called for: {file_key}");
         let mut request = self

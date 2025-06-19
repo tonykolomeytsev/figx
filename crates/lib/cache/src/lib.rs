@@ -12,6 +12,15 @@ mod key;
 #[derive(Clone)]
 pub struct Cache {
     store: Arc<Store>,
+    config: Arc<CacheConfig>,
+}
+
+#[derive(Default)]
+pub struct CacheConfig {
+    /// If true, transaction write conflicts (same key) will be ignores
+    pub ignore_write_conflict: bool,
+    /// If true, then values ​​that cannot be deserialized will return None
+    pub allow_deserialization_error: bool,
 }
 
 impl Cache {
@@ -22,7 +31,7 @@ impl Cache {
     ///
     /// # Errors
     /// Returns `Err` if storage initialization fails or directory can't be accessed
-    pub fn new(dir: impl AsRef<Path>) -> Result<Self> {
+    pub fn new(dir: impl AsRef<Path>, config: CacheConfig) -> Result<Self> {
         let mut opts = Options::new();
         opts.dir = dir.as_ref().into();
 
@@ -45,52 +54,31 @@ impl Cache {
         // endregion
 
         let store = Arc::new(Store::new(opts).map_err(Error::initialization)?);
-        Ok(Self { store })
+        Ok(Self {
+            store,
+            config: Arc::new(config),
+        })
     }
 
-    /// Stores raw bytes in the cache with the given key.
-    ///
-    /// # Arguments
-    /// * `key` - Key to associate with the value
-    /// * `value` - Raw bytes to store
-    ///
-    /// # Errors
-    /// Returns `Err` if the transaction fails or storage operation fails
-    pub fn put_bytes(&self, key: &CacheKey, value: &Bytes) -> Result<()> {
+    /// Stores the raw bytes `value` in the cache by `key`.
+    pub fn put_bytes(&self, key: &CacheKey, value: &[u8]) -> Result<()> {
         let mut txn = self.store.begin()?;
         txn.set(key.as_ref(), value)?;
-        txn.commit()?;
+        use surrealkv::Error::*;
+        match txn.commit() {
+            Err(TransactionWriteConflict) if self.config.ignore_write_conflict => Ok(()),
+            res => res,
+        }?;
         Ok(())
     }
 
-    pub fn put_slice(&self, key: &CacheKey, value: &[u8]) -> Result<()> {
-        let mut txn = self.store.begin()?;
-        txn.set(key.as_ref(), value)?;
-        txn.commit()?;
-        Ok(())
-    }
-
-    /// Retrieves raw bytes from the cache by key.
-    ///
-    /// Returns `None` if the key doesn't exist.
-    ///
-    /// # Arguments
-    /// * `key` - Key to look up
-    ///
-    /// # Errors
-    /// Returns `Err` if the transaction fails or storage operation fails
+    /// Retrieves raw bytes from the cache by `key`.
     pub fn get_bytes(&self, key: &CacheKey) -> Result<Option<Vec<u8>>> {
         let mut txn = self.store.begin()?;
         Ok(txn.get(key.as_ref())?)
     }
 
-    /// Removes the key and its associated value from the cache.
-    ///
-    /// # Arguments
-    /// * `key` - Key to remove
-    ///
-    /// # Errors
-    /// Returns `Err` if the transaction fails
+    /// Removes the `key` and its associated `value` from the cache.
     pub fn delete(&self, key: &CacheKey) -> Result<()> {
         let mut txn = self.store.begin()?;
         txn.delete(key.as_ref())?;
@@ -98,26 +86,13 @@ impl Cache {
         Ok(())
     }
 
-    /// Checks if the cache contains the specified key.
-    ///
-    /// # Arguments
-    /// * `key` - Key to check
-    ///
-    /// # Errors
-    /// Returns `Err` if the transaction fails
+    /// Checks if the cache contains the specified `key`.
     pub fn contains_key(&self, key: &CacheKey) -> Result<bool> {
         let mut txn = self.store.begin()?;
         Ok(txn.get(key.as_ref())?.is_some())
     }
 
-    /// Serializes and stores a value in the cache with the given key.
-    ///
-    /// # Arguments
-    /// * `key` - Key to associate with the value
-    /// * `value` - Serializable value to store
-    ///
-    /// # Errors
-    /// Returns `Err` if serialization fails or storage operation fails
+    /// Serializes and stores the `value` in the cache with the given `key`.
     pub fn put<E>(&self, key: &CacheKey, value: &E) -> Result<()>
     where
         E: Encode,
@@ -127,23 +102,17 @@ impl Cache {
         self.put_bytes(key, &Bytes::from(serialized_value))
     }
 
-    /// Retrieves and deserializes a value from the cache by key.
-    ///
-    /// Returns `None` if the key doesn't exist.
-    ///
-    /// # Arguments
-    /// * `key` - Key to look up
-    ///
-    /// # Errors
-    /// Returns `Err` if deserialization fails or storage operation fails
+    /// Retrieves and deserializes a value from the cache by `key`.
     pub fn get<D>(&self, key: &CacheKey) -> Result<Option<D>>
     where
         D: Decode<()>,
     {
         if let Some(raw_value) = self.get_bytes(key)? {
             let (deserialized_value, _) =
-                bincode::decode_from_slice(&raw_value, bincode::config::standard())
-                    .map_err(Error::deserialization)?;
+                match bincode::decode_from_slice(&raw_value, bincode::config::standard()) {
+                    Err(_) if self.config.allow_deserialization_error => return Ok(None),
+                    res => res.map_err(Error::deserialization)?,
+                };
             Ok(Some(deserialized_value))
         } else {
             Ok(None)

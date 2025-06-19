@@ -1,37 +1,6 @@
+use crate::figma::NodeMetadata;
 use lib_label::Label;
-use log::{info, warn};
-use phase_loading::{RemoteSource, ResourceDiagnostics};
-
-use crate::{
-    EvalContext, Result,
-    actions::{
-        fetch_remote::{FetchRemoteArgs, fetch_remote},
-        find_node_by_name::{FindNodeByNameArgs, find_node_by_name},
-    },
-    figma::NodeMetadata,
-};
-
-pub fn get_node<'a, 'b>(ctx: &'a EvalContext, args: GetNodeArgs<'a>) -> Result<NodeMetadata> {
-    let remote = fetch_remote(
-        ctx,
-        FetchRemoteArgs {
-            remote: args.remote,
-        },
-        || info!(target: "Updating", "remote index: {}", args.remote),
-    )?;
-    find_node_by_name(FindNodeByNameArgs {
-        name: args.node_name,
-        remote: &remote,
-        diag: args.diag,
-    })
-    .cloned()
-}
-
-pub struct GetNodeArgs<'a> {
-    pub node_name: &'a str,
-    pub remote: &'a RemoteSource,
-    pub diag: &'a ResourceDiagnostics,
-}
+use log::warn;
 
 pub fn ensure_is_vector_node(
     node: &NodeMetadata,

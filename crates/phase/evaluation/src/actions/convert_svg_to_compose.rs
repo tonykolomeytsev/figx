@@ -32,7 +32,11 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
     let cache_key = cache_key.build();
 
     // return cached value if it exists
-    if let Some(compose) = ctx.cache.get_bytes(&cache_key)? {
+    if let Some(compose) = ctx
+        .cache
+        .get_bytes(&cache_key)
+        .map_err(|it| it.with_context("svg to compose"))?
+    {
         return Ok(compose);
     }
 
@@ -74,7 +78,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
     )?;
 
     // remember result to cache
-    ctx.cache.put_slice(&cache_key, &compose)?;
+    ctx.cache.put_bytes(&cache_key, &compose)?;
     Ok(compose)
 }
 

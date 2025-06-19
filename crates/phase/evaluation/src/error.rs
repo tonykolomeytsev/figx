@@ -14,6 +14,7 @@ pub enum Error {
     ImageDecode(image::ImageError),
     FigmaApiNetwork(lib_figma_fluent::Error),
     ExportImage(String),
+    IndexingRemote(String),
     FindNode {
         node_name: String,
         file: PathBuf,

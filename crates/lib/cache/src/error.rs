@@ -4,7 +4,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     Internal(String),
     Initialization(String),
-    SurrealKV(String),
+    SurrealKV(Option<String>, surrealkv::Error),
     Serialization(String),
     Deserialization(String),
     MissingRequiredValue(String),
@@ -22,11 +22,22 @@ impl Error {
     pub fn deserialization(e: impl std::fmt::Display) -> Self {
         Self::Deserialization(e.to_string())
     }
+
+    pub fn with_context(self, ctx: impl std::fmt::Display) -> Self {
+        match self {
+            Self::Internal(e) => Self::Internal(format!("{ctx}: {e}")),
+            Self::Initialization(e) => Self::Initialization(format!("{ctx}: {e}")),
+            Self::SurrealKV(_, e) => Self::SurrealKV(Some(format!("{ctx}")), e),
+            Self::Serialization(e) => Self::Serialization(format!("{ctx}: {e}")),
+            Self::Deserialization(e) => Self::Deserialization(format!("{ctx}: {e}")),
+            Self::MissingRequiredValue(e) => Self::MissingRequiredValue(format!("{ctx}: {e}")),
+        }
+    }
 }
 
 impl From<surrealkv::Error> for Error {
     fn from(value: surrealkv::Error) -> Self {
-        Self::SurrealKV(value.to_string())
+        Self::SurrealKV(None, value)
     }
 }
 
@@ -37,7 +48,11 @@ impl std::fmt::Display for Error {
         match self {
             Internal(msg) => write!(f, "{msg}"),
             Initialization(msg) => write!(f, "{msg}"),
-            SurrealKV(msg) => write!(f, "surrealkv error: {msg}"),
+            SurrealKV(ctx, msg) => write!(
+                f,
+                "{}surrealkv error: {msg}",
+                ctx.as_ref().map(|it| format!("{it}: ")).unwrap_or_default()
+            ),
             Serialization(msg) => write!(f, "serialization error: {msg}"),
             Deserialization(msg) => write!(f, "deserialization error: {msg}"),
             MissingRequiredValue(key) => write!(f, "missing required value: key={key}"),

@@ -26,6 +26,7 @@ ureq.workspace = true
 num_cpus.workspace = true
 crossbeam-channel.workspace = true
 resvg.workspace = true
+ordermap.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

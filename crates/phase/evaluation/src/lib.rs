@@ -6,13 +6,17 @@ use actions::{
     import_svg::{ImportSvgArgs, import_svg},
     import_webp::{ImportWebpArgs, import_webp},
 };
+use dashmap::DashMap;
 use figma::FigmaRepository;
-use lib_cache::Cache;
+use lib_cache::{Cache, CacheConfig};
 use lib_figma_fluent::FigmaApi;
-use lib_progress_bar::{set_progress_bar_maximum, set_progress_bar_visible};
-use log::{debug, info, trace};
-use phase_loading::Workspace;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use lib_progress_bar::{
+    set_progress_bar_maximum, set_progress_bar_progress, set_progress_bar_visible,
+};
+use log::{debug, error, info, trace};
+use ordermap::OrderMap;
+use phase_loading::{RemoteSource, Resource, Workspace};
+use rayon::iter::{IntoParallelIterator, ParallelBridge, ParallelIterator};
 use std::{
     cmp::min,
     collections::HashSet,
@@ -32,6 +36,11 @@ mod hashing;
 pub use error::*;
 pub use hashing::*;
 
+use crate::figma::{
+    NodeMetadata,
+    indexing::{RemoteIndex, Subscription},
+};
+
 #[derive(Clone)]
 pub struct EvalContext {
     pub eval_args: Arc<EvalArgs>,
@@ -40,7 +49,7 @@ pub struct EvalContext {
     pub processed_files_counter: Arc<AtomicUsize>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct EvalArgs {
     pub fetch: bool,
     pub refetch: bool,
@@ -72,34 +81,96 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         info!(target: "Requested", "{requested_resources} resource(s) from {requested_remotes} remote(s)");
     }
     // region: exec
-    let result = ws
-        .packages
-        .par_iter()
-        .flat_map(|it| &it.resources)
-        .map(|res| {
-            use phase_loading::Profile::*;
-            let result = match res.profile.as_ref() {
-                Png(png_profile) => import_png(&ctx, ImportPngArgs::new(&res.attrs, png_profile)),
-                Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(&res.attrs, svg_profile)),
-                Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(&res.attrs, pdf_profile)),
-                Webp(webp_profile) => {
-                    import_webp(&ctx, ImportWebpArgs::new(&res.attrs, webp_profile))
+
+    let mut remote_to_resources = OrderMap::<Arc<RemoteSource>, Vec<Resource>>::new();
+    for pkg in ws.packages {
+        for res in pkg.resources {
+            remote_to_resources
+                .entry(res.attrs.remote.clone())
+                .or_default()
+                .push(res);
+        }
+    }
+
+    let result =
+        remote_to_resources
+            .into_iter()
+            .par_bridge()
+            .try_for_each(|(remote, resources)| {
+                let index = RemoteIndex::new(FigmaApi::default(), ctx.cache.clone());
+                let (handle, subscription) = index.subscribe(remote.as_ref(), args.refetch)?;
+                match subscription {
+                    Subscription::FromCache(name_to_node) => {
+                        resources.into_par_iter().try_for_each(|res| {
+                            let node = name_to_node.get(&res.attrs.node_name).ok_or_else(|| {
+                                debug!("found unused resource from cache: {}", res.attrs.label);
+                                Error::FindNode {
+                                    node_name: res.attrs.node_name.to_owned(),
+                                    file: res.attrs.diag.file.to_path_buf(),
+                                    span: res.attrs.diag.definition_span.clone(),
+                                }
+                            })?;
+                            let result = import_resource(&res, &ctx, &node);
+                            processed_resources.fetch_add(1, Ordering::Relaxed);
+                            set_progress_bar_progress(processed_resources.load(Ordering::Relaxed));
+                            result
+                        })
+                    }
+                    Subscription::FromRemote(stream) => {
+                        let name_to_resources: Arc<DashMap<_, Vec<_>>> =
+                            Arc::new(DashMap::with_capacity(resources.len()));
+                        for res in resources {
+                            name_to_resources
+                                .entry(res.attrs.node_name.clone())
+                                .or_default()
+                                .push(res);
+                        }
+
+                        // let export_result = Arc::new(None);
+                        let indexing_result = stream.par_bridge().try_for_each(|node| {
+                            let node = node?;
+                            let name_to_resources = Arc::clone(&name_to_resources);
+                            if let Some((_, resources)) = name_to_resources.remove(&node.name) {
+                                resources.into_par_iter().for_each(|res| {
+                                    let result = import_resource(&res, &ctx, &node);
+                                    if let Err(e) = result {
+                                        error!("{e}");
+                                    }
+                                    processed_resources.fetch_add(1, Ordering::Relaxed);
+                                    set_progress_bar_progress(
+                                        processed_resources.load(Ordering::Relaxed),
+                                    );
+                                });
+                            }
+                            Ok(())
+                        });
+
+                        // Save cache if there was no indexing errors
+                        if let Ok(()) = indexing_result {
+                            handle.commit_cache()?;
+                        }
+
+                        // show NODE NOT FOUND error if needed
+                        for entry in name_to_resources.iter() {
+                            for res in entry.value() {
+                                debug!(
+                                    "found unused resource after execution: {}",
+                                    res.attrs.label
+                                );
+                                debug!("stream result is: {indexing_result:?}");
+                                return Err(Error::FindNode {
+                                    node_name: res.attrs.node_name.to_owned(),
+                                    file: res.attrs.diag.file.to_path_buf(),
+                                    span: res.attrs.diag.definition_span.clone(),
+                                });
+                            }
+                        }
+
+                        indexing_result
+                    }
                 }
-                Compose(compose_profile) => {
-                    import_compose(&ctx, ImportComposeArgs::new(&res.attrs, compose_profile))
-                }
-                AndroidWebp(android_webp_profile) => import_android_webp(
-                    &ctx,
-                    ImportAndroidWebpArgs::new(&res.attrs, android_webp_profile),
-                ),
-            };
-            processed_resources.fetch_add(1, Ordering::Relaxed);
-            lib_progress_bar::set_progress_bar_progress(
-                processed_resources.load(Ordering::Relaxed),
-            );
-            result
-        })
-        .collect::<Result<()>>();
+            });
+
     // endregion: exec
     let elapsed = instant.elapsed();
     set_progress_bar_visible(false);
@@ -123,6 +194,26 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     }
 }
 
+fn import_resource(res: &Resource, ctx: &EvalContext, node: &NodeMetadata) -> Result<()> {
+    use phase_loading::Profile::*;
+    match res.profile.as_ref() {
+        Png(png_profile) => import_png(&ctx, ImportPngArgs::new(node, &res.attrs, png_profile)),
+        Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(node, &res.attrs, svg_profile)),
+        Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(node, &res.attrs, pdf_profile)),
+        Webp(webp_profile) => {
+            import_webp(&ctx, ImportWebpArgs::new(node, &res.attrs, webp_profile))
+        }
+        Compose(compose_profile) => import_compose(
+            &ctx,
+            ImportComposeArgs::new(node, &res.attrs, compose_profile),
+        ),
+        AndroidWebp(android_webp_profile) => import_android_webp(
+            &ctx,
+            ImportAndroidWebpArgs::new(node, &res.attrs, android_webp_profile),
+        ),
+    }
+}
+
 fn set_up_rayon(user_defined_concurrency: usize) {
     let num_threads = if user_defined_concurrency == 0 {
         min(num_cpus::get(), MAX_NUM_THREADS)
@@ -139,7 +230,13 @@ pub fn setup_cache(dir: &Path) -> Result<Cache> {
     trace!("Ensuring all dirs to cache DB exists...");
     std::fs::create_dir_all(dir)?;
     debug!("Loading cache...");
-    Ok(Cache::new(dir)?)
+    Ok(Cache::new(
+        dir,
+        CacheConfig {
+            allow_deserialization_error: true,
+            ignore_write_conflict: true,
+        },
+    )?)
 }
 
 fn init_eval_context(ws: &Workspace, args: EvalArgs) -> Result<EvalContext> {

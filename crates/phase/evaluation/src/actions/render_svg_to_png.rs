@@ -52,7 +52,9 @@ pub fn render_svg_to_png(ctx: &EvalContext, args: RenderSvgToPngArgs) -> Result<
         })?;
 
     // remember result to cache
-    ctx.cache.put_slice(&cache_key, &png)?;
+    ctx.cache
+        .put_bytes(&cache_key, &png)
+        .map_err(|it| it.with_context("svg to png"))?;
     Ok(png.to_vec())
 }
 
