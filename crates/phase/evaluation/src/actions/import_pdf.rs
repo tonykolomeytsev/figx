@@ -33,6 +33,9 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
                     variant_name: &variant.id,
                 },
             )?;
+            if ctx.eval_args.fetch {
+                return Ok(());
+            }
             materialize(
                 ctx,
                 MaterializeArgs {

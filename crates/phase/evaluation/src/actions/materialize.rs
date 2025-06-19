@@ -10,10 +10,6 @@ pub fn materialize(
     args: MaterializeArgs,
     on_execute: impl FnOnce(),
 ) -> Result<()> {
-    if ctx.eval_args.fetch {
-        return Ok(());
-    }
-
     // collect metrics
     ctx.metrics.files_counter.fetch_add(1, Ordering::Relaxed);
 

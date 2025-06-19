@@ -46,7 +46,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
             };
 
             let png = if args.profile.legacy_loader {
-                get_remote_image(
+                let png = get_remote_image(
                     ctx,
                     GetRemoteImageArgs {
                         label: &args.attrs.label,
@@ -56,7 +56,11 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                         scale: factor,
                         variant_name: &variant_name,
                     },
-                )?
+                )?;
+                if ctx.eval_args.fetch {
+                    return Ok(());
+                }
+                png
             } else {
                 ensure_is_vector_node(&args.node, node_name, &args.attrs.label, true);
                 let svg = get_remote_image(
@@ -70,6 +74,9 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                         variant_name: "", // no variant yes
                     },
                 )?;
+                if ctx.eval_args.fetch {
+                    return Ok(());
+                }
                 render_svg_to_png(
                     ctx,
                     RenderSvgToPngArgs {

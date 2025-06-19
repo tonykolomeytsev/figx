@@ -50,6 +50,9 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
                     variant_name: &variant.id,
                 },
             )?;
+            if ctx.eval_args.fetch {
+                return Ok(());
+            }
 
             materialize(
                 ctx,

@@ -31,7 +31,7 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
         .par_iter()
         .map(|variant| {
             let png = if args.profile.legacy_loader {
-                get_remote_image(
+                let png = get_remote_image(
                     ctx,
                     GetRemoteImageArgs {
                         label: &args.attrs.label,
@@ -41,7 +41,11 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
                         scale: variant.scale,
                         variant_name: &variant.id,
                     },
-                )?
+                )?;
+                if ctx.eval_args.fetch {
+                    return Ok(());
+                }
+                png
             } else {
                 ensure_is_vector_node(&args.node, &variant.node_name, &args.attrs.label, true);
                 let svg = get_remote_image(
@@ -55,6 +59,9 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
                         variant_name: "", // no variant yes
                     },
                 )?;
+                if ctx.eval_args.fetch {
+                    return Ok(());
+                }
                 render_svg_to_png(
                     ctx,
                     RenderSvgToPngArgs {
@@ -78,7 +85,8 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
                         label = args.attrs.label.fitted(50),
                         variant = if variant.default { String::new() } else { format!(" ({})", variant.id) },
                     )
-                },            )
+                },   
+            )
         })
         .collect::<Result<Vec<_>>>()?;
 

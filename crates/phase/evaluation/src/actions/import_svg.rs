@@ -38,6 +38,9 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
                     variant_name: &variant.id,
                 },
             )?;
+            if ctx.eval_args.fetch {
+                return Ok(());
+            }
             materialize(
                 ctx,
                 MaterializeArgs {
