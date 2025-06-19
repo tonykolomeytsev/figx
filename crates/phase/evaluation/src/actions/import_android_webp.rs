@@ -11,7 +11,6 @@ use crate::actions::render_svg_to_png::RenderSvgToPngArgs;
 use crate::actions::render_svg_to_png::render_svg_to_png;
 use crate::figma::NodeMetadata;
 use lib_progress_bar::create_in_progress_item;
-use log::debug;
 use log::info;
 use phase_loading::AndroidDensity;
 use phase_loading::AndroidWebpProfile;
@@ -20,17 +19,6 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 
 pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Result<()> {
-    debug!(
-        target: "Import",
-        "android-webp: {} ({})",
-        args.attrs.label.name,
-        args.profile
-            .scales
-            .iter()
-            .map(density_name)
-            .collect::<Vec<_>>()
-            .join(", "),
-    );
     let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
 
     // region: generating all android variants

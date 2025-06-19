@@ -12,8 +12,7 @@ use figma::FigmaRepository;
 use lib_cache::{Cache, CacheConfig};
 use lib_figma_fluent::FigmaApi;
 use lib_progress_bar::{
-    create_in_progress_item, set_progress_bar_maximum, set_progress_bar_progress,
-    set_progress_bar_visible,
+    set_progress_bar_maximum, set_progress_bar_progress, set_progress_bar_visible,
 };
 use log::{debug, error, info, trace};
 use ordermap::OrderMap;
@@ -107,7 +106,8 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .par_bridge()
         .map(|(remote, resources)| {
             let index = RemoteIndex::new(FigmaApi::default(), ctx.cache.clone());
-            let (handle, subscription) = index.subscribe(remote.as_ref(), args.refetch)?;
+            let (handle, subscription) =
+                index.subscribe(remote.as_ref(), args.fetch || args.refetch)?;
             match subscription {
                 Subscription::FromCache(name_to_node) => {
                     execute_with_cached_index(&ctx, resources, name_to_node)
@@ -165,7 +165,7 @@ fn execute_with_streaming_index(
         let indexing_error = Arc::clone(&indexing_error);
         let name_to_resources = Arc::clone(&name_to_resources);
         s.spawn(move |_| {
-            let _guard = create_in_progress_item("REMOTE");
+            // let _guard = create_in_progress_item("REMOTE"); Sosal?
             for node in stream {
                 let node = match node {
                     Ok(node) => node,
