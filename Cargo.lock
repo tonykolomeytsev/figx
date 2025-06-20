@@ -1580,6 +1580,7 @@ dependencies = [
  "lib_svg2compose",
  "log",
  "num_cpus",
+ "ordermap",
  "phase_loading",
  "rayon",
  "resvg",

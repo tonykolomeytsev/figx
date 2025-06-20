@@ -37,7 +37,7 @@ pub fn convert_png_to_webp(ctx: &EvalContext, args: ConvertPngToWebpArgs) -> Res
     };
 
     // remember result to cache
-    ctx.cache.put_slice(&cache_key, &webp)?;
+    ctx.cache.put_bytes(&cache_key, &webp)?;
     Ok(webp.to_vec())
 }
 

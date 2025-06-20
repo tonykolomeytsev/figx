@@ -1,4 +1,6 @@
-use phase_loading::{Profile, Resource, ResourceAttrs, ResourceVariants};
+use phase_loading::{
+    AndroidDensity, AndroidWebpProfile, Profile, Resource, ResourceAttrs, ResourceVariants,
+};
 
 pub struct Target<'a> {
     pub id: Option<String>,
@@ -31,7 +33,7 @@ pub fn targets_from_resource(res: &Resource) -> Vec<Target> {
         Pdf(p) => p.variants.as_ref(),
         Webp(p) => p.variants.as_ref(),
         Compose(p) => p.variants.as_ref(),
-        AndroidWebp(_) => None,
+        AndroidWebp(p) => return android_webp_targets(res, p),
     };
 
     match variants {
@@ -77,5 +79,75 @@ pub fn targets_from_resource(res: &Resource) -> Vec<Target> {
                 }
             })
             .collect(),
+    }
+}
+
+fn android_webp_targets<'a>(res: &'a Resource, profile: &'a AndroidWebpProfile) -> Vec<Target<'a>> {
+    let scales = &profile.scales;
+    let themes: &[_] = if let Some(night_variant) = &profile.night {
+        let light_variant = &res.attrs.node_name;
+        let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
+        &[(light_variant.to_owned(), false), (night_variant, true)]
+    } else {
+        let light_variant = &res.attrs.node_name;
+        &[(light_variant.to_owned(), false)]
+    };
+    let all_variants = cartesian_product(scales, themes);
+
+    all_variants
+        .into_iter()
+        .map(|(density, (figma_name, night))| {
+            let factor = scale_factor(density);
+            let density_name = density_name(density);
+            let variant_name = if !night {
+                format!("{density_name}")
+            } else {
+                format!("night-{density_name}")
+            };
+
+            Target {
+                id: Some(variant_name.clone()),
+                attrs: &res.attrs,
+                profile: &res.profile,
+                figma_name: Some(figma_name.to_owned()),
+                output_name: Some(res.attrs.label.name.to_string()),
+                scale: Some(factor),
+            }
+        })
+        .collect()
+}
+
+pub fn cartesian_product<'a, A, B>(list_a: &'a [A], list_b: &'a [B]) -> Vec<(&'a A, &'a B)> {
+    list_a
+        .iter()
+        .flat_map(|a| list_b.iter().map(move |b| (a, b)))
+        .collect()
+}
+
+pub fn expand_night_variant(light_variant: &str, night_variant: &str) -> String {
+    night_variant.replacen("{base}", light_variant, 1)
+}
+
+pub fn scale_factor(d: &AndroidDensity) -> f32 {
+    use AndroidDensity::*;
+    match d {
+        LDPI => 0.75,
+        MDPI => 1.0,
+        HDPI => 1.5,
+        XHDPI => 2.0,
+        XXHDPI => 3.0,
+        XXXHDPI => 4.0,
+    }
+}
+
+pub fn density_name(d: &AndroidDensity) -> &str {
+    use AndroidDensity::*;
+    match d {
+        LDPI => "ldpi",
+        MDPI => "mdpi",
+        HDPI => "hdpi",
+        XHDPI => "xhdpi",
+        XXHDPI => "xxhdpi",
+        XXXHDPI => "xxxhdpi",
     }
 }

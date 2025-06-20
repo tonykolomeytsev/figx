@@ -6,8 +6,9 @@ use crate::{
     EvalContext, Result, Target,
     actions::{
         convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
-        get_node::{GetNodeArgs, ensure_is_vector_node, get_node},
+        get_node::ensure_is_vector_node,
     },
+    figma::NodeMetadata,
 };
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info, warn};
@@ -15,7 +16,11 @@ use phase_loading::ComposeProfile;
 use std::path::{Path, PathBuf};
 
 pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> {
-    let ImportComposeArgs { target, profile } = args;
+    let ImportComposeArgs {
+        node,
+        target,
+        profile,
+    } = args;
     let node_name = target.figma_name();
     let variant_name = target.id.clone().unwrap_or_default();
 
@@ -29,21 +34,13 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
         warn!("Kotlin package for {} was not found", output_dir.display());
     }
 
-    let node = get_node(
-        ctx,
-        GetNodeArgs {
-            node_name,
-            remote: &target.attrs.remote,
-            diag: &target.attrs.diag,
-        },
-    )?;
     ensure_is_vector_node(&node, node_name, &target.attrs.label, false);
     let svg = &get_remote_image(
         ctx,
         GetRemoteImageArgs {
             label: &target.attrs.label,
             remote: &target.attrs.remote,
-            node: &node,
+            node,
             format: "svg",
             scale: 1.0,
             variant_name: &variant_name,
@@ -90,13 +87,18 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
 }
 
 pub struct ImportComposeArgs<'a> {
+    node: &'a NodeMetadata,
     target: Target<'a>,
     profile: &'a ComposeProfile,
 }
 
 impl<'a> ImportComposeArgs<'a> {
-    pub fn new(target: Target<'a>, profile: &'a ComposeProfile) -> Self {
-        Self { target, profile }
+    pub fn new(node: &'a NodeMetadata, target: Target<'a>, profile: &'a ComposeProfile) -> Self {
+        Self {
+            node,
+            target,
+            profile,
+        }
     }
 }
 

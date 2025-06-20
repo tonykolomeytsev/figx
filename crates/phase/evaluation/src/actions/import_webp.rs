@@ -6,16 +6,21 @@ use crate::{
     EvalContext, Result, Target,
     actions::{
         convert_png_to_webp::{ConvertPngToWebpArgs, convert_png_to_webp},
-        get_node::{GetNodeArgs, ensure_is_vector_node, get_node},
+        get_node::ensure_is_vector_node,
         render_svg_to_png::{RenderSvgToPngArgs, render_svg_to_png},
     },
+    figma::NodeMetadata,
 };
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::WebpProfile;
 
 pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
-    let ImportWebpArgs { target, profile } = args;
+    let ImportWebpArgs {
+        node,
+        target,
+        profile,
+    } = args;
     let node_name = target.figma_name();
     let scale = target.scale.unwrap_or(*profile.scale);
     let variant_name = target.id.clone().unwrap_or_default();
@@ -23,21 +28,13 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
     debug!(target: "Import", "webp: {}", target.attrs.label.name);
     let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
 
-    let node = get_node(
-        ctx,
-        GetNodeArgs {
-            node_name,
-            remote: &target.attrs.remote,
-            diag: &target.attrs.diag,
-        },
-    )?;
     let png = if args.profile.legacy_loader {
         get_remote_image(
             ctx,
             GetRemoteImageArgs {
                 label: &target.attrs.label,
                 remote: &target.attrs.remote,
-                node: &node,
+                node,
                 format: "png",
                 scale,
                 variant_name: &variant_name,
@@ -97,12 +94,17 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
 }
 
 pub struct ImportWebpArgs<'a> {
+    node: &'a NodeMetadata,
     target: Target<'a>,
     profile: &'a WebpProfile,
 }
 
 impl<'a> ImportWebpArgs<'a> {
-    pub fn new(target: Target<'a>, profile: &'a WebpProfile) -> Self {
-        Self { target, profile }
+    pub fn new(node: &'a NodeMetadata, target: Target<'a>, profile: &'a WebpProfile) -> Self {
+        Self {
+            node,
+            target,
+            profile,
+        }
     }
 }

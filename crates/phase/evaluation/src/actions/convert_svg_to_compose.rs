@@ -74,7 +74,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
     )?;
 
     // remember result to cache
-    ctx.cache.put_slice(&cache_key, &compose)?;
+    ctx.cache.put_bytes(&cache_key, &compose)?;
     Ok(compose)
 }
 

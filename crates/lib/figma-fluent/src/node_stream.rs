@@ -1,4 +1,5 @@
 use json_event_parser::{JsonEvent, JsonParseError, ReaderJsonParser};
+use log::warn;
 use std::{collections::VecDeque, fmt::Display, hash::Hasher, io::Read};
 
 #[cfg_attr(test, derive(Debug, Eq, PartialEq, Hash))]
@@ -83,8 +84,7 @@ macro_rules! parse_next_value {
     ($r:expr, $t:path) => {
         match $r.parse_next() {
             Ok($t(value)) => Some(value),
-            Ok(JsonEvent::Null) => None,
-            Ok(_) => return Some(Err(NodeStreamError::msg("unexpected token"))),
+            Ok(_) => None,
             Err(e) => return Some(Err(NodeStreamError::parser(e))),
         }
     };

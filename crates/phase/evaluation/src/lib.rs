@@ -6,20 +6,25 @@ use actions::{
     import_svg::{ImportSvgArgs, import_svg},
     import_webp::{ImportWebpArgs, import_webp},
 };
+use crossbeam_channel::unbounded;
+use dashmap::DashMap;
 use figma::FigmaRepository;
-use lib_cache::Cache;
+use lib_cache::{Cache, CacheConfig};
 use lib_figma_fluent::FigmaApi;
 use lib_metrics::{Counter, Metrics};
-use lib_progress_bar::{set_progress_bar_maximum, set_progress_bar_visible};
-use log::{debug, info, trace};
-use phase_loading::Workspace;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use lib_progress_bar::{
+    set_progress_bar_maximum, set_progress_bar_progress, set_progress_bar_visible,
+};
+use log::{debug, error, info, trace};
+use ordermap::OrderMap;
+use phase_loading::{RemoteSource, Workspace};
+use rayon::iter::{IntoParallelIterator, ParallelBridge, ParallelIterator};
 use std::{
     cmp::min,
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     path::Path,
     sync::{
-        Arc,
+        Arc, Mutex,
         atomic::{AtomicUsize, Ordering},
     },
     time::Duration,
@@ -34,6 +39,11 @@ pub use error::*;
 pub use hashing::*;
 mod targets;
 pub use targets::*;
+
+use crate::figma::{
+    NodeMetadata,
+    indexing::{RemoteIndex, Subscription, SubscriptionHandle},
+};
 
 #[derive(Clone)]
 pub struct EvalContext {
@@ -83,33 +93,34 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         info!(target: "Requested", "{requested_resources} resource(s) from {requested_remotes} remote(s)");
     }
     // region: exec
-    let result = ws
-        .packages
-        .par_iter()
-        .flat_map(|it| &it.resources)
-        .flat_map(|it| targets_from_resource(it))
-        .map(|target| {
-            use phase_loading::Profile::*;
-            let result = match target.profile {
-                Png(png_profile) => import_png(&ctx, ImportPngArgs::new(target, png_profile)),
-                Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(target, svg_profile)),
-                Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(target, pdf_profile)),
-                Webp(webp_profile) => import_webp(&ctx, ImportWebpArgs::new(target, webp_profile)),
-                Compose(compose_profile) => {
-                    import_compose(&ctx, ImportComposeArgs::new(target, compose_profile))
+
+    let mut remote_to_resources = OrderMap::<Arc<RemoteSource>, Vec<Target>>::new();
+    for pkg in ws.packages.iter() {
+        for res in pkg.resources.iter() {
+            remote_to_resources
+                .entry(res.attrs.remote.clone())
+                .or_default()
+                .append(&mut targets_from_resource(res));
+        }
+    }
+
+    let result = remote_to_resources
+        .into_iter()
+        .par_bridge()
+        .map(|(remote, targets)| {
+            let index = RemoteIndex::new(FigmaApi::default(), ctx.cache.clone());
+            let (handle, subscription) = index.subscribe(remote.as_ref(), ctx.eval_args.refetch)?;
+            match subscription {
+                Subscription::FromCache(name_to_node) => {
+                    execute_with_cached_index(&ctx, targets, name_to_node)
                 }
-                AndroidWebp(android_webp_profile) => import_android_webp(
-                    &ctx,
-                    ImportAndroidWebpArgs::new(target, android_webp_profile),
-                ),
-            };
-            processed_resources.fetch_add(1, Ordering::Relaxed);
-            lib_progress_bar::set_progress_bar_progress(
-                processed_resources.load(Ordering::Relaxed),
-            );
-            result
+                Subscription::FromRemote(stream) => {
+                    execute_with_streaming_index(&ctx, targets, stream, handle, remote.clone())
+                }
+            }
         })
-        .collect::<Result<()>>();
+        .collect::<Result<Vec<_>>>();
+
     // endregion: exec
     drop(_instant);
 
@@ -134,6 +145,105 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     }
 }
 
+fn execute_with_cached_index(
+    ctx: &EvalContext,
+    targets: Vec<Target>,
+    name_to_node: HashMap<String, NodeMetadata>,
+) -> Result<()> {
+    targets.into_par_iter().try_for_each(|target| {
+        let node = name_to_node
+            .get(&target.attrs.node_name)
+            .ok_or_else::<Error, _>(|| (&target).into())?;
+        let result = import_target(target, ctx, &node);
+        ctx.metrics.resources_executed.increment();
+        set_progress_bar_progress(ctx.metrics.resources_executed.get());
+        result
+    })
+}
+
+fn execute_with_streaming_index(
+    ctx: &EvalContext,
+    targets: Vec<Target<'_>>,
+    stream: Box<dyn Iterator<Item = Result<NodeMetadata>> + Send + '_>,
+    handle: SubscriptionHandle,
+    remote: Arc<RemoteSource>,
+) -> Result<()> {
+    // Group resources by their expected node name
+    let name_to_targets: Arc<DashMap<_, Vec<_>>> = Arc::new(DashMap::with_capacity(targets.len()));
+    for target in targets {
+        name_to_targets
+            .entry(target.figma_name().to_owned())
+            .or_insert_with(|| Vec::with_capacity(1))
+            .push(target);
+    }
+
+    let (tx, rx) = unbounded::<(Target, NodeMetadata)>();
+    let indexing_error: Arc<Mutex<Option<Error>>> = Default::default();
+    let import_result = rayon::scope(|s| {
+        let indexing_error = Arc::clone(&indexing_error);
+        let name_to_targets = Arc::clone(&name_to_targets);
+        s.spawn(move |_| {
+            for node in stream {
+                let node = match node {
+                    Ok(node) => node,
+                    Err(e) => {
+                        *indexing_error.lock().unwrap() = Some(e);
+                        return;
+                    }
+                };
+                if let Some((_, targets)) = name_to_targets.remove(&node.name) {
+                    for target in targets {
+                        let node = node.clone();
+                        let _ = tx.send((target, node));
+                    }
+                }
+            }
+            if let Err(e) = handle.commit_cache() {
+                error!("Unable to save indexed remote `{remote}` data to cache");
+                *indexing_error.lock().unwrap() = Some(e)
+            }
+        });
+
+        rx.iter().par_bridge().try_for_each(|(target, node)| {
+            import_target(target, ctx, &node)?;
+            ctx.metrics.resources_executed.increment();
+            set_progress_bar_progress(ctx.metrics.resources_executed.get());
+            Ok(())
+        })
+    });
+
+    // show NODE NOT FOUND error if needed
+    if indexing_error.lock().unwrap().is_none() && import_result.is_ok() {
+        for entry in name_to_targets.iter() {
+            for res in entry.value() {
+                return Err(res.into());
+            }
+        }
+    }
+
+    match (indexing_error.lock().unwrap().take(), import_result) {
+        (Some(e), _) => Err(e),
+        (_, res) => res,
+    }
+}
+
+fn import_target(target: Target<'_>, ctx: &EvalContext, node: &NodeMetadata) -> Result<()> {
+    use phase_loading::Profile::*;
+    match target.profile {
+        Png(png_profile) => import_png(&ctx, ImportPngArgs::new(node, target, png_profile)),
+        Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(node, target, svg_profile)),
+        Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(node, target, pdf_profile)),
+        Webp(webp_profile) => import_webp(&ctx, ImportWebpArgs::new(node, target, webp_profile)),
+        Compose(compose_profile) => {
+            import_compose(&ctx, ImportComposeArgs::new(node, target, compose_profile))
+        }
+        AndroidWebp(android_webp_profile) => import_android_webp(
+            &ctx,
+            ImportAndroidWebpArgs::new(node, target, android_webp_profile),
+        ),
+    }
+}
+
 fn set_up_rayon(user_defined_concurrency: usize) {
     let num_threads = if user_defined_concurrency == 0 {
         min(num_cpus::get(), MAX_NUM_THREADS)
@@ -150,7 +260,13 @@ pub fn setup_cache(dir: &Path) -> Result<Cache> {
     trace!("Ensuring all dirs to cache DB exists...");
     std::fs::create_dir_all(dir)?;
     debug!("Loading cache...");
-    Ok(Cache::new(dir)?)
+    Ok(Cache::new(
+        dir,
+        CacheConfig {
+            ignore_write_conflict: true,
+            allow_deserialization_error: true,
+        },
+    )?)
 }
 
 fn init_eval_context(ws: &Workspace, args: EvalArgs, metrics: &Metrics) -> Result<EvalContext> {

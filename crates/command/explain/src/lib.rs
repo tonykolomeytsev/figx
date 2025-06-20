@@ -2,9 +2,8 @@
 
 use lib_label::LabelPattern;
 use owo_colors::OwoColorize;
-use phase_evaluation::actions::{
-    import_android_webp::{cartesian_product, density_name, expand_night_variant, scale_factor},
-    import_compose::{get_kotlin_package, get_output_dir_for_compose_profile},
+use phase_evaluation::actions::import_compose::{
+    get_kotlin_package, get_output_dir_for_compose_profile,
 };
 use phase_loading::{
     AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile, ResourceAttrs, SvgProfile,
@@ -329,66 +328,67 @@ fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
 }
 
 fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node {
-    // region: generating all android variants
-    let scales = &p.scales;
-    let themes: &[_] = if let Some(night_variant) = &p.night {
-        let light_variant = &r.node_name;
-        let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
-        &[(light_variant.to_owned(), false), (night_variant, true)]
-    } else {
-        let light_variant = &r.node_name;
-        &[(light_variant.to_owned(), false)]
-    };
-    let all_variants = cartesian_product(scales, themes);
-    // endregion: generating all android variants
+    todo!()
+    // // region: generating all android variants
+    // let scales = &p.scales;
+    // let themes: &[_] = if let Some(night_variant) = &p.night {
+    //     let light_variant = &r.node_name;
+    //     let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
+    //     &[(light_variant.to_owned(), false), (night_variant, true)]
+    // } else {
+    //     let light_variant = &r.node_name;
+    //     &[(light_variant.to_owned(), false)]
+    // };
+    // let all_variants = cartesian_product(scales, themes);
+    // // endregion: generating all android variants
 
-    let res_name = r.label.name.to_string();
-    Node {
-        name: r.label.to_string(),
-        children: all_variants
-            .iter()
-            .map(|(d, (node_name, is_night))| {
-                let density_name = density_name(d);
-                let scale_factor = scale_factor(d);
-                let variant_name = if !*is_night {
-                    format!("{density_name}")
-                } else {
-                    format!("night-{density_name}")
-                };
-                let mut child_nodes = Vec::with_capacity(4);
-                if p.legacy_loader {
-                    child_nodes.push(node!(
-                        format!("📤 Export PNG from remote {}", r.remote),
-                        [
-                            ("node", node_name.to_string()),
-                            ("scale", scale_factor.to_string())
-                        ]
-                    ));
-                } else {
-                    child_nodes.push(node!(
-                        format!("📤 Export SVG from remote {}", r.remote),
-                        [("node", node_name.to_string())]
-                    ));
-                    child_nodes.push(node!(
-                        "🎨 Render PNG locally",
-                        [("scale", scale_factor.to_string())]
-                    ));
-                }
-                child_nodes.push(node!(
-                    "✨ Transform PNG to WEBP",
-                    [("quality", p.quality.to_string())]
-                ));
-                child_nodes.push(node!(
-                    "💾 Write to file",
-                    [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
-                ));
-                Node {
-                    name: format!("Variant '{variant_name}'"),
-                    children: child_nodes,
-                    params: Default::default(),
-                }
-            })
-            .collect(),
-        ..Default::default()
-    }
+    // let res_name = r.label.name.to_string();
+    // Node {
+    //     name: r.label.to_string(),
+    //     children: all_variants
+    //         .iter()
+    //         .map(|(d, (node_name, is_night))| {
+    //             let density_name = density_name(d);
+    //             let scale_factor = scale_factor(d);
+    //             let variant_name = if !*is_night {
+    //                 format!("{density_name}")
+    //             } else {
+    //                 format!("night-{density_name}")
+    //             };
+    //             let mut child_nodes = Vec::with_capacity(4);
+    //             if p.legacy_loader {
+    //                 child_nodes.push(node!(
+    //                     format!("📤 Export PNG from remote {}", r.remote),
+    //                     [
+    //                         ("node", node_name.to_string()),
+    //                         ("scale", scale_factor.to_string())
+    //                     ]
+    //                 ));
+    //             } else {
+    //                 child_nodes.push(node!(
+    //                     format!("📤 Export SVG from remote {}", r.remote),
+    //                     [("node", node_name.to_string())]
+    //                 ));
+    //                 child_nodes.push(node!(
+    //                     "🎨 Render PNG locally",
+    //                     [("scale", scale_factor.to_string())]
+    //                 ));
+    //             }
+    //             child_nodes.push(node!(
+    //                 "✨ Transform PNG to WEBP",
+    //                 [("quality", p.quality.to_string())]
+    //             ));
+    //             child_nodes.push(node!(
+    //                 "💾 Write to file",
+    //                 [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
+    //             ));
+    //             Node {
+    //                 name: format!("Variant '{variant_name}'"),
+    //                 children: child_nodes,
+    //                 params: Default::default(),
+    //             }
+    //         })
+    //         .collect(),
+    //     ..Default::default()
+    // }
 }

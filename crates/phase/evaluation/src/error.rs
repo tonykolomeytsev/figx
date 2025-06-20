@@ -1,3 +1,4 @@
+use crate::Target;
 use std::{
     fmt::{Debug, Display},
     ops::Range,
@@ -14,6 +15,7 @@ pub enum Error {
     ImageDecode(image::ImageError),
     FigmaApiNetwork(lib_figma_fluent::Error),
     ExportImage(String),
+    IndexingRemote(String),
     FindNode {
         node_name: String,
         file: PathBuf,
@@ -75,5 +77,15 @@ impl From<retry::Error<Error>> for Error {
 impl From<lib_figma_fluent::NodeStreamError> for Error {
     fn from(value: lib_figma_fluent::NodeStreamError) -> Self {
         Self::ExportImage(value.0)
+    }
+}
+
+impl<'a> From<&Target<'a>> for Error {
+    fn from(value: &Target<'a>) -> Self {
+        Self::FindNode {
+            node_name: value.attrs.node_name.clone(),
+            file: value.attrs.diag.file.to_path_buf(),
+            span: value.attrs.diag.definition_span.clone(),
+        }
     }
 }

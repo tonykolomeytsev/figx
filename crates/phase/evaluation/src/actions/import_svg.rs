@@ -2,37 +2,34 @@ use super::{GetRemoteImageArgs, get_remote_image};
 use crate::{
     EvalContext, Result, Target,
     actions::{
-        get_node::{GetNodeArgs, ensure_is_vector_node, get_node},
+        get_node::ensure_is_vector_node,
         materialize::{MaterializeArgs, materialize},
     },
+    figma::NodeMetadata,
 };
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::SvgProfile;
 
 pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
-    let ImportSvgArgs { target, profile } = args;
+    let ImportSvgArgs {
+        node,
+        target,
+        profile,
+    } = args;
     let node_name = target.figma_name();
     let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "svg: {}", target.attrs.label.name);
     let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
 
-    let node = get_node(
-        ctx,
-        GetNodeArgs {
-            node_name,
-            remote: &target.attrs.remote,
-            diag: &target.attrs.diag,
-        },
-    )?;
     ensure_is_vector_node(&node, node_name, &target.attrs.label, false);
     let svg = get_remote_image(
         ctx,
         GetRemoteImageArgs {
             label: &target.attrs.label,
             remote: &target.attrs.remote,
-            node: &node,
+            node,
             format: "svg",
             scale: 1.0,
             variant_name: &variant_name,
@@ -60,12 +57,17 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
 }
 
 pub struct ImportSvgArgs<'a> {
+    node: &'a NodeMetadata,
     target: Target<'a>,
     profile: &'a SvgProfile,
 }
 
 impl<'a> ImportSvgArgs<'a> {
-    pub fn new(target: Target<'a>, profile: &'a SvgProfile) -> Self {
-        Self { target, profile }
+    pub fn new(node: &'a NodeMetadata, target: Target<'a>, profile: &'a SvgProfile) -> Self {
+        Self {
+            node,
+            target,
+            profile,
+        }
     }
 }
