@@ -3,103 +3,100 @@ use super::{
     materialize::{MaterializeArgs, materialize},
 };
 use crate::{
+    EvalContext, Result, Target,
     actions::{
-        convert_svg_to_compose::{convert_svg_to_compose, ConvertSvgToComposeArgs},
-        get_node::{ensure_is_vector_node, get_node, GetNodeArgs},
-        util_variants::generate_variants,
-    }, EvalContext, Result
+        convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
+        get_node::{GetNodeArgs, ensure_is_vector_node, get_node},
+    },
 };
 use lib_progress_bar::create_in_progress_item;
 use log::{debug, info, warn};
-use phase_loading::{ComposeProfile, ResourceAttrs};
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use phase_loading::ComposeProfile;
 use std::path::{Path, PathBuf};
 
 pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> {
-    debug!(target: "Import", "compose: {}", args.attrs.label.name);
-    let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
+    let ImportComposeArgs { target, profile } = args;
+    let node_name = target.figma_name();
+    let variant_name = target.id.clone().unwrap_or_default();
 
-    let output_dir = get_output_dir_for_compose_profile(args.profile, &args.attrs.package_dir);
+    debug!(target: "Import", "compose: {}", target.attrs.label.name);
+    let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
+
+    let output_dir = get_output_dir_for_compose_profile(profile, &target.attrs.package_dir);
     let package = get_kotlin_package(&output_dir).unwrap_or_default();
 
-    if let (None, true) = (&args.profile.package, package.is_empty()) {
+    if let (None, true) = (&profile.package, package.is_empty()) {
         warn!("Kotlin package for {} was not found", output_dir.display());
     }
 
-    let variants = generate_variants(
-        &args.attrs.label.name.to_string(),
-        &args.attrs.node_name,
-        1.0,
-        &args.profile.variants,
-    );
+    let node = get_node(
+        ctx,
+        GetNodeArgs {
+            node_name,
+            remote: &target.attrs.remote,
+            diag: &target.attrs.diag,
+        },
+    )?;
+    ensure_is_vector_node(&node, node_name, &target.attrs.label, false);
+    let svg = &get_remote_image(
+        ctx,
+        GetRemoteImageArgs {
+            label: &target.attrs.label,
+            remote: &target.attrs.remote,
+            node: &node,
+            format: "svg",
+            scale: 1.0,
+            variant_name: &variant_name,
+        },
+    )?;
+    let compose = convert_svg_to_compose(
+        ctx,
+        ConvertSvgToComposeArgs {
+            label: &target.attrs.label,
+            variant_name: &variant_name,
+            name: target.output_name(),
+            package: match profile.package.as_ref() {
+                None => &package,
+                Some(package) => package,
+            },
+            kotlin_explicit_api: profile.kotlin_explicit_api,
+            extension_target: &profile.extension_target,
+            file_suppress_lint: &profile.file_suppress_lint,
+            svg,
+            color_mappings: &profile.color_mappings,
+            preview: &profile.preview,
+            composable_get: profile.composable_get,
+        },
+    )?;
 
-    variants
-        .par_iter()
-        .map(|variant| {
-            let node = get_node(ctx, GetNodeArgs { 
-                node_name: &variant.node_name, 
-                remote: &args.attrs.remote,
-                diag: &args.attrs.diag,
-            })?;
-            ensure_is_vector_node(&node, &variant.node_name, &args.attrs.label, false);
-            let svg = &get_remote_image(
-                ctx,
-                GetRemoteImageArgs {
-                    label: &args.attrs.label,
-                    remote: &args.attrs.remote,
-                    node: &node,
-                    format: "svg",
-                    scale: variant.scale,
-                    variant_name: &variant.id,
-                },
-            )?;
-
-            materialize(
-                ctx,
-                MaterializeArgs {
-                    output_dir: &output_dir,
-                    file_name: &variant.res_name,
-                    file_extension: "kt",
-                    bytes: &convert_svg_to_compose(
-                        ctx,
-                        ConvertSvgToComposeArgs {
-                            label: &args.attrs.label,
-                            variant_name: &variant.id,
-                            name: &variant.res_name,
-                            package: match args.profile.package.as_ref() {
-                                None => &package,
-                                Some(package) => package,
-                            },
-                            kotlin_explicit_api: args.profile.kotlin_explicit_api,
-                            extension_target: &args.profile.extension_target,
-                            file_suppress_lint: &args.profile.file_suppress_lint,
-                            svg,
-                            color_mappings: &args.profile.color_mappings,
-                            preview: &args.profile.preview,
-                            composable_get: args.profile.composable_get,
-                        },
-                    )?,
-                },
-                || {
-                    info!(target: "Writing", "`{label}`{variant} to file",
-                        label = args.attrs.label.fitted(50),
-                        variant = if variant.default { String::new() } else { format!(" ({})", variant.id) },
-                    )
-                },            )
-        })
-        .collect::<Result<Vec<_>>>()?;
+    let variant = target
+        .id
+        .as_ref()
+        .map(|it| format!(" ({it})"))
+        .unwrap_or_default();
+    let label = target.attrs.label.fitted(50);
+    materialize(
+        ctx,
+        MaterializeArgs {
+            output_dir: &output_dir,
+            file_name: target.output_name(),
+            file_extension: "kt",
+            bytes: &compose,
+        },
+        || info!(target: "Writing", "`{label}`{variant} to file"),
+    )?;
 
     Ok(())
 }
 
 pub struct ImportComposeArgs<'a> {
-    attrs: &'a ResourceAttrs,
+    target: Target<'a>,
     profile: &'a ComposeProfile,
 }
 
 impl<'a> ImportComposeArgs<'a> {
-    pub fn new(attrs: &'a ResourceAttrs, profile: &'a ComposeProfile) -> Self {
-        Self { attrs, profile }
+    pub fn new(target: Target<'a>, profile: &'a ComposeProfile) -> Self {
+        Self { target, profile }
     }
 }
 

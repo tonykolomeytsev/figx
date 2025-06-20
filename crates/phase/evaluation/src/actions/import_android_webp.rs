@@ -3,12 +3,12 @@ use log::debug;
 use log::info;
 use phase_loading::AndroidDensity;
 use phase_loading::AndroidWebpProfile;
-use phase_loading::ResourceAttrs;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 
 use crate::EvalContext;
 use crate::Result;
+use crate::Target;
 use crate::actions::GetRemoteImageArgs;
 use crate::actions::convert_png_to_webp::ConvertPngToWebpArgs;
 use crate::actions::convert_png_to_webp::convert_png_to_webp;
@@ -22,27 +22,19 @@ use crate::actions::render_svg_to_png::RenderSvgToPngArgs;
 use crate::actions::render_svg_to_png::render_svg_to_png;
 
 pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Result<()> {
-    debug!(
-        target: "Import",
-        "android-webp: {} ({})",
-        args.attrs.label.name,
-        args.profile
-            .scales
-            .iter()
-            .map(density_name)
-            .collect::<Vec<_>>()
-            .join(", "),
-    );
-    let _guard = create_in_progress_item(args.attrs.label.name.as_ref());
+    let ImportAndroidWebpArgs { target, profile } = args;
+
+    debug!(target: "Import", "android-webp: {}", target.attrs.label.name);
+    let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
 
     // region: generating all android variants
-    let scales = &args.profile.scales;
-    let themes: &[_] = if let Some(night_variant) = &args.profile.night {
-        let light_variant = &args.attrs.node_name;
+    let scales = &profile.scales;
+    let themes: &[_] = if let Some(night_variant) = &profile.night {
+        let light_variant = &target.attrs.node_name;
         let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
         &[(light_variant.to_owned(), false), (night_variant, true)]
     } else {
-        let light_variant = &args.attrs.node_name;
+        let light_variant = &target.attrs.node_name;
         &[(light_variant.to_owned(), false)]
     };
     let all_variants = cartesian_product(scales, themes);
@@ -63,16 +55,16 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 ctx,
                 GetNodeArgs {
                     node_name: &node_name,
-                    remote: &args.attrs.remote,
-                    diag: &args.attrs.diag,
+                    remote: &target.attrs.remote,
+                    diag: &target.attrs.diag,
                 },
             )?;
-            let png = if args.profile.legacy_loader {
+            let png = if profile.legacy_loader {
                 get_remote_image(
                     ctx,
                     GetRemoteImageArgs {
-                        label: &args.attrs.label,
-                        remote: &args.attrs.remote,
+                        label: &target.attrs.label,
+                        remote: &target.attrs.remote,
                         node: &node,
                         format: "png",
                         scale: factor,
@@ -80,12 +72,12 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                     },
                 )?
             } else {
-                ensure_is_vector_node(&node, node_name, &args.attrs.label, true);
+                ensure_is_vector_node(&node, node_name, &target.attrs.label, true);
                 let svg = get_remote_image(
                     ctx,
                     GetRemoteImageArgs {
-                        label: &args.attrs.label,
-                        remote: &args.attrs.remote,
+                        label: &target.attrs.label,
+                        remote: &target.attrs.remote,
                         node: &node,
                         format: "svg",
                         scale: 1.0,       // always the same yes
@@ -95,7 +87,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 render_svg_to_png(
                     ctx,
                     RenderSvgToPngArgs {
-                        label: &args.attrs.label,
+                        label: &target.attrs.label,
                         variant_name: &variant_name,
                         svg: &svg,
                         zoom: if factor != 1.0 { Some(factor) } else { None },
@@ -106,29 +98,29 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
             let webp = convert_png_to_webp(
                 ctx,
                 ConvertPngToWebpArgs {
-                    quality: *args.profile.quality,
+                    quality: *profile.quality,
                     bytes: &png,
-                    label: &args.attrs.label,
+                    label: &target.attrs.label,
                     variant_name: &variant_name,
                 },
             )?;
-            let output_dir = args
+            let output_dir = target
                 .attrs
                 .package_dir
-                .join(&args.profile.android_res_dir)
+                .join(&profile.android_res_dir)
                 .join(&format!("drawable-{variant_name}"));
 
             materialize(
                 ctx,
                 MaterializeArgs {
                     output_dir: &output_dir,
-                    file_name: args.attrs.label.name.as_ref(),
+                    file_name: target.attrs.label.name.as_ref(),
                     file_extension: "webp",
                     bytes: &webp,
                 },
                 || {
                     info!(target: "Writing", "`{label}` ({variant}) to file",
-                        label = args.attrs.label.fitted(50),
+                        label = target.attrs.label.fitted(50),
                         variant = &variant_name,
                     )
                 },
@@ -139,13 +131,13 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
 }
 
 pub struct ImportAndroidWebpArgs<'a> {
-    attrs: &'a ResourceAttrs,
+    target: Target<'a>,
     profile: &'a AndroidWebpProfile,
 }
 
 impl<'a> ImportAndroidWebpArgs<'a> {
-    pub fn new(attrs: &'a ResourceAttrs, profile: &'a AndroidWebpProfile) -> Self {
-        Self { attrs, profile }
+    pub fn new(target: Target<'a>, profile: &'a AndroidWebpProfile) -> Self {
+        Self { target, profile }
     }
 }
 

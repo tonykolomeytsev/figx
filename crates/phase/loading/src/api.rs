@@ -89,6 +89,14 @@ impl Profile {
             AndroidWebp(p) => p.remote_id.as_str(),
         }
     }
+
+    pub fn vector(&self) -> bool {
+        use Profile::*;
+        match self {
+            Png(_) | Webp(_) | AndroidWebp(_) => false,
+            _ => true,
+        }
+    }
 }
 
 // region: PNG Profile

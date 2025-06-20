@@ -32,6 +32,8 @@ mod hashing;
 // pub use actions_old::*;
 pub use error::*;
 pub use hashing::*;
+mod targets;
+pub use targets::*;
 
 #[derive(Clone)]
 pub struct EvalContext {
@@ -85,21 +87,20 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .packages
         .par_iter()
         .flat_map(|it| &it.resources)
-        .map(|res| {
+        .flat_map(|it| targets_from_resource(it))
+        .map(|target| {
             use phase_loading::Profile::*;
-            let result = match res.profile.as_ref() {
-                Png(png_profile) => import_png(&ctx, ImportPngArgs::new(&res.attrs, png_profile)),
-                Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(&res.attrs, svg_profile)),
-                Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(&res.attrs, pdf_profile)),
-                Webp(webp_profile) => {
-                    import_webp(&ctx, ImportWebpArgs::new(&res.attrs, webp_profile))
-                }
+            let result = match target.profile {
+                Png(png_profile) => import_png(&ctx, ImportPngArgs::new(target, png_profile)),
+                Svg(svg_profile) => import_svg(&ctx, ImportSvgArgs::new(target, svg_profile)),
+                Pdf(pdf_profile) => import_pdf(&ctx, ImportPdfArgs::new(target, pdf_profile)),
+                Webp(webp_profile) => import_webp(&ctx, ImportWebpArgs::new(target, webp_profile)),
                 Compose(compose_profile) => {
-                    import_compose(&ctx, ImportComposeArgs::new(&res.attrs, compose_profile))
+                    import_compose(&ctx, ImportComposeArgs::new(target, compose_profile))
                 }
                 AndroidWebp(android_webp_profile) => import_android_webp(
                     &ctx,
-                    ImportAndroidWebpArgs::new(&res.attrs, android_webp_profile),
+                    ImportAndroidWebpArgs::new(target, android_webp_profile),
                 ),
             };
             processed_resources.fetch_add(1, Ordering::Relaxed);

@@ -1,9 +1,10 @@
+#![allow(unused)]
+
 use lib_label::LabelPattern;
 use owo_colors::OwoColorize;
 use phase_evaluation::actions::{
     import_android_webp::{cartesian_product, density_name, expand_night_variant, scale_factor},
     import_compose::{get_kotlin_package, get_output_dir_for_compose_profile},
-    util_variants::generate_variants,
 };
 use phase_loading::{
     AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile, ResourceAttrs, SvgProfile,
@@ -104,222 +105,227 @@ impl Node {
 }
 
 fn png_resource_tree(r: &ResourceAttrs, p: &PngProfile) -> Node {
-    let mut root_node = Node {
-        name: r.label.to_string(),
-        children: Vec::new(),
-        params: Vec::new(),
-    };
-    let variants = generate_variants(
-        &r.label.name.to_string(),
-        &r.node_name,
-        *p.scale,
-        &p.variants,
-    );
-    for v in variants {
-        let mut child_nodes = Vec::with_capacity(4);
-        if p.legacy_loader {
-            child_nodes.push(node!(
-                format!("📤 Export PNG from remote {}", r.remote),
-                [
-                    ("node", v.node_name.to_string()),
-                    ("scale", v.scale.to_string())
-                ]
-            ));
-        } else {
-            child_nodes.push(node!(
-                format!("📤 Export SVG from remote {}", r.remote),
-                [("node", v.node_name.to_string())]
-            ));
-            child_nodes.push(node!(
-                "🎨 Render PNG locally",
-                [("scale", v.scale.to_string())]
-            ));
-        }
-        child_nodes.push(node!(
-            "💾 Write to file",
-            [("output", format!("{}.png", v.res_name))]
-        ));
+    todo!()
+    // let mut root_node = Node {
+    //     name: r.label.to_string(),
+    //     children: Vec::new(),
+    //     params: Vec::new(),
+    // };
+    // let variants = generate_variants(
+    //     &r.label.name.to_string(),
+    //     &r.node_name,
+    //     *p.scale,
+    //     &p.variants,
+    // );
+    // for v in variants {
+    //     let mut child_nodes = Vec::with_capacity(4);
+    //     if p.legacy_loader {
+    //         child_nodes.push(node!(
+    //             format!("📤 Export PNG from remote {}", r.remote),
+    //             [
+    //                 ("node", v.node_name.to_string()),
+    //                 ("scale", v.scale.to_string())
+    //             ]
+    //         ));
+    //     } else {
+    //         child_nodes.push(node!(
+    //             format!("📤 Export SVG from remote {}", r.remote),
+    //             [("node", v.node_name.to_string())]
+    //         ));
+    //         child_nodes.push(node!(
+    //             "🎨 Render PNG locally",
+    //             [("scale", v.scale.to_string())]
+    //         ));
+    //     }
+    //     child_nodes.push(node!(
+    //         "💾 Write to file",
+    //         [("output", format!("{}.png", v.res_name))]
+    //     ));
 
-        if v.default {
-            root_node.children.append(&mut child_nodes);
-        } else {
-            let variant_node = Node {
-                name: format!("Variant '{}'", v.res_name),
-                children: child_nodes,
-                params: Vec::new(),
-            };
-            root_node.children.push(variant_node);
-        }
-    }
-    root_node
+    //     if v.default {
+    //         root_node.children.append(&mut child_nodes);
+    //     } else {
+    //         let variant_node = Node {
+    //             name: format!("Variant '{}'", v.res_name),
+    //             children: child_nodes,
+    //             params: Vec::new(),
+    //         };
+    //         root_node.children.push(variant_node);
+    //     }
+    // }
+    // root_node
 }
 
 fn svg_resource_tree(r: &ResourceAttrs, p: &SvgProfile) -> Node {
-    let mut root_node = Node {
-        name: r.label.to_string(),
-        children: Vec::new(),
-        params: Vec::new(),
-    };
-    let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
-    for v in variants {
-        let mut child_nodes = vec![
-            node!(
-                format!("📤 Export SVG from remote {}", r.remote),
-                [("node", v.node_name.to_string())]
-            ),
-            node!(
-                "💾 Write to file",
-                [("output", format!("{}.svg", v.res_name))]
-            ),
-        ];
+    todo!()
+    // let mut root_node = Node {
+    //     name: r.label.to_string(),
+    //     children: Vec::new(),
+    //     params: Vec::new(),
+    // };
+    // let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
+    // for v in variants {
+    //     let mut child_nodes = vec![
+    //         node!(
+    //             format!("📤 Export SVG from remote {}", r.remote),
+    //             [("node", v.node_name.to_string())]
+    //         ),
+    //         node!(
+    //             "💾 Write to file",
+    //             [("output", format!("{}.svg", v.res_name))]
+    //         ),
+    //     ];
 
-        if v.default {
-            root_node.children.append(&mut child_nodes);
-        } else {
-            let variant_node = Node {
-                name: format!("Variant '{}'", v.res_name),
-                children: child_nodes,
-                params: Vec::new(),
-            };
-            root_node.children.push(variant_node);
-        }
-    }
-    root_node
+    //     if v.default {
+    //         root_node.children.append(&mut child_nodes);
+    //     } else {
+    //         let variant_node = Node {
+    //             name: format!("Variant '{}'", v.res_name),
+    //             children: child_nodes,
+    //             params: Vec::new(),
+    //         };
+    //         root_node.children.push(variant_node);
+    //     }
+    // }
+    // root_node
 }
 
 fn pdf_resource_tree(r: &ResourceAttrs, p: &PdfProfile) -> Node {
-    let mut root_node = Node {
-        name: r.label.to_string(),
-        children: Vec::new(),
-        params: Vec::new(),
-    };
-    let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
-    for v in variants {
-        let mut child_nodes = vec![
-            node!(
-                format!("📤 Export PDF from remote {}", r.remote),
-                [("node", v.node_name.to_string())]
-            ),
-            node!(
-                "💾 Write to file",
-                [("output", format!("{}.pdf", v.res_name))]
-            ),
-        ];
+    todo!()
+    // let mut root_node = Node {
+    //     name: r.label.to_string(),
+    //     children: Vec::new(),
+    //     params: Vec::new(),
+    // };
+    // let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
+    // for v in variants {
+    //     let mut child_nodes = vec![
+    //         node!(
+    //             format!("📤 Export PDF from remote {}", r.remote),
+    //             [("node", v.node_name.to_string())]
+    //         ),
+    //         node!(
+    //             "💾 Write to file",
+    //             [("output", format!("{}.pdf", v.res_name))]
+    //         ),
+    //     ];
 
-        if v.default {
-            root_node.children.append(&mut child_nodes);
-        } else {
-            let variant_node = Node {
-                name: format!("Variant '{}'", v.res_name),
-                children: child_nodes,
-                params: Vec::new(),
-            };
-            root_node.children.push(variant_node);
-        }
-    }
-    root_node
+    //     if v.default {
+    //         root_node.children.append(&mut child_nodes);
+    //     } else {
+    //         let variant_node = Node {
+    //             name: format!("Variant '{}'", v.res_name),
+    //             children: child_nodes,
+    //             params: Vec::new(),
+    //         };
+    //         root_node.children.push(variant_node);
+    //     }
+    // }
+    // root_node
 }
 
 fn webp_resource_tree(r: &ResourceAttrs, p: &WebpProfile) -> Node {
-    let mut root_node = Node {
-        name: r.label.to_string(),
-        children: Vec::new(),
-        params: Vec::new(),
-    };
-    let variants = generate_variants(
-        &r.label.name.to_string(),
-        &r.node_name,
-        *p.scale,
-        &p.variants,
-    );
-    for v in variants {
-        let mut child_nodes = Vec::with_capacity(4);
-        if p.legacy_loader {
-            child_nodes.push(node!(
-                format!("📤 Export PNG from remote {}", r.remote),
-                [
-                    ("node", v.node_name.to_string()),
-                    ("scale", v.scale.to_string())
-                ]
-            ));
-        } else {
-            child_nodes.push(node!(
-                format!("📤 Export SVG from remote {}", r.remote),
-                [("node", v.node_name.to_string())]
-            ));
-            child_nodes.push(node!(
-                "🎨 Render PNG locally",
-                [("scale", v.scale.to_string())]
-            ));
-        }
-        child_nodes.push(node!(
-            "✨ Transform PNG to WEBP",
-            [("quality", p.quality.to_string())]
-        ));
-        child_nodes.push(node!(
-            "💾 Write to file",
-            [("output", format!("{}.webp", v.res_name))]
-        ));
+    todo!()
+    // let mut root_node = Node {
+    //     name: r.label.to_string(),
+    //     children: Vec::new(),
+    //     params: Vec::new(),
+    // };
+    // let variants = generate_variants(
+    //     &r.label.name.to_string(),
+    //     &r.node_name,
+    //     *p.scale,
+    //     &p.variants,
+    // );
+    // for v in variants {
+    //     let mut child_nodes = Vec::with_capacity(4);
+    //     if p.legacy_loader {
+    //         child_nodes.push(node!(
+    //             format!("📤 Export PNG from remote {}", r.remote),
+    //             [
+    //                 ("node", v.node_name.to_string()),
+    //                 ("scale", v.scale.to_string())
+    //             ]
+    //         ));
+    //     } else {
+    //         child_nodes.push(node!(
+    //             format!("📤 Export SVG from remote {}", r.remote),
+    //             [("node", v.node_name.to_string())]
+    //         ));
+    //         child_nodes.push(node!(
+    //             "🎨 Render PNG locally",
+    //             [("scale", v.scale.to_string())]
+    //         ));
+    //     }
+    //     child_nodes.push(node!(
+    //         "✨ Transform PNG to WEBP",
+    //         [("quality", p.quality.to_string())]
+    //     ));
+    //     child_nodes.push(node!(
+    //         "💾 Write to file",
+    //         [("output", format!("{}.webp", v.res_name))]
+    //     ));
 
-        if v.default {
-            root_node.children.append(&mut child_nodes);
-        } else {
-            let variant_node = Node {
-                name: format!("Variant '{}'", v.res_name),
-                children: child_nodes,
-                params: Vec::new(),
-            };
-            root_node.children.push(variant_node);
-        }
-    }
-    root_node
+    //     if v.default {
+    //         root_node.children.append(&mut child_nodes);
+    //     } else {
+    //         let variant_node = Node {
+    //             name: format!("Variant '{}'", v.res_name),
+    //             children: child_nodes,
+    //             params: Vec::new(),
+    //         };
+    //         root_node.children.push(variant_node);
+    //     }
+    // }
+    // root_node
 }
 
 fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
-    let output_dir = get_output_dir_for_compose_profile(p, &r.package_dir);
-    let package = match &p.package {
-        Some(pkg) if pkg.is_empty() => "Explicitly empty".to_owned(),
-        Some(pkg) => pkg.to_owned(),
-        None => match get_kotlin_package(&output_dir) {
-            Some(pkg) => pkg,
-            None => "Undetermined".to_owned(),
-        },
-    };
+    todo!()
+    // let output_dir = get_output_dir_for_compose_profile(p, &r.package_dir);
+    // let package = match &p.package {
+    //     Some(pkg) if pkg.is_empty() => "Explicitly empty".to_owned(),
+    //     Some(pkg) => pkg.to_owned(),
+    //     None => match get_kotlin_package(&output_dir) {
+    //         Some(pkg) => pkg,
+    //         None => "Undetermined".to_owned(),
+    //     },
+    // };
 
-    let mut root_node = Node {
-        name: r.label.to_string(),
-        children: Vec::new(),
-        params: Vec::new(),
-    };
-    let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
-    for v in variants {
-        let mut child_nodes = vec![
-            node!(
-                format!("📤 Export SVG from remote {}", r.remote),
-                [("node", v.node_name.to_string())]
-            ),
-            node!(
-                "✨ Transform SVG to Compose",
-                [("package", package.to_string())]
-            ),
-            node!(
-                "💾 Write to file",
-                [("output", format!("{}.kt", v.res_name))]
-            ),
-        ];
+    // let mut root_node = Node {
+    //     name: r.label.to_string(),
+    //     children: Vec::new(),
+    //     params: Vec::new(),
+    // };
+    // let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
+    // for v in variants {
+    //     let mut child_nodes = vec![
+    //         node!(
+    //             format!("📤 Export SVG from remote {}", r.remote),
+    //             [("node", v.node_name.to_string())]
+    //         ),
+    //         node!(
+    //             "✨ Transform SVG to Compose",
+    //             [("package", package.to_string())]
+    //         ),
+    //         node!(
+    //             "💾 Write to file",
+    //             [("output", format!("{}.kt", v.res_name))]
+    //         ),
+    //     ];
 
-        if v.default {
-            root_node.children.append(&mut child_nodes);
-        } else {
-            let variant_node = Node {
-                name: format!("Variant '{}'", v.res_name),
-                children: child_nodes,
-                params: Vec::new(),
-            };
-            root_node.children.push(variant_node);
-        }
-    }
-    root_node
+    //     if v.default {
+    //         root_node.children.append(&mut child_nodes);
+    //     } else {
+    //         let variant_node = Node {
+    //             name: format!("Variant '{}'", v.res_name),
+    //             children: child_nodes,
+    //             params: Vec::new(),
+    //         };
+    //         root_node.children.push(variant_node);
+    //     }
+    // }
+    // root_node
 }
 
 fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node {
