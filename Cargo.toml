@@ -28,6 +28,7 @@ lib_label = { path = "crates/lib/label" }
 lib_progress_bar = { path = "crates/lib/progress_bar" }
 lib_cache = { path = "crates/lib/cache" }
 lib_svg2compose = { path = "crates/lib/svg2compose" }
+lib_metrics = { path = "crates/lib/metrics" }
 
 # External Deps
 usvg = "0.45.1"
@@ -65,3 +66,5 @@ retry = "2.1.0"
 num_cpus = "1.17"
 tempfile = "3.19.1"
 crossbeam-channel = "0.5.15"
+boxcar = "0.2.13"
+quantiles = "0.7.1"

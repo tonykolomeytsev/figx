@@ -9,6 +9,7 @@ use actions::{
 use figma::FigmaRepository;
 use lib_cache::Cache;
 use lib_figma::FigmaApi;
+use lib_metrics::{Counter, Metrics};
 use lib_progress_bar::{set_progress_bar_maximum, set_progress_bar_visible};
 use log::{debug, info, trace};
 use phase_loading::Workspace;
@@ -21,7 +22,7 @@ use std::{
         Arc,
         atomic::{AtomicUsize, Ordering},
     },
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 pub mod actions;
@@ -37,7 +38,13 @@ pub struct EvalContext {
     pub eval_args: Arc<EvalArgs>,
     pub figma_repository: FigmaRepository,
     pub cache: Cache,
-    pub processed_files_counter: Arc<AtomicUsize>,
+    pub metrics: EvalMetrics,
+}
+
+#[derive(Clone)]
+pub struct EvalMetrics {
+    pub resources_executed: Arc<Counter>,
+    pub targets_requested: Arc<Counter>,
 }
 
 #[derive(Default)]
@@ -51,10 +58,12 @@ pub struct EvalArgs {
 const MAX_NUM_THREADS: usize = 8;
 
 pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
-    let instant = Instant::now();
+    let metrics = Metrics::default();
+    let full_duration = metrics.duration("figx_full_duration");
+    let _instant = full_duration.record();
     // setup rayon thread pool
     set_up_rayon(args.concurrency);
-    let ctx = init_eval_context(&ws, args)?;
+    let ctx = init_eval_context(&ws, args, &metrics)?;
     set_progress_bar_visible(true);
     let requested_resources = ws.packages.iter().map(|pkg| pkg.resources.len()).sum();
     let processed_resources: Arc<AtomicUsize> = Default::default();
@@ -101,18 +110,19 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         })
         .collect::<Result<()>>();
     // endregion: exec
-    let elapsed = instant.elapsed();
+    drop(_instant);
+
     set_progress_bar_visible(false);
 
     // Извлекаем ошибку, если она была
     match result {
         Err(e) => Err(e),
         Ok(_) => {
-            let time = format_duration(elapsed);
+            let time = format_duration(full_duration.get());
             if ctx.eval_args.fetch {
                 info!(target: "Finished", "{requested_remotes} remotes(s) in {time}",);
             } else {
-                let files_count = ctx.processed_files_counter.load(Ordering::Relaxed);
+                let files_count = ctx.metrics.targets_requested.get();
                 info!(
                     target: "Finished", "{res_num} resource(s), resulting in {files_count} file(s) in {time}",
                     res_num = processed_resources.load(Ordering::Relaxed),
@@ -142,14 +152,17 @@ pub fn setup_cache(dir: &Path) -> Result<Cache> {
     Ok(Cache::new(dir)?)
 }
 
-fn init_eval_context(ws: &Workspace, args: EvalArgs) -> Result<EvalContext> {
+fn init_eval_context(ws: &Workspace, args: EvalArgs, metrics: &Metrics) -> Result<EvalContext> {
     let api = FigmaApi::default();
     let cache = setup_cache(&ws.context.cache_dir)?;
     Ok(EvalContext {
         eval_args: Arc::new(args),
         figma_repository: FigmaRepository::new(api, cache.clone()),
         cache,
-        processed_files_counter: Default::default(),
+        metrics: EvalMetrics {
+            resources_executed: metrics.counter("figx_resources_executed"),
+            targets_requested: metrics.counter("figx_targets_requested"),
+        },
     })
 }
 

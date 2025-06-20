@@ -1,0 +1,8 @@
+[package]
+name = "lib_metrics"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+dashmap.workspace = true
+quantiles.workspace = true

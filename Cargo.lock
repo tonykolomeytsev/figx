@@ -721,6 +721,7 @@ dependencies = [
  "crossterm",
  "derive_more",
  "lib_label",
+ "lib_metrics",
  "lib_progress_bar",
  "lib_svg2compose",
  "log",
@@ -1225,6 +1226,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "lib_metrics"
+version = "0.6.0"
+dependencies = [
+ "dashmap 6.1.0",
+ "quantiles",
+]
+
+[[package]]
 name = "lib_progress_bar"
 version = "0.6.0"
 dependencies = [
@@ -1547,6 +1556,7 @@ dependencies = [
  "lib_cache",
  "lib_figma",
  "lib_label",
+ "lib_metrics",
  "lib_progress_bar",
  "lib_svg2compose",
  "log",
@@ -1660,6 +1670,12 @@ checksum = "7f6d64c71eb498fe9eae14ce4ec935c555749aef511cca85b5568910d6e48001"
 dependencies = [
  "bytemuck",
 ]
+
+[[package]]
+name = "quantiles"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c10fa813fb26fb6c321a6f3085b5ade4cb4730d08d0b9e70a3759136940957f2"
 
 [[package]]
 name = "quick-error"

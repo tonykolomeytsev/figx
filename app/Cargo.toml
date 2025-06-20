@@ -22,6 +22,7 @@ phase_evaluation.workspace = true
 lib_label.workspace = true
 lib_svg2compose.workspace = true
 lib_progress_bar.workspace = true
+lib_metrics.workspace = true
 
 # External
 clap.workspace = true
