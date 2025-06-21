@@ -29,6 +29,9 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
             variant_name: &variant_name,
         },
     )?;
+    if ctx.eval_args.fetch {
+        return Ok(());
+    }
 
     let variant = target
         .id

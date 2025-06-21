@@ -46,6 +46,9 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
             variant_name: &variant_name,
         },
     )?;
+    if ctx.eval_args.fetch {
+        return Ok(());
+    }
     let compose = convert_svg_to_compose(
         ctx,
         ConvertSvgToComposeArgs {

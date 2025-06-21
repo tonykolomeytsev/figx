@@ -4,12 +4,12 @@ use crate::Target;
 use crate::actions::GetRemoteImageArgs;
 use crate::actions::convert_png_to_webp::ConvertPngToWebpArgs;
 use crate::actions::convert_png_to_webp::convert_png_to_webp;
-use crate::actions::validation::ensure_is_vector_node;
 use crate::actions::get_remote_image;
 use crate::actions::materialize::MaterializeArgs;
 use crate::actions::materialize::materialize;
 use crate::actions::render_svg_to_png::RenderSvgToPngArgs;
 use crate::actions::render_svg_to_png::render_svg_to_png;
+use crate::actions::validation::ensure_is_vector_node;
 use crate::figma::NodeMetadata;
 use lib_progress_bar::create_in_progress_item;
 use log::debug;
@@ -30,7 +30,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
     let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
 
     let png = if profile.legacy_loader {
-        get_remote_image(
+        let png = get_remote_image(
             ctx,
             GetRemoteImageArgs {
                 label: &target.attrs.label,
@@ -40,7 +40,11 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 scale,
                 variant_name: &variant_name,
             },
-        )?
+        )?;
+        if ctx.eval_args.fetch {
+            return Ok(());
+        }
+        png
     } else {
         ensure_is_vector_node(&node, node_name, &target.attrs.label, true);
         let svg = get_remote_image(
@@ -54,6 +58,9 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
                 variant_name: "", // no variant yes
             },
         )?;
+        if ctx.eval_args.fetch {
+            return Ok(());
+        }
         render_svg_to_png(
             ctx,
             RenderSvgToPngArgs {

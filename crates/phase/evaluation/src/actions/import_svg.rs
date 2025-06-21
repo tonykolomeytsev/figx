@@ -2,8 +2,8 @@ use super::{GetRemoteImageArgs, get_remote_image};
 use crate::{
     EvalContext, Result, Target,
     actions::{
-        validation::ensure_is_vector_node,
         materialize::{MaterializeArgs, materialize},
+        validation::ensure_is_vector_node,
     },
     figma::NodeMetadata,
 };
@@ -35,6 +35,9 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
             variant_name: &variant_name,
         },
     )?;
+    if ctx.eval_args.fetch {
+        return Ok(());
+    }
 
     let variant = target
         .id

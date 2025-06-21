@@ -6,8 +6,8 @@ use crate::{
     EvalContext, Result, Target,
     actions::{
         convert_png_to_webp::{ConvertPngToWebpArgs, convert_png_to_webp},
-        validation::ensure_is_vector_node,
         render_svg_to_png::{RenderSvgToPngArgs, render_svg_to_png},
+        validation::ensure_is_vector_node,
     },
     figma::NodeMetadata,
 };
@@ -29,7 +29,7 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
     let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
 
     let png = if args.profile.legacy_loader {
-        get_remote_image(
+        let png = get_remote_image(
             ctx,
             GetRemoteImageArgs {
                 label: &target.attrs.label,
@@ -39,7 +39,11 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
                 scale,
                 variant_name: &variant_name,
             },
-        )?
+        )?;
+        if ctx.eval_args.fetch {
+            return Ok(());
+        }
+        png
     } else {
         ensure_is_vector_node(&node, node_name, &target.attrs.label, true);
         let svg = get_remote_image(
@@ -53,6 +57,9 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
                 variant_name: "", // no variant yes
             },
         )?;
+        if ctx.eval_args.fetch {
+            return Ok(());
+        }
         render_svg_to_png(
             ctx,
             RenderSvgToPngArgs {

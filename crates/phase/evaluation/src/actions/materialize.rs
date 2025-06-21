@@ -11,10 +11,6 @@ pub fn materialize(
     args: MaterializeArgs,
     on_execute: impl FnOnce(),
 ) -> Result<()> {
-    if ctx.eval_args.fetch {
-        return Ok(());
-    }
-
     // construct unique cache key
     let cache_key = CacheKey::builder()
         .set_tag(FILE_DIGEST_TAG)
