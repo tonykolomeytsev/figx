@@ -1,9 +1,21 @@
 use crate::MetricsCollector;
 use dashmap::DashMap;
+use log::warn;
 use std::{fs::File, io::Write, path::Path, sync::Arc};
 
 impl MetricsCollector {
+
     pub fn export_as_prometheus(
+        &self,
+        labels: Option<&[(&'static str, &'static str)]>,
+        path: &Path,
+    ) {
+        if let Err(e) = self.try_export_as_prometheus(labels, path) {
+            warn!("Unable to export metrics: {e}")
+        }
+    }
+
+    pub fn try_export_as_prometheus(
         &self,
         labels: Option<&[(&'static str, &'static str)]>,
         path: &Path,

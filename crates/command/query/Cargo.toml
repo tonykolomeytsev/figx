@@ -6,5 +6,4 @@ edition.workspace = true
 [dependencies]
 lib_label.workspace = true
 phase_loading.workspace = true
-owo-colors.workspace = true
-line-numbers = "0.4.0"
+crossterm.workspace = true

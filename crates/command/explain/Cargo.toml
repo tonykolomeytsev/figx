@@ -7,4 +7,4 @@ edition.workspace = true
 phase_loading.workspace = true
 phase_evaluation.workspace = true
 lib_label.workspace = true
-owo-colors.workspace = true
+crossterm.workspace = true

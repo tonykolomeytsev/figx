@@ -3,7 +3,6 @@ use lib_label::LabelPattern;
 mod error;
 pub use error::*;
 use lib_metrics::Metrics;
-use log::warn;
 use phase_evaluation::EvalArgs;
 
 pub struct FeatureImportOptions {
@@ -38,11 +37,9 @@ pub fn import(opts: FeatureImportOptions) -> Result<()> {
     }
 
     drop(full_duration);
-    if let Err(e) = metrics.export_as_prometheus(
+    metrics.export_as_prometheus(
         Some(&[("command", "import")]),
         &cache_dir.join("metrics.prom"),
-    ) {
-        warn!("Unable to save metrics: {e}")
-    }
+    );
     Ok(())
 }

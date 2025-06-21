@@ -1,10 +1,7 @@
 use actions::{
-    import_android_webp::{ImportAndroidWebpArgs, import_android_webp},
-    import_compose::{ImportComposeArgs, import_compose},
-    import_pdf::{ImportPdfArgs, import_pdf},
-    import_png::{ImportPngArgs, import_png},
-    import_svg::{ImportSvgArgs, import_svg},
-    import_webp::{ImportWebpArgs, import_webp},
+    {ImportAndroidWebpArgs, import_android_webp}, {ImportComposeArgs, import_compose},
+    {ImportPdfArgs, import_pdf}, {ImportPngArgs, import_png}, {ImportSvgArgs, import_svg},
+    {ImportWebpArgs, import_webp},
 };
 use crossbeam_channel::unbounded;
 use dashmap::DashMap;
@@ -83,7 +80,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .collect::<HashSet<_>>()
         .len();
     metrics
-        .counter("figx_requested_remotes")
+        .counter("figx_remotes_requested")
         .set(requested_remotes);
 
     // region: exec
@@ -108,7 +105,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     }
 
     metrics
-        .counter("figx_requested_targets")
+        .counter("figx_targets_requested")
         .set(requested_targets);
     set_progress_bar_maximum(requested_targets);
 

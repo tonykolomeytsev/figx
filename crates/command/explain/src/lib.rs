@@ -1,14 +1,14 @@
-#![allow(unused)]
-
+use crossterm::style::Stylize;
 use lib_label::LabelPattern;
-use owo_colors::OwoColorize;
-use phase_evaluation::actions::import_compose::{
-    get_kotlin_package, get_output_dir_for_compose_profile,
+use phase_evaluation::{
+    actions::{get_kotlin_package, get_output_dir_for_compose_profile},
+    targets_from_resource,
 };
 use phase_loading::{
-    AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile, ResourceAttrs, SvgProfile,
+    AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile, Resource, SvgProfile,
     WebpProfile,
 };
+
 mod error;
 pub use error::*;
 
@@ -42,12 +42,12 @@ pub fn explain(opts: FeatureExplainOptions) -> Result<()> {
     let mut nodes = Vec::with_capacity(1024);
     for res in ws.packages.iter().flat_map(|pkg| &pkg.resources) {
         let node = match res.profile.as_ref() {
-            Profile::Png(p) => png_resource_tree(&res.attrs, p),
-            Profile::Svg(p) => svg_resource_tree(&res.attrs, p),
-            Profile::Pdf(p) => pdf_resource_tree(&res.attrs, p),
-            Profile::Webp(p) => webp_resource_tree(&res.attrs, p),
-            Profile::Compose(p) => compose_resource_tree(&res.attrs, p),
-            Profile::AndroidWebp(p) => android_webp_resource_tree(&res.attrs, p),
+            Profile::Png(p) => png_resource_tree(res, p),
+            Profile::Svg(p) => svg_resource_tree(res, p),
+            Profile::Pdf(p) => pdf_resource_tree(res, p),
+            Profile::Webp(p) => webp_resource_tree(res, p),
+            Profile::Compose(p) => compose_resource_tree(res, p),
+            Profile::AndroidWebp(p) => android_webp_resource_tree(res, p),
         };
         nodes.push(node);
     }
@@ -67,14 +67,14 @@ impl std::fmt::Display for Node {
 
 impl Node {
     fn fmt_tree(&self, f: &mut std::fmt::Formatter<'_>, prefix: &str) -> std::fmt::Result {
-        // Выводим текущий узел
-        writeln!(f, "{}", self.name.bold())?;
+        // Print current node
+        writeln!(f, "{}", self.name.clone().bold())?;
         for (param_key, param_value) in &self.params {
             let param_key = format!("{param_key}: ");
             writeln!(
                 f,
                 "{prefix}   {} {}{}",
-                "┆".bright_black(),
+                "┆".dark_grey(),
                 param_key.green(),
                 param_value
             )?;
@@ -84,16 +84,16 @@ impl Node {
         let middle_children = self.children.len().saturating_sub(1);
         for child in self.children.iter().take(middle_children) {
             // Префикс для текущего узла
-            write!(f, "{prefix}{corner} ", corner = "├──".bright_black())?;
+            write!(f, "{prefix}{corner} ", corner = "├──".dark_grey())?;
             // Префикс для детей текущего узла
-            let new_prefix = format!("{prefix}{border}   ", border = "│".bright_black());
+            let new_prefix = format!("{prefix}{border}   ", border = "│".dark_grey());
             child.fmt_tree(f, &new_prefix)?;
         }
 
         // Обрабатываем последнего ребенка (если есть)
         if let Some(last_child) = self.children.last() {
             // Префикс для последнего узла
-            write!(f, "{prefix}{corner} ", corner = "╰──".bright_black())?;
+            write!(f, "{prefix}{corner} ", corner = "╰──".dark_grey())?;
             // Префикс для детей последнего узла (пробелы вместо │)
             let new_prefix = format!("{prefix}    ");
             last_child.fmt_tree(f, &new_prefix)?;
@@ -103,292 +103,274 @@ impl Node {
     }
 }
 
-fn png_resource_tree(r: &ResourceAttrs, p: &PngProfile) -> Node {
-    todo!()
-    // let mut root_node = Node {
-    //     name: r.label.to_string(),
-    //     children: Vec::new(),
-    //     params: Vec::new(),
-    // };
-    // let variants = generate_variants(
-    //     &r.label.name.to_string(),
-    //     &r.node_name,
-    //     *p.scale,
-    //     &p.variants,
-    // );
-    // for v in variants {
-    //     let mut child_nodes = Vec::with_capacity(4);
-    //     if p.legacy_loader {
-    //         child_nodes.push(node!(
-    //             format!("📤 Export PNG from remote {}", r.remote),
-    //             [
-    //                 ("node", v.node_name.to_string()),
-    //                 ("scale", v.scale.to_string())
-    //             ]
-    //         ));
-    //     } else {
-    //         child_nodes.push(node!(
-    //             format!("📤 Export SVG from remote {}", r.remote),
-    //             [("node", v.node_name.to_string())]
-    //         ));
-    //         child_nodes.push(node!(
-    //             "🎨 Render PNG locally",
-    //             [("scale", v.scale.to_string())]
-    //         ));
-    //     }
-    //     child_nodes.push(node!(
-    //         "💾 Write to file",
-    //         [("output", format!("{}.png", v.res_name))]
-    //     ));
+fn png_resource_tree(res: &Resource, p: &PngProfile) -> Node {
+    let attrs = &res.attrs;
+    let targets = targets_from_resource(res);
 
-    //     if v.default {
-    //         root_node.children.append(&mut child_nodes);
-    //     } else {
-    //         let variant_node = Node {
-    //             name: format!("Variant '{}'", v.res_name),
-    //             children: child_nodes,
-    //             params: Vec::new(),
-    //         };
-    //         root_node.children.push(variant_node);
-    //     }
-    // }
-    // root_node
+    let mut root_node = Node {
+        name: attrs.label.to_string(),
+        children: Vec::new(),
+        params: Vec::new(),
+    };
+    for t in targets {
+        let mut child_nodes = Vec::with_capacity(4);
+        let scale = t.scale.unwrap_or(*p.scale);
+        if p.legacy_loader {
+            child_nodes.push(node!(
+                format!("📤 Export PNG from remote {}", attrs.remote),
+                [
+                    ("node", t.figma_name().to_string()),
+                    ("scale", scale.to_string())
+                ]
+            ));
+        } else {
+            child_nodes.push(node!(
+                format!("📤 Export SVG from remote {}", attrs.remote),
+                [("node", t.figma_name().to_string())]
+            ));
+            child_nodes.push(node!(
+                "🎨 Render PNG locally",
+                [("scale", scale.to_string())]
+            ));
+        }
+        child_nodes.push(node!(
+            "💾 Write to file",
+            [("output", format!("{}.png", t.output_name()))]
+        ));
+
+        if let Some(variant_id) = t.id {
+            let variant_node = Node {
+                name: format!("Variant '{}'", variant_id),
+                children: child_nodes,
+                params: Vec::new(),
+            };
+            root_node.children.push(variant_node);
+        } else {
+            root_node.children.append(&mut child_nodes);
+        }
+    }
+    root_node
 }
 
-fn svg_resource_tree(r: &ResourceAttrs, p: &SvgProfile) -> Node {
-    todo!()
-    // let mut root_node = Node {
-    //     name: r.label.to_string(),
-    //     children: Vec::new(),
-    //     params: Vec::new(),
-    // };
-    // let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
-    // for v in variants {
-    //     let mut child_nodes = vec![
-    //         node!(
-    //             format!("📤 Export SVG from remote {}", r.remote),
-    //             [("node", v.node_name.to_string())]
-    //         ),
-    //         node!(
-    //             "💾 Write to file",
-    //             [("output", format!("{}.svg", v.res_name))]
-    //         ),
-    //     ];
+fn svg_resource_tree(res: &Resource, _p: &SvgProfile) -> Node {
+    let attrs = &res.attrs;
+    let targets = targets_from_resource(res);
 
-    //     if v.default {
-    //         root_node.children.append(&mut child_nodes);
-    //     } else {
-    //         let variant_node = Node {
-    //             name: format!("Variant '{}'", v.res_name),
-    //             children: child_nodes,
-    //             params: Vec::new(),
-    //         };
-    //         root_node.children.push(variant_node);
-    //     }
-    // }
-    // root_node
+    let mut root_node = Node {
+        name: attrs.label.to_string(),
+        children: Vec::new(),
+        params: Vec::new(),
+    };
+    for t in targets {
+        let mut child_nodes = vec![
+            node!(
+                format!("📤 Export SVG from remote {}", attrs.remote),
+                [("node", t.figma_name().to_string())]
+            ),
+            node!(
+                "💾 Write to file",
+                [("output", format!("{}.svg", t.output_name()))]
+            ),
+        ];
+
+        if let Some(variant_id) = t.id {
+            let variant_node = Node {
+                name: format!("Variant '{}'", variant_id),
+                children: child_nodes,
+                params: Vec::new(),
+            };
+            root_node.children.push(variant_node);
+        } else {
+            root_node.children.append(&mut child_nodes);
+        }
+    }
+    root_node
 }
 
-fn pdf_resource_tree(r: &ResourceAttrs, p: &PdfProfile) -> Node {
-    todo!()
-    // let mut root_node = Node {
-    //     name: r.label.to_string(),
-    //     children: Vec::new(),
-    //     params: Vec::new(),
-    // };
-    // let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
-    // for v in variants {
-    //     let mut child_nodes = vec![
-    //         node!(
-    //             format!("📤 Export PDF from remote {}", r.remote),
-    //             [("node", v.node_name.to_string())]
-    //         ),
-    //         node!(
-    //             "💾 Write to file",
-    //             [("output", format!("{}.pdf", v.res_name))]
-    //         ),
-    //     ];
+fn pdf_resource_tree(res: &Resource, _p: &PdfProfile) -> Node {
+    let attrs = &res.attrs;
+    let targets = targets_from_resource(res);
 
-    //     if v.default {
-    //         root_node.children.append(&mut child_nodes);
-    //     } else {
-    //         let variant_node = Node {
-    //             name: format!("Variant '{}'", v.res_name),
-    //             children: child_nodes,
-    //             params: Vec::new(),
-    //         };
-    //         root_node.children.push(variant_node);
-    //     }
-    // }
-    // root_node
+    let mut root_node = Node {
+        name: attrs.label.to_string(),
+        children: Vec::new(),
+        params: Vec::new(),
+    };
+
+    for t in targets {
+        let mut child_nodes = vec![
+            node!(
+                format!("📤 Export PDF from remote {}", attrs.remote),
+                [("node", t.figma_name().to_string())]
+            ),
+            node!(
+                "💾 Write to file",
+                [("output", format!("{}.pdf", t.output_name()))]
+            ),
+        ];
+
+        if let Some(variant_id) = t.id {
+            let variant_node = Node {
+                name: format!("Variant '{}'", variant_id),
+                children: child_nodes,
+                params: Vec::new(),
+            };
+            root_node.children.push(variant_node);
+        } else {
+            root_node.children.append(&mut child_nodes);
+        }
+    }
+    root_node
 }
 
-fn webp_resource_tree(r: &ResourceAttrs, p: &WebpProfile) -> Node {
-    todo!()
-    // let mut root_node = Node {
-    //     name: r.label.to_string(),
-    //     children: Vec::new(),
-    //     params: Vec::new(),
-    // };
-    // let variants = generate_variants(
-    //     &r.label.name.to_string(),
-    //     &r.node_name,
-    //     *p.scale,
-    //     &p.variants,
-    // );
-    // for v in variants {
-    //     let mut child_nodes = Vec::with_capacity(4);
-    //     if p.legacy_loader {
-    //         child_nodes.push(node!(
-    //             format!("📤 Export PNG from remote {}", r.remote),
-    //             [
-    //                 ("node", v.node_name.to_string()),
-    //                 ("scale", v.scale.to_string())
-    //             ]
-    //         ));
-    //     } else {
-    //         child_nodes.push(node!(
-    //             format!("📤 Export SVG from remote {}", r.remote),
-    //             [("node", v.node_name.to_string())]
-    //         ));
-    //         child_nodes.push(node!(
-    //             "🎨 Render PNG locally",
-    //             [("scale", v.scale.to_string())]
-    //         ));
-    //     }
-    //     child_nodes.push(node!(
-    //         "✨ Transform PNG to WEBP",
-    //         [("quality", p.quality.to_string())]
-    //     ));
-    //     child_nodes.push(node!(
-    //         "💾 Write to file",
-    //         [("output", format!("{}.webp", v.res_name))]
-    //     ));
+fn webp_resource_tree(res: &Resource, p: &WebpProfile) -> Node {
+    let attrs = &res.attrs;
+    let targets = targets_from_resource(res);
 
-    //     if v.default {
-    //         root_node.children.append(&mut child_nodes);
-    //     } else {
-    //         let variant_node = Node {
-    //             name: format!("Variant '{}'", v.res_name),
-    //             children: child_nodes,
-    //             params: Vec::new(),
-    //         };
-    //         root_node.children.push(variant_node);
-    //     }
-    // }
-    // root_node
+    let mut root_node = Node {
+        name: attrs.label.to_string(),
+        children: Vec::new(),
+        params: Vec::new(),
+    };
+    for t in targets {
+        let mut child_nodes = Vec::with_capacity(4);
+        let scale = t.scale.unwrap_or(*p.scale);
+        if p.legacy_loader {
+            child_nodes.push(node!(
+                format!("📤 Export PNG from remote {}", attrs.remote),
+                [
+                    ("node", t.figma_name().to_string()),
+                    ("scale", scale.to_string())
+                ]
+            ));
+        } else {
+            child_nodes.push(node!(
+                format!("📤 Export SVG from remote {}", attrs.remote),
+                [("node", t.figma_name().to_string())]
+            ));
+            child_nodes.push(node!(
+                "🎨 Render PNG locally",
+                [("scale", scale.to_string())]
+            ));
+        }
+        child_nodes.push(node!(
+            "✨ Transform PNG to WEBP",
+            [("quality", p.quality.to_string())]
+        ));
+        child_nodes.push(node!(
+            "💾 Write to file",
+            [("output", format!("{}.webp", t.output_name()))]
+        ));
+
+        if let Some(variant_id) = t.id {
+            let variant_node = Node {
+                name: format!("Variant '{}'", variant_id),
+                children: child_nodes,
+                params: Vec::new(),
+            };
+            root_node.children.push(variant_node);
+        } else {
+            root_node.children.append(&mut child_nodes);
+        }
+    }
+    root_node
 }
 
-fn compose_resource_tree(r: &ResourceAttrs, p: &ComposeProfile) -> Node {
-    todo!()
-    // let output_dir = get_output_dir_for_compose_profile(p, &r.package_dir);
-    // let package = match &p.package {
-    //     Some(pkg) if pkg.is_empty() => "Explicitly empty".to_owned(),
-    //     Some(pkg) => pkg.to_owned(),
-    //     None => match get_kotlin_package(&output_dir) {
-    //         Some(pkg) => pkg,
-    //         None => "Undetermined".to_owned(),
-    //     },
-    // };
+fn compose_resource_tree(res: &Resource, p: &ComposeProfile) -> Node {
+    let attrs = &res.attrs;
+    let targets = targets_from_resource(res);
 
-    // let mut root_node = Node {
-    //     name: r.label.to_string(),
-    //     children: Vec::new(),
-    //     params: Vec::new(),
-    // };
-    // let variants = generate_variants(&r.label.name.to_string(), &r.node_name, 1.0, &p.variants);
-    // for v in variants {
-    //     let mut child_nodes = vec![
-    //         node!(
-    //             format!("📤 Export SVG from remote {}", r.remote),
-    //             [("node", v.node_name.to_string())]
-    //         ),
-    //         node!(
-    //             "✨ Transform SVG to Compose",
-    //             [("package", package.to_string())]
-    //         ),
-    //         node!(
-    //             "💾 Write to file",
-    //             [("output", format!("{}.kt", v.res_name))]
-    //         ),
-    //     ];
+    let output_dir = get_output_dir_for_compose_profile(p, &attrs.package_dir);
+    let package = match &p.package {
+        Some(pkg) if pkg.is_empty() => "Explicitly empty".to_owned(),
+        Some(pkg) => pkg.to_owned(),
+        None => match get_kotlin_package(&output_dir) {
+            Some(pkg) => pkg,
+            None => "Undetermined".to_owned(),
+        },
+    };
 
-    //     if v.default {
-    //         root_node.children.append(&mut child_nodes);
-    //     } else {
-    //         let variant_node = Node {
-    //             name: format!("Variant '{}'", v.res_name),
-    //             children: child_nodes,
-    //             params: Vec::new(),
-    //         };
-    //         root_node.children.push(variant_node);
-    //     }
-    // }
-    // root_node
+    let mut root_node = Node {
+        name: attrs.label.to_string(),
+        children: Vec::new(),
+        params: Vec::new(),
+    };
+    for t in targets {
+        let mut child_nodes = vec![
+            node!(
+                format!("📤 Export SVG from remote {}", attrs.remote),
+                [("node", t.figma_name().to_string())]
+            ),
+            node!(
+                "✨ Transform SVG to Compose",
+                [("package", package.to_string())]
+            ),
+            node!(
+                "💾 Write to file",
+                [("output", format!("{}.kt", t.output_name()))]
+            ),
+        ];
+
+        if let Some(variant_id) = t.id {
+            let variant_node = Node {
+                name: format!("Variant '{}'", variant_id),
+                children: child_nodes,
+                params: Vec::new(),
+            };
+            root_node.children.push(variant_node);
+        } else {
+            root_node.children.append(&mut child_nodes);
+        }
+    }
+    root_node
 }
 
-fn android_webp_resource_tree(r: &ResourceAttrs, p: &AndroidWebpProfile) -> Node {
-    todo!()
-    // // region: generating all android variants
-    // let scales = &p.scales;
-    // let themes: &[_] = if let Some(night_variant) = &p.night {
-    //     let light_variant = &r.node_name;
-    //     let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
-    //     &[(light_variant.to_owned(), false), (night_variant, true)]
-    // } else {
-    //     let light_variant = &r.node_name;
-    //     &[(light_variant.to_owned(), false)]
-    // };
-    // let all_variants = cartesian_product(scales, themes);
-    // // endregion: generating all android variants
+fn android_webp_resource_tree(res: &Resource, p: &AndroidWebpProfile) -> Node {
+    let attrs = &res.attrs;
+    let targets = targets_from_resource(res);
 
-    // let res_name = r.label.name.to_string();
-    // Node {
-    //     name: r.label.to_string(),
-    //     children: all_variants
-    //         .iter()
-    //         .map(|(d, (node_name, is_night))| {
-    //             let density_name = density_name(d);
-    //             let scale_factor = scale_factor(d);
-    //             let variant_name = if !*is_night {
-    //                 format!("{density_name}")
-    //             } else {
-    //                 format!("night-{density_name}")
-    //             };
-    //             let mut child_nodes = Vec::with_capacity(4);
-    //             if p.legacy_loader {
-    //                 child_nodes.push(node!(
-    //                     format!("📤 Export PNG from remote {}", r.remote),
-    //                     [
-    //                         ("node", node_name.to_string()),
-    //                         ("scale", scale_factor.to_string())
-    //                     ]
-    //                 ));
-    //             } else {
-    //                 child_nodes.push(node!(
-    //                     format!("📤 Export SVG from remote {}", r.remote),
-    //                     [("node", node_name.to_string())]
-    //                 ));
-    //                 child_nodes.push(node!(
-    //                     "🎨 Render PNG locally",
-    //                     [("scale", scale_factor.to_string())]
-    //                 ));
-    //             }
-    //             child_nodes.push(node!(
-    //                 "✨ Transform PNG to WEBP",
-    //                 [("quality", p.quality.to_string())]
-    //             ));
-    //             child_nodes.push(node!(
-    //                 "💾 Write to file",
-    //                 [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
-    //             ));
-    //             Node {
-    //                 name: format!("Variant '{variant_name}'"),
-    //                 children: child_nodes,
-    //                 params: Default::default(),
-    //             }
-    //         })
-    //         .collect(),
-    //     ..Default::default()
-    // }
+    let res_name = attrs.label.name.to_string();
+    Node {
+        name: attrs.label.to_string(),
+        children: targets
+            .into_iter()
+            .map(|target| {
+                let variant_name = target.id.as_ref().expect("always present");
+                let scale = target.scale.expect("always present");
+                let mut child_nodes = Vec::with_capacity(4);
+                if p.legacy_loader {
+                    child_nodes.push(node!(
+                        format!("📤 Export PNG from remote {}", attrs.remote),
+                        [
+                            ("node", target.figma_name().to_string()),
+                            ("scale", scale.to_string())
+                        ]
+                    ));
+                } else {
+                    child_nodes.push(node!(
+                        format!("📤 Export SVG from remote {}", attrs.remote),
+                        [("node", target.figma_name().to_string())]
+                    ));
+                    child_nodes.push(node!(
+                        "🎨 Render PNG locally",
+                        [("scale", scale.to_string())]
+                    ));
+                }
+                child_nodes.push(node!(
+                    "✨ Transform PNG to WEBP",
+                    [("quality", p.quality.to_string())]
+                ));
+                child_nodes.push(node!(
+                    "💾 Write to file",
+                    [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
+                ));
+                Node {
+                    name: format!("Variant '{variant_name}'"),
+                    children: child_nodes,
+                    params: Default::default(),
+                }
+            })
+            .collect(),
+        ..Default::default()
+    }
 }

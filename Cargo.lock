@@ -385,8 +385,8 @@ dependencies = [
 name = "command_explain"
 version = "0.6.0"
 dependencies = [
+ "crossterm",
  "lib_label",
- "owo-colors",
  "phase_evaluation",
  "phase_loading",
 ]
@@ -407,7 +407,6 @@ dependencies = [
  "lib_figma",
  "lib_label",
  "lib_metrics",
- "log",
  "phase_evaluation",
  "phase_loading",
 ]
@@ -423,9 +422,8 @@ dependencies = [
 name = "command_query"
 version = "0.6.0"
 dependencies = [
+ "crossterm",
  "lib_label",
- "line-numbers",
- "owo-colors",
  "phase_loading",
 ]
 
@@ -1250,6 +1248,7 @@ name = "lib_metrics"
 version = "0.6.0"
 dependencies = [
  "dashmap 6.1.0",
+ "log",
  "quantiles",
 ]
 
@@ -1302,12 +1301,6 @@ dependencies = [
  "glob",
  "pkg-config",
 ]
-
-[[package]]
-name = "line-numbers"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24ab6409a2f9ffae158ae823a012a7d7d68386663a14bedc260ca66eacf65c2c"
 
 [[package]]
 name = "linux-raw-sys"
@@ -1522,12 +1515,6 @@ checksum = "7d31b8b7a99f71bdff4235faf9ce9eada0ad3562c8fbeb7d607d9f41a6ec569d"
 dependencies = [
  "indexmap",
 ]
-
-[[package]]
-name = "owo-colors"
-version = "4.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26995317201fa17f3656c36716aed4a7c81743a9634ac4c99c0eeda495db0cec"
 
 [[package]]
 name = "parking_lot"

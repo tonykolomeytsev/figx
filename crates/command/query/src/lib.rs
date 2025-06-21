@@ -1,5 +1,5 @@
+use crossterm::style::Stylize;
 use lib_label::LabelPattern;
-use owo_colors::OwoColorize;
 use phase_loading::{Profile, Workspace};
 
 mod error;
@@ -70,9 +70,9 @@ fn print_trees(ws: Workspace) -> Result<()> {
         let res_count = pkg.resources.len();
         for (idx, res) in pkg.resources.iter().enumerate() {
             let tab = if idx == res_count - 1 {
-                "╰── ".bright_black()
+                "╰── ".dark_grey()
             } else {
-                "├── ".bright_black()
+                "├── ".dark_grey()
             };
             let profile = match res.profile.as_ref() {
                 Profile::Png(_) => "png",

@@ -9,4 +9,3 @@ phase_evaluation.workspace = true
 lib_label.workspace = true
 lib_figma.workspace = true
 lib_metrics.workspace = true
-log.workspace = true
