@@ -406,6 +406,8 @@ version = "0.6.0"
 dependencies = [
  "lib_figma",
  "lib_label",
+ "lib_metrics",
+ "log",
  "phase_evaluation",
  "phase_loading",
 ]

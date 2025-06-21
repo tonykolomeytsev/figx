@@ -34,6 +34,7 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
                         }
                     )
                 },
+                || ctx.metrics.targets_from_cache.increment(),
             )?,
         },
     )

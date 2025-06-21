@@ -10,6 +10,7 @@ pub fn export_image(
     ctx: &EvalContext,
     args: ExportImageArgs,
     on_export_start: impl FnOnce(),
+    on_cache_hit: impl FnOnce(),
 ) -> Result<DownloadUrl> {
     ctx.figma_repository.export(
         args.remote,
@@ -17,6 +18,7 @@ pub fn export_image(
         args.format,
         args.scale,
         on_export_start,
+        on_cache_hit,
     )
 }
 

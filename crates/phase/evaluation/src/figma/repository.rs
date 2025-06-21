@@ -72,6 +72,7 @@ impl FigmaRepository {
         format: &str,
         scale: f32,
         on_export_start: impl FnOnce(),
+        on_cache_hit: impl FnOnce(),
     ) -> Result<DownloadUrl> {
         // construct unique cache key
         let cache_key = CacheKey::builder()
@@ -86,6 +87,7 @@ impl FigmaRepository {
 
         // return cached value if it exists
         if let Some(url) = self.cache.get::<DownloadUrl>(&cache_key)? {
+            on_cache_hit();
             return Ok(url);
         }
 
