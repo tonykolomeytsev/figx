@@ -98,11 +98,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         }
     }
 
-    if ctx.eval_args.fetch {
-        info!(target: "Requested", "update for {requested_remotes} remote(s)");
-    } else {
-        info!(target: "Requested", "{requested_targets} target(s) from {requested_remotes} remote(s)");
-    }
+    info!(target: "Requested", "{requested_targets} target(s) from {requested_remotes} remote(s)");
 
     metrics
         .counter("figx_targets_requested")
@@ -135,12 +131,8 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         Err(e) => Err(e),
         Ok(_) => {
             let time = format_duration(evaluation_duration.get());
-            if ctx.eval_args.fetch {
-                info!(target: "Finished", "{requested_remotes} remotes(s) in {time}",);
-            } else {
-                let files_count = ctx.metrics.targets_evaluated.get();
-                info!(target: "Finished", "{files_count} target(s) in {time}");
-            }
+            let targets_count = ctx.metrics.targets_evaluated.get();
+            info!(target: "Finished", "{targets_count} target(s) in {time}");
             Ok(())
         }
     }
