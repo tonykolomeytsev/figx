@@ -287,7 +287,7 @@ mod test {
             name: "Icon / Coffee".to_string(),
             visible: true,
             has_raster_fills: true,
-            hash: 5586879825278873861,
+            hash: 10040623593275229939,
         }];
 
         // When
@@ -329,14 +329,14 @@ mod test {
                 name: "Icon / Leaf".to_string(),
                 visible: true,
                 has_raster_fills: true,
-                hash: 8407416283103642061,
+                hash: 15472301963993704598,
             },
             Node {
                 id: "0-4".to_string(),
                 name: "Icon / Coffee".to_string(),
                 visible: true,
                 has_raster_fills: true,
-                hash: 1366760619861967320,
+                hash: 16736626037856730157,
             },
         ];
 
