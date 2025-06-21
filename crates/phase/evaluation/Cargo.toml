@@ -5,7 +5,6 @@ edition.workspace = true
 
 [dependencies]
 phase_loading.workspace = true
-lib_figma.workspace = true
 lib_figma_fluent.workspace = true
 lib_label.workspace = true
 lib_cache.workspace = true

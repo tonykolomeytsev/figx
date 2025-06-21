@@ -1,5 +1,8 @@
 # Unreleased
 
+- Figma file indexing now runs in parallel with resource import, streaming data as it becomes available. As soon as a Figma node ID is identified for a resource, it is immediately queued for download.   
+   **This greatly shortens the wait time for resource loading, especially in large Figma files.**
+
 - The message that a node with a certain name was not found in Figma now contains a link to the resource declaration, leading to a file if you click on it in the IDE
 
 # 0.6.0
