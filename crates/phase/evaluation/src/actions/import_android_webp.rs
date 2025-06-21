@@ -4,7 +4,7 @@ use crate::Target;
 use crate::actions::GetRemoteImageArgs;
 use crate::actions::convert_png_to_webp::ConvertPngToWebpArgs;
 use crate::actions::convert_png_to_webp::convert_png_to_webp;
-use crate::actions::get_node::ensure_is_vector_node;
+use crate::actions::validation::ensure_is_vector_node;
 use crate::actions::get_remote_image;
 use crate::actions::materialize::MaterializeArgs;
 use crate::actions::materialize::materialize;

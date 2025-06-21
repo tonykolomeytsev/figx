@@ -15,16 +15,16 @@ impl MetricsCollector {
                         buf.push(',');
                     }
                     buf.push_str(k);
-                    buf.push('=');
-                    buf.push('"');
+                    buf.push_str(r#"=""#);
                     buf.push_str(v);
                     buf.push('"');
                 }
-                buf.push('}');
+                buf.push_str("} ");
             } else {
                 buf.push(' ');
             }
             buf.push_str(&value.get().as_millis().to_string());
+            buf.push('\n');
         }
         for entry in self.counters.iter() {
             let key = entry.key();
@@ -38,16 +38,16 @@ impl MetricsCollector {
                         buf.push(',');
                     }
                     buf.push_str(k);
-                    buf.push('=');
-                    buf.push('"');
+                    buf.push_str(r#"=""#);
                     buf.push_str(v);
                     buf.push('"');
                 }
-                buf.push('}');
+                buf.push_str("} ");
             } else {
                 buf.push(' ');
             }
             buf.push_str(&value.get().to_string());
+            buf.push('\n');
         }
 
         buf

@@ -2,7 +2,7 @@ use super::{GetRemoteImageArgs, get_remote_image};
 use crate::{
     EvalContext, Result, Target,
     actions::{
-        get_node::ensure_is_vector_node,
+        validation::ensure_is_vector_node,
         materialize::{MaterializeArgs, materialize},
     },
     figma::NodeMetadata,

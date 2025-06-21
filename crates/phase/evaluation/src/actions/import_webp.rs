@@ -6,7 +6,7 @@ use crate::{
     EvalContext, Result, Target,
     actions::{
         convert_png_to_webp::{ConvertPngToWebpArgs, convert_png_to_webp},
-        get_node::ensure_is_vector_node,
+        validation::ensure_is_vector_node,
         render_svg_to_png::{RenderSvgToPngArgs, render_svg_to_png},
     },
     figma::NodeMetadata,

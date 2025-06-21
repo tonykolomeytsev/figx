@@ -1,5 +1,4 @@
 use json_event_parser::{JsonEvent, JsonParseError, ReaderJsonParser};
-use log::warn;
 use std::{collections::VecDeque, fmt::Display, hash::Hasher, io::Read};
 
 #[cfg_attr(test, derive(Debug, Eq, PartialEq, Hash))]

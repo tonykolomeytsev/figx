@@ -86,7 +86,7 @@ fn android_webp_targets<'a>(res: &'a Resource, profile: &'a AndroidWebpProfile) 
     let scales = &profile.scales;
     let themes: &[_] = if let Some(night_variant) = &profile.night {
         let light_variant = &res.attrs.node_name;
-        let night_variant = expand_night_variant(light_variant, night_variant.as_ref());
+        let night_variant = night_variant.as_ref().replace("{base}", &light_variant);
         &[(light_variant.to_owned(), false), (night_variant, true)]
     } else {
         let light_variant = &res.attrs.node_name;
@@ -122,10 +122,6 @@ pub fn cartesian_product<'a, A, B>(list_a: &'a [A], list_b: &'a [B]) -> Vec<(&'a
         .iter()
         .flat_map(|a| list_b.iter().map(move |b| (a, b)))
         .collect()
-}
-
-pub fn expand_night_variant(light_variant: &str, night_variant: &str) -> String {
-    night_variant.replacen("{base}", light_variant, 1)
 }
 
 pub fn scale_factor(d: &AndroidDensity) -> f32 {

@@ -55,8 +55,7 @@ pub struct EvalContext {
 
 #[derive(Clone)]
 pub struct EvalMetrics {
-    pub resources_executed: Arc<Counter>,
-    pub targets_requested: Arc<Counter>,
+    pub targets_executed: Arc<Counter>,
 }
 
 #[derive(Default)]
@@ -86,7 +85,13 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .map(|res| &res.attrs.remote)
         .collect::<HashSet<_>>()
         .len();
-    set_progress_bar_maximum(requested_resources);
+    metrics
+        .counter("figx_requested_resources")
+        .set(requested_resources);
+    metrics
+        .counter("figx_requested_remotes")
+        .set(requested_remotes);
+
     if ctx.eval_args.fetch {
         info!(target: "Requested", "update for {requested_remotes} remote(s)");
     } else {
@@ -95,14 +100,21 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     // region: exec
 
     let mut remote_to_resources = OrderMap::<Arc<RemoteSource>, Vec<Target>>::new();
+    let mut requested_targets = 0usize;
     for pkg in ws.packages.iter() {
         for res in pkg.resources.iter() {
+            let mut targets = targets_from_resource(res);
+            requested_targets += targets.len();
             remote_to_resources
                 .entry(res.attrs.remote.clone())
                 .or_default()
-                .append(&mut targets_from_resource(res));
+                .append(&mut targets);
         }
     }
+    metrics
+        .counter("figx_requested_targets")
+        .set(requested_targets);
+    set_progress_bar_maximum(requested_targets);
 
     let result = remote_to_resources
         .into_iter()
@@ -126,6 +138,8 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
 
     set_progress_bar_visible(false);
 
+    println!("\n\n{}\n\n", metrics.to_prom(Some(&[("cmd", "import")])));
+
     // Извлекаем ошибку, если она была
     match result {
         Err(e) => Err(e),
@@ -134,7 +148,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
             if ctx.eval_args.fetch {
                 info!(target: "Finished", "{requested_remotes} remotes(s) in {time}",);
             } else {
-                let files_count = ctx.metrics.targets_requested.get();
+                let files_count = ctx.metrics.targets_executed.get();
                 info!(
                     target: "Finished", "{res_num} resource(s), resulting in {files_count} file(s) in {time}",
                     res_num = processed_resources.load(Ordering::Relaxed),
@@ -152,11 +166,11 @@ fn execute_with_cached_index(
 ) -> Result<()> {
     targets.into_par_iter().try_for_each(|target| {
         let node = name_to_node
-            .get(&target.attrs.node_name)
+            .get(target.figma_name())
             .ok_or_else::<Error, _>(|| (&target).into())?;
         let result = import_target(target, ctx, &node);
-        ctx.metrics.resources_executed.increment();
-        set_progress_bar_progress(ctx.metrics.resources_executed.get());
+        ctx.metrics.targets_executed.increment();
+        set_progress_bar_progress(ctx.metrics.targets_executed.get());
         result
     })
 }
@@ -206,8 +220,8 @@ fn execute_with_streaming_index(
 
         rx.iter().par_bridge().try_for_each(|(target, node)| {
             import_target(target, ctx, &node)?;
-            ctx.metrics.resources_executed.increment();
-            set_progress_bar_progress(ctx.metrics.resources_executed.get());
+            ctx.metrics.targets_executed.increment();
+            set_progress_bar_progress(ctx.metrics.targets_executed.get());
             Ok(())
         })
     });
@@ -277,8 +291,7 @@ fn init_eval_context(ws: &Workspace, args: EvalArgs, metrics: &Metrics) -> Resul
         figma_repository: FigmaRepository::new(api, cache.clone()),
         cache,
         metrics: EvalMetrics {
-            resources_executed: metrics.counter("figx_resources_executed"),
-            targets_requested: metrics.counter("figx_targets_requested"),
+            targets_executed: metrics.counter("figx_targets_executed"),
         },
     })
 }

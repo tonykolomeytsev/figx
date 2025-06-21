@@ -6,7 +6,7 @@ use crate::{
     EvalContext, Result, Target,
     actions::{
         convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
-        get_node::ensure_is_vector_node,
+        validation::ensure_is_vector_node,
     },
     figma::NodeMetadata,
 };

@@ -1,7 +1,7 @@
 use crate::{
     EvalContext, Result, Target,
     actions::{
-        get_node::ensure_is_vector_node,
+        validation::ensure_is_vector_node,
         render_svg_to_png::{RenderSvgToPngArgs, render_svg_to_png},
     },
     figma::NodeMetadata,
