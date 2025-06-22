@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.7.1
+
 - Show indexing progress during `fetch` and `import --refetch`
 
 # 0.7.0
