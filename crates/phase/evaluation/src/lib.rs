@@ -21,6 +21,7 @@ use std::{
     collections::{HashMap, HashSet},
     path::Path,
     sync::{Arc, Mutex},
+    thread::available_parallelism,
     time::Duration,
 };
 
@@ -248,7 +249,10 @@ fn import_target(target: Target<'_>, ctx: &EvalContext, node: &NodeMetadata) -> 
 
 fn set_up_rayon(user_defined_concurrency: usize) {
     let num_threads = if user_defined_concurrency == 0 {
-        min(num_cpus::get(), MAX_NUM_THREADS)
+        let available = available_parallelism()
+            .map(|it| it.get())
+            .unwrap_or(MAX_NUM_THREADS);
+        min(available, MAX_NUM_THREADS)
     } else {
         user_defined_concurrency
     };
