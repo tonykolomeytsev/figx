@@ -10,7 +10,6 @@ lib_label.workspace = true
 # External
 toml-span.workspace = true
 log.workspace = true
-derive_more.workspace = true
 ordermap.workspace = true
 ignore.workspace = true
 

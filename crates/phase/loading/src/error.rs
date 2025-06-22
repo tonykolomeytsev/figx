@@ -1,13 +1,11 @@
-use derive_more::From;
 use lib_label::PackageParsingError;
 use std::path::PathBuf;
 use toml_span::Span;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-#[derive(Debug, From)]
+#[derive(Debug)]
 pub enum Error {
-    #[from]
     Internal(String),
 
     // region: Init
