@@ -170,7 +170,7 @@ fn execute_with_streaming_index(
             .push(target);
     }
 
-    let (tx, rx) = unbounded::<(Target, NodeMetadata)>();
+    let (tx, rx) = unbounded::<(Vec<Target>, NodeMetadata)>();
     let indexing_error: Arc<Mutex<Option<Error>>> = Default::default();
     let import_result = rayon::scope(|s| {
         let indexing_error = Arc::clone(&indexing_error);
@@ -185,10 +185,7 @@ fn execute_with_streaming_index(
                     }
                 };
                 if let Some((_, targets)) = name_to_targets.remove(&node.name) {
-                    for target in targets {
-                        let node = node.clone();
-                        let _ = tx.send((target, node));
-                    }
+                    let _ = tx.send((targets, node.clone()));
                 }
             }
             if let Err(e) = handle.commit_cache() {
@@ -197,10 +194,15 @@ fn execute_with_streaming_index(
             }
         });
 
-        rx.iter().par_bridge().try_for_each(|(target, node)| {
-            import_target(target, ctx, &node)?;
-            ctx.metrics.targets_evaluated.increment();
-            set_progress_bar_progress(ctx.metrics.targets_evaluated.get());
+        rx.iter().par_bridge().try_for_each(|(targets, node)| {
+            // Bottleneck when multiple resources with the same figma_name appear
+            // So we dedicate one thread entirely to process them sequentially
+            // TODO: find a more efficient solution
+            for target in targets {
+                import_target(target, ctx, &node)?;
+                ctx.metrics.targets_evaluated.increment();
+                set_progress_bar_progress(ctx.metrics.targets_evaluated.get());
+            }
             Ok(())
         })
     });

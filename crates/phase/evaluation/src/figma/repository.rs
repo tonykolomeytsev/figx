@@ -78,7 +78,6 @@ impl FigmaRepository {
         let cache_key = CacheKey::builder()
             .set_tag(Self::EXPORTED_IMAGE_TAG)
             .write_str(&remote.file_key)
-            .write_str(&remote.container_node_ids.join(","))
             .write_str(&node.id)
             .write_u64(node.hash)
             .write_str(format)
