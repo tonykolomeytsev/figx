@@ -396,6 +396,7 @@ name = "command_fetch"
 version = "0.7.1"
 dependencies = [
  "lib_label",
+ "lib_metrics",
  "phase_evaluation",
  "phase_loading",
 ]
