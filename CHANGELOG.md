@@ -9,6 +9,8 @@
 
 - The message that a node with a certain name was not found in Figma now contains a link to the resource declaration, leading to a file if you click on it in the IDE
 
+- **Experimental**: Metrics are now published in Prometheus format to the `.figx-out/metrics.prom` file, containing information about the import process.
+
 # 0.6.0
 
 The `png`, `webp`, and `android-webp` profiles now default to downloading the original SVG asset from Figma and rendering the required resolution locally.
