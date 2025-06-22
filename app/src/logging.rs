@@ -43,7 +43,7 @@ impl log::Log for Logger {
             log::Level::Error => "error:".to_owned().bold().red(),
             log::Level::Info => format!("{target: >12}").bold().green(),
         };
-        if !self.quiet || target == "Finished" || target == "Requested" {
+        if (!self.quiet || target == "Finished" || target == "Requested") && (target != "noop") {
             let _ = queue!(
                 stdout,
                 MoveToColumn(0),
@@ -55,6 +55,7 @@ impl log::Log for Logger {
             let _ = queue!(
                 stdout,
                 MoveToColumn(0),
+                Clear(ClearType::CurrentLine),
                 Print(format!(
                     "{} {}",
                     "   Executing".bold().cyan(),

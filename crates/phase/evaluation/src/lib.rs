@@ -206,6 +206,10 @@ fn execute_with_streaming_index(
                 ctx.metrics.targets_evaluated.increment();
                 set_progress_bar_progress(ctx.metrics.targets_evaluated.get());
             }
+            // workaround, update progress bar state
+            if ctx.eval_args.fetch || ctx.eval_args.refetch {
+                info!(target: "noop", "");
+            }
             Ok(())
         })
     });
