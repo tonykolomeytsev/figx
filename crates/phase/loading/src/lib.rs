@@ -25,6 +25,9 @@ pub fn load_invocation_context() -> Result<InvocationContext> {
     // Looking for workspace marker in this dir and it's ancestors
     let ws_file = find_workspace_file(&working_dir)?;
     // Looking recursively for fig files in workspace directory and children directories
+    // FIXME: Cannot start traversing from the current directory because, if the user queries
+    //        an absolute package like `//path/to:resource`, we need to know about packages
+    //        other than our own.
     let fig_files = find_fig_files(&ws_file.parent_dir)?;
 
     let current_dir = working_dir
