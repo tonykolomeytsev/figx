@@ -110,7 +110,10 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .par_bridge()
         .map(|(remote, targets)| {
             let index = RemoteIndex::new(FigmaApi::default(), ctx.cache.clone());
-            let (handle, subscription) = index.subscribe(remote.as_ref(), ctx.eval_args.refetch)?;
+            let (handle, subscription) = index.subscribe(
+                remote.as_ref(),
+                ctx.eval_args.fetch || ctx.eval_args.refetch,
+            )?;
             match subscription {
                 Subscription::FromCache(name_to_node) => {
                     execute_with_cached_index(&ctx, targets, name_to_node)
