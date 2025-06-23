@@ -1,5 +1,7 @@
 # Unreleased
 
+- **Less verbose output**. By default, instead of a huge wall of logs, a cool and concise progress bar is now shown. To display logs or even more detailed logs, use the `-v`, `-vv`, and `-vvv` arguments.
+
 # 0.7.1
 
 - Show indexing progress during `fetch` and `import --refetch`
