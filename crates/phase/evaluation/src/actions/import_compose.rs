@@ -10,8 +10,7 @@ use crate::{
     },
     figma::NodeMetadata,
 };
-use lib_progress_bar::create_in_progress_item;
-use log::{debug, info, warn};
+use log::{debug, warn};
 use phase_loading::ComposeProfile;
 use std::path::{Path, PathBuf};
 
@@ -25,8 +24,6 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
     let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "compose: {}", target.attrs.label.name);
-    let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
-
     let output_dir = get_output_dir_for_compose_profile(profile, &target.attrs.package_dir);
     let package = get_kotlin_package(&output_dir).unwrap_or_default();
 
@@ -83,7 +80,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
             file_extension: "kt",
             bytes: &compose,
         },
-        || info!(target: "Writing", "`{label}`{variant} to file"),
+        || debug!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())

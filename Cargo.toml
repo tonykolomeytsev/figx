@@ -29,6 +29,7 @@ lib_progress_bar = { path = "crates/lib/progress_bar" }
 lib_cache = { path = "crates/lib/cache" }
 lib_svg2compose = { path = "crates/lib/svg2compose" }
 lib_metrics = { path = "crates/lib/metrics" }
+lib_dashboard = { path = "crates/lib/dashboard" }
 
 
 
@@ -70,3 +71,6 @@ tempfile = { version = "3.19.1", default-features = false }
 crossbeam-channel = "0.5.15"
 boxcar = "0.2.13"
 quantiles = "0.7.1"
+supports-color = "3.0.2"
+slab = "0.4.10"
+term_size = "0.3.2"

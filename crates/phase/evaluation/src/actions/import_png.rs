@@ -6,8 +6,7 @@ use crate::{
     },
     figma::NodeMetadata,
 };
-use lib_progress_bar::create_in_progress_item;
-use log::{debug, info};
+use log::debug;
 use phase_loading::PngProfile;
 
 use super::{
@@ -26,8 +25,6 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
     let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "png: {}", target.attrs.label.name);
-    let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
-
     let png = if profile.legacy_loader {
         let png = get_remote_image(
             ctx,
@@ -85,7 +82,7 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
             file_extension: "png",
             bytes: &png,
         },
-        || info!(target: "Writing", "`{label}`{variant} to file"),
+        || debug!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())

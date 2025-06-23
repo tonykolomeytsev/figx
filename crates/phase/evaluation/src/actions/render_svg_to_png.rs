@@ -1,7 +1,7 @@
 use crate::{Error, EvalContext, Result};
 use lib_cache::CacheKey;
 use lib_label::Label;
-use log::info;
+use log::debug;
 use resvg::usvg::Transform;
 use resvg::usvg::Tree;
 
@@ -21,7 +21,7 @@ pub fn render_svg_to_png(ctx: &EvalContext, args: RenderSvgToPngArgs) -> Result<
     }
 
     // otherwise, do transform
-    info!(
+    debug!(
         target: "Rendering", "PNG: `{label}`{variant}",
         label = args.label.fitted(50),
         variant = if args.variant_name.is_empty() {

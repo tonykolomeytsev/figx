@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{EvalContext, Result, actions::download_image::download_image, figma::NodeMetadata};
 use lib_label::Label;
-use log::info;
+use log::debug;
 use phase_loading::RemoteSource;
 use std::sync::Arc;
 
@@ -23,7 +23,7 @@ pub fn get_remote_image(ctx: &EvalContext, args: GetRemoteImageArgs) -> Result<V
                     node: args.node,
                 },
                 || {
-                    info!(target: "Downloading", "{format} for `{label}`{variant}",
+                    debug!(target: "Downloading", "{format} for `{label}`{variant}",
                         format = args.format.to_ascii_uppercase(),
                         label = args.label.fitted(50),
                         variant = if args.variant_name.is_empty() {

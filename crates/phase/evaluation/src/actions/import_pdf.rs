@@ -3,8 +3,7 @@ use super::{
     materialize::{MaterializeArgs, materialize},
 };
 use crate::{EvalContext, Result, Target, figma::NodeMetadata};
-use lib_progress_bar::create_in_progress_item;
-use log::{debug, info};
+use log::{debug};
 use phase_loading::PdfProfile;
 
 pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
@@ -16,8 +15,6 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
     let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "pdf: {}", target.attrs.label.name);
-    let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
-
     let pdf = &get_remote_image(
         ctx,
         GetRemoteImageArgs {
@@ -47,7 +44,7 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
             file_extension: "pdf",
             bytes: pdf,
         },
-        || info!(target: "Writing", "`{label}`{variant} to file"),
+        || debug!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())
