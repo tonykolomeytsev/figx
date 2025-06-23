@@ -9,4 +9,4 @@ serde.workspace = true
 bytes.workspace = true
 xxhash-rust.workspace = true
 log.workspace = true
-json-event-parser = "0.2.2"
+json-event-parser.workspace = true

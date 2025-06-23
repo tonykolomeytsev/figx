@@ -1,5 +1,6 @@
 use crossterm::style::{Color, Stylize};
-use std::{cmp::min, fmt::Display};
+use terminal_size::Width;
+use std::{cmp::min, fmt::Display, io::stderr};
 
 pub(crate) struct ProgressBar {
     max: usize,
@@ -11,8 +12,8 @@ pub(crate) struct ProgressBar {
 
 impl Default for ProgressBar {
     fn default() -> Self {
-        let term_width = if let Some((w, _)) = term_size::dimensions_stderr() {
-            min(40, w)
+        let term_width = if let Some((Width(w), _)) = terminal_size::terminal_size_of(stderr()) {
+            min(40, w as usize)
         } else {
             40
         };

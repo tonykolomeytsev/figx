@@ -6,7 +6,6 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{Clear, ClearType},
 };
-use log::info;
 use ordermap::OrderSet;
 use slab::Slab;
 use std::{
@@ -18,6 +17,7 @@ use std::{
     thread::{self},
     time::Duration,
 };
+use terminal_size::Width;
 
 mod logger;
 pub use logger::*;
@@ -61,7 +61,7 @@ fn lifecycle_loop(start_receiver: Receiver<()>) {
     }
     while let Err(_) = start_receiver.try_recv() {
         INSTANCE.progress_bar.lock().unwrap().update_anim_state();
-        info!(target: "", "");
+        lifecycle!(target: "@", "");
         thread::sleep(Duration::from_millis(50));
     }
 }
@@ -101,8 +101,8 @@ pub(crate) fn render_progress_bar(pb: &mut ProgressBar) -> std::io::Result<()> {
     };
 
     let mut length = 0;
-    let max_length = if let Some((w, _)) = term_size::dimensions_stderr() {
-        w.saturating_sub(13).saturating_sub(60)
+    let max_length = if let Some((Width(w), _)) = terminal_size::terminal_size_of(&stderr) {
+        (w as usize).saturating_sub(13).saturating_sub(60)
     } else {
         30
     };

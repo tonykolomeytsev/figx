@@ -5,12 +5,12 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{Clear, ClearType},
 };
-use log::{max_level, set_logger, Log, Record};
+use log::{Log, Record, max_level, set_logger};
 use std::io::{Write, stderr};
 
 impl Log for Dashboard {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
-        metadata.level() <= max_level()
+        metadata.target().starts_with('@') || metadata.level() <= max_level()
     }
 
     fn log(&self, record: &log::Record) {
@@ -23,7 +23,7 @@ impl Log for Dashboard {
 
         let mut stderr = stderr().lock();
         let _ = match record.target().as_ref() {
-            "" => Ok(()),
+            "@" => Ok(()),
             target if target.starts_with("@") => {
                 queue!(
                     stderr,
@@ -84,6 +84,13 @@ fn should_skip(record: &Record) -> bool {
         t if t.starts_with("globset") => true,
         t if t.starts_with("ignore") => true,
         t if t.starts_with("rustls") => true,
-        _ => false
+        _ => false,
     }
+}
+
+#[macro_export]
+macro_rules! lifecycle {
+    (target: $target:expr, $($arg:tt)+) => ({
+        log::log!(target: $target, log::Level::Warn, $($arg)+)
+    });
 }

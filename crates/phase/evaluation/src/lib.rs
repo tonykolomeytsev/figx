@@ -7,10 +7,12 @@ use crossbeam_channel::unbounded;
 use dashmap::DashMap;
 use figma::FigmaRepository;
 use lib_cache::{Cache, CacheConfig};
-use lib_dashboard::{InitDashboardParams, init_dashboard, shutdown_dashboard, track_progress};
+use lib_dashboard::{
+    InitDashboardParams, init_dashboard, lifecycle, shutdown_dashboard, track_progress,
+};
 use lib_figma_fluent::FigmaApi;
 use lib_metrics::{Counter, Metrics};
-use log::{debug, error, info, trace};
+use log::{debug, error, trace};
 use ordermap::OrderMap;
 use phase_loading::{RemoteSource, Workspace};
 use rayon::iter::{IntoParallelIterator, ParallelBridge, ParallelIterator};
@@ -101,7 +103,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         .counter("figx_targets_requested")
         .set(requested_targets);
 
-    info!(
+    lifecycle!(
         target: "@Requested",
         "{tn} target{tp} from {rn} remote{rp} ({pn} package{pp} loaded)",
         tn = requested_targets,
@@ -152,7 +154,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         Ok(_) => {
             let time = format_duration(evaluation_duration.get());
             let targets_count = ctx.metrics.targets_evaluated.get();
-            info!(
+            lifecycle!(
                 target: "@Finished",
                 "{targets_count} target{tp} in {time}",
                 tp = if targets_count == 1 { "" } else { "s" },
