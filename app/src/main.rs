@@ -14,16 +14,14 @@ use command_query::FeatureQueryOptions;
 
 mod cli;
 mod error;
-mod logging;
 use error::*;
-use log::Log;
-use logging::{LOGGER, init_log_impl};
+use lib_dashboard::init_log_impl;
 
 pub fn main() -> ExitCode {
-    match run_app() {
+    let result = run_app();
+    match result {
         Ok(_) => ExitCode::SUCCESS,
         Err(err) => {
-            LOGGER.wait().flush();
             handle_error(err);
             ExitCode::FAILURE
         }
@@ -32,7 +30,7 @@ pub fn main() -> ExitCode {
 
 fn run_app() -> Result<()> {
     let cli = Cli::parse();
-    init_log_impl(cli.verbosity, cli.quiet);
+    init_log_impl(cli.verbosity);
 
     match cli.subcommand {
         CliSubcommand::Info(CommandInfoArgs { entity }) => {

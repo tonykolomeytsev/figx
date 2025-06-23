@@ -14,10 +14,6 @@ pub struct Cli {
     #[arg(short, action = clap::ArgAction::Set, default_value = "0")]
     pub jobs: usize,
 
-    /// Do not print non-essential messages
-    #[arg(short, long)]
-    pub quiet: bool,
-
     #[command(subcommand)]
     pub subcommand: CliSubcommand,
 }

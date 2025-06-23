@@ -5,7 +5,7 @@ use crate::{
 use dashmap::DashMap;
 use lib_cache::{Cache, CacheKey};
 use lib_figma_fluent::{FigmaApi, GetFileNodesQueryParameters};
-use log::info;
+use log::debug;
 use phase_loading::RemoteSource;
 use std::{collections::HashMap, sync::Arc};
 
@@ -57,7 +57,7 @@ impl RemoteIndex {
             }
         }
 
-        info!(target: "Updating", "remote index {remote}");
+        debug!(target: "Updating", "remote index {remote}");
         let stream = self.api.get_file_nodes(
             &remote.access_token,
             &remote.file_key,

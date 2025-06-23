@@ -11,7 +11,6 @@ use crate::actions::render_svg_to_png::RenderSvgToPngArgs;
 use crate::actions::render_svg_to_png::render_svg_to_png;
 use crate::actions::validation::ensure_is_vector_node;
 use crate::figma::NodeMetadata;
-use lib_progress_bar::create_in_progress_item;
 use log::debug;
 use log::info;
 use phase_loading::AndroidWebpProfile;
@@ -27,8 +26,6 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
     let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "android-webp: {}", target.attrs.label.name);
-    let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
-
     let png = if profile.legacy_loader {
         let png = get_remote_image(
             ctx,

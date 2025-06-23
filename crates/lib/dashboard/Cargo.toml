@@ -1,0 +1,14 @@
+[package]
+name = "lib_dashboard"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+crossbeam-channel.workspace = true
+crossterm.workspace = true
+log.workspace = true
+supports-color.workspace = true
+slab.workspace = true
+terminal_size.workspace = true
+ordermap.workspace = true
+is_ci.workspace = true

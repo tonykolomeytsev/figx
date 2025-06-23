@@ -7,12 +7,12 @@ use crossbeam_channel::unbounded;
 use dashmap::DashMap;
 use figma::FigmaRepository;
 use lib_cache::{Cache, CacheConfig};
+use lib_dashboard::{
+    InitDashboardParams, init_dashboard, lifecycle, shutdown_dashboard, track_progress,
+};
 use lib_figma_fluent::FigmaApi;
 use lib_metrics::{Counter, Metrics};
-use lib_progress_bar::{
-    set_progress_bar_maximum, set_progress_bar_progress, set_progress_bar_visible,
-};
-use log::{debug, error, info, trace};
+use log::{debug, error, trace};
 use ordermap::OrderMap;
 use phase_loading::{RemoteSource, Workspace};
 use rayon::iter::{IntoParallelIterator, ParallelBridge, ParallelIterator};
@@ -72,7 +72,6 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     // setup rayon thread pool
     set_up_rayon(args.concurrency);
     let ctx = init_eval_context(&ws, args, &metrics)?;
-    set_progress_bar_visible(true);
     let requested_remotes = ws
         .packages
         .iter()
@@ -88,7 +87,9 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
 
     let mut remote_to_resources = OrderMap::<Arc<RemoteSource>, Vec<Target>>::new();
     let mut requested_targets = 0usize;
+    let mut loaded_packages = 0usize;
     for pkg in ws.packages.iter() {
+        loaded_packages += 1;
         for res in pkg.resources.iter() {
             let mut targets = targets_from_resource(res);
             requested_targets += targets.len();
@@ -98,13 +99,30 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
                 .append(&mut targets);
         }
     }
-
-    info!(target: "Requested", "{requested_targets} target(s) from {requested_remotes} remote(s)");
-
     metrics
         .counter("figx_targets_requested")
         .set(requested_targets);
-    set_progress_bar_maximum(requested_targets);
+
+    lifecycle!(
+        target: "@Requested",
+        "{tn} target{tp} from {rn} remote{rp} ({pn} package{pp} loaded)",
+        tn = requested_targets,
+        tp = if requested_targets == 1 { "" } else { "s" },
+        rn = requested_remotes,
+        rp = if requested_remotes == 1 { "" } else { "s" },
+        pn = loaded_packages,
+        pp = if loaded_packages == 1 { "" } else { "s" },
+    );
+    init_dashboard(InitDashboardParams {
+        requested_targets,
+        requested_remotes,
+        loaded_packages,
+        process_name: if ctx.eval_args.fetch {
+            "Fetching"
+        } else {
+            "Importing"
+        },
+    });
 
     let result = remote_to_resources
         .into_iter()
@@ -128,7 +146,7 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
 
     // endregion: exec
     drop(_instant);
-    set_progress_bar_visible(false);
+    shutdown_dashboard();
 
     // Извлекаем ошибку, если она была
     match result {
@@ -136,7 +154,11 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         Ok(_) => {
             let time = format_duration(evaluation_duration.get());
             let targets_count = ctx.metrics.targets_evaluated.get();
-            info!(target: "Finished", "{targets_count} target(s) in {time}");
+            lifecycle!(
+                target: "@Finished",
+                "{targets_count} target{tp} in {time}",
+                tp = if targets_count == 1 { "" } else { "s" },
+            );
             Ok(())
         }
     }
@@ -148,12 +170,13 @@ fn execute_with_cached_index(
     name_to_node: HashMap<String, NodeMetadata>,
 ) -> Result<()> {
     targets.into_par_iter().try_for_each(|target| {
+        let tracker = track_progress(target.attrs.label.name.to_string());
         let node = name_to_node
             .get(target.figma_name())
             .ok_or_else::<Error, _>(|| (&target).into())?;
         let result = import_target(target, ctx, &node);
         ctx.metrics.targets_evaluated.increment();
-        set_progress_bar_progress(ctx.metrics.targets_evaluated.get());
+        tracker.mark_as_done();
         result
     })
 }
@@ -203,13 +226,10 @@ fn execute_with_streaming_index(
             // So we dedicate one thread entirely to process them sequentially
             // TODO: find a more efficient solution
             for target in targets {
+                let tracker = track_progress(target.attrs.label.name.to_string());
                 import_target(target, ctx, &node)?;
                 ctx.metrics.targets_evaluated.increment();
-                set_progress_bar_progress(ctx.metrics.targets_evaluated.get());
-            }
-            // workaround, update progress bar state
-            if ctx.eval_args.fetch || ctx.eval_args.refetch {
-                info!(target: "noop", "");
+                tracker.mark_as_done();
             }
             Ok(())
         })

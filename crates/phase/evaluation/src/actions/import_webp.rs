@@ -11,7 +11,6 @@ use crate::{
     },
     figma::NodeMetadata,
 };
-use lib_progress_bar::create_in_progress_item;
 use log::{debug, info};
 use phase_loading::WebpProfile;
 
@@ -26,8 +25,6 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
     let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "webp: {}", target.attrs.label.name);
-    let _guard = create_in_progress_item(target.attrs.label.name.as_ref());
-
     let png = if args.profile.legacy_loader {
         let png = get_remote_image(
             ctx,
