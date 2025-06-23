@@ -103,10 +103,13 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
 
     info!(
         target: "@Requested",
-        "{tn} target(s) from {rn} remote(s), {pn} package(s) loaded",
+        "{tn} target{tp} from {rn} remote{rp} ({pn} package{pp} loaded)",
         tn = requested_targets,
+        tp = if requested_targets == 1 { "" } else { "s" },
         rn = requested_remotes,
+        rp = if requested_remotes == 1 { "" } else { "s" },
         pn = loaded_packages,
+        pp = if loaded_packages == 1 { "" } else { "s" },
     );
     init_dashboard(InitDashboardParams {
         requested_targets,
@@ -149,7 +152,11 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         Ok(_) => {
             let time = format_duration(evaluation_duration.get());
             let targets_count = ctx.metrics.targets_evaluated.get();
-            info!(target: "@Finished", "{targets_count} target(s) in {time}");
+            info!(
+                target: "@Finished",
+                "{targets_count} target{tp} in {time}",
+                tp = if targets_count == 1 { "" } else { "s" },
+            );
             Ok(())
         }
     }

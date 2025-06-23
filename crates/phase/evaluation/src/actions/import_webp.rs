@@ -11,7 +11,7 @@ use crate::{
     },
     figma::NodeMetadata,
 };
-use log::debug;
+use log::{debug, info};
 use phase_loading::WebpProfile;
 
 pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
@@ -91,7 +91,7 @@ pub fn import_webp(ctx: &EvalContext, args: ImportWebpArgs) -> Result<()> {
             file_extension: "webp",
             bytes: webp,
         },
-        || debug!(target: "Writing", "`{label}`{variant} to file"),
+        || info!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())

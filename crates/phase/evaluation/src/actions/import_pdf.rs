@@ -3,7 +3,7 @@ use super::{
     materialize::{MaterializeArgs, materialize},
 };
 use crate::{EvalContext, Result, Target, figma::NodeMetadata};
-use log::{debug};
+use log::{debug, info};
 use phase_loading::PdfProfile;
 
 pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
@@ -44,7 +44,7 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
             file_extension: "pdf",
             bytes: pdf,
         },
-        || debug!(target: "Writing", "`{label}`{variant} to file"),
+        || info!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())

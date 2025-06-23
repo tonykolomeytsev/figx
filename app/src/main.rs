@@ -30,8 +30,7 @@ pub fn main() -> ExitCode {
 
 fn run_app() -> Result<()> {
     let cli = Cli::parse();
-    // init_log_impl(cli.verbosity, cli.quiet);
-    init_log_impl(cli.verbosity, cli.quiet);
+    init_log_impl(cli.verbosity);
 
     match cli.subcommand {
         CliSubcommand::Info(CommandInfoArgs { entity }) => {

@@ -10,7 +10,7 @@ use crate::{
     },
     figma::NodeMetadata,
 };
-use log::{debug, warn};
+use log::{debug, info, warn};
 use phase_loading::ComposeProfile;
 use std::path::{Path, PathBuf};
 
@@ -80,7 +80,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
             file_extension: "kt",
             bytes: &compose,
         },
-        || debug!(target: "Writing", "`{label}`{variant} to file"),
+        || info!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())

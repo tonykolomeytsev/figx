@@ -6,7 +6,7 @@ use crate::{
     },
     figma::NodeMetadata,
 };
-use log::debug;
+use log::{debug, info};
 use phase_loading::PngProfile;
 
 use super::{
@@ -82,7 +82,7 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
             file_extension: "png",
             bytes: &png,
         },
-        || debug!(target: "Writing", "`{label}`{variant} to file"),
+        || info!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())

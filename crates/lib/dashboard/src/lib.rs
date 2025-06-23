@@ -43,7 +43,7 @@ impl Dashboard {
         thread::spawn(move || lifecycle_loop(start_receiver));
         Self {
             start_trigger,
-            is_interactive: stderr().is_terminal(),
+            is_interactive: stderr().is_terminal() && !is_ci::cached(),
             max_targets: Default::default(),
             current_targets: Default::default(),
             requested_remotes: Default::default(),
@@ -93,17 +93,24 @@ pub(crate) fn render_progress_bar(pb: &mut ProgressBar) -> std::io::Result<()> {
             queue!(stderr, MoveToColumn(0))?;
             return Ok(());
         }
-        let mut vec = slab.iter().map(|(_, v)| v.to_owned()).collect::<OrderSet<_>>();
-        vec.sort_by(|a, b| a.len().cmp(&b.len()));
+        let vec = slab
+            .iter()
+            .map(|(_, v)| v.to_owned())
+            .collect::<OrderSet<_>>();
         vec
     };
 
     let mut length = 0;
+    let max_length = if let Some((w, _)) = term_size::dimensions_stderr() {
+        w.saturating_sub(13).saturating_sub(60)
+    } else {
+        30
+    };
     let mut trimmed = false;
     let mut items_to_render = items_to_render
         .into_iter()
         .take_while(|v| {
-            if length + v.len() + 2 <= 30 {
+            if length + v.len() + 2 <= max_length {
                 length += v.len() + 2;
                 true
             } else {

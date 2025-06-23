@@ -7,7 +7,7 @@ use crate::{
     },
     figma::NodeMetadata,
 };
-use log::debug;
+use log::{debug, info};
 use phase_loading::SvgProfile;
 
 pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
@@ -50,7 +50,7 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
             file_extension: "svg",
             bytes: &svg,
         },
-        || debug!(target: "Writing", "`{label}`{variant} to file"),
+        || info!(target: "Writing", "`{label}`{variant} to file"),
     )?;
 
     Ok(())

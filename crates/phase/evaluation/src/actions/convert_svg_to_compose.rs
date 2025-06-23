@@ -3,7 +3,7 @@ use crate::Result;
 use lib_cache::CacheKey;
 use lib_label::Label;
 use lib_svg2compose::SvgToComposeOptions;
-use log::debug;
+use log::info;
 use phase_loading::ColorMapping;
 use phase_loading::ComposePreview;
 
@@ -37,7 +37,7 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
     }
 
     // otherwise, do transform
-    debug!(target: "Converting", "SVG to Compose: `{label}`{variant}",
+    info!(target: "Converting", "SVG to Compose: `{label}`{variant}",
         label = args.label.fitted(40),
         variant = if args.variant_name.is_empty() {
             String::new()

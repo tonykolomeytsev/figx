@@ -1,7 +1,7 @@
 use crate::{Error, EvalContext, Result};
 use lib_cache::CacheKey;
 use lib_label::Label;
-use log::debug;
+use log::info;
 
 const WEBP_TRANSFORM_TAG: u8 = 0x02;
 
@@ -19,7 +19,7 @@ pub fn convert_png_to_webp(ctx: &EvalContext, args: ConvertPngToWebpArgs) -> Res
     }
 
     // otherwise, do transform
-    debug!(
+    info!(
         target: "Converting", "PNG to WEBP: `{label}`{variant}",
         label = args.label.fitted(50),
         variant = if args.variant_name.is_empty() {

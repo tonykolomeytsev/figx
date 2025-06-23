@@ -12,6 +12,7 @@ use crate::actions::render_svg_to_png::render_svg_to_png;
 use crate::actions::validation::ensure_is_vector_node;
 use crate::figma::NodeMetadata;
 use log::debug;
+use log::info;
 use phase_loading::AndroidWebpProfile;
 
 pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Result<()> {
@@ -92,7 +93,7 @@ pub fn import_android_webp(ctx: &EvalContext, args: ImportAndroidWebpArgs) -> Re
             file_extension: "webp",
             bytes: &webp,
         },
-        || debug!(target: "Writing", "`{label}` ({variant}) to file"),
+        || info!(target: "Writing", "`{label}` ({variant}) to file"),
     )?;
     Ok(())
 }

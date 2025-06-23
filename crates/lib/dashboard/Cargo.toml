@@ -11,3 +11,4 @@ supports-color.workspace = true
 slab.workspace = true
 term_size.workspace = true
 ordermap.workspace = true
+is_ci = "1.2.0"

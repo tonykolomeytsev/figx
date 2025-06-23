@@ -5,7 +5,7 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{Clear, ClearType},
 };
-use log::{Log, max_level, set_logger};
+use log::{max_level, set_logger, Log, Record};
 use std::io::{Write, stderr};
 
 impl Log for Dashboard {
@@ -15,6 +15,9 @@ impl Log for Dashboard {
 
     fn log(&self, record: &log::Record) {
         if !self.enabled(record.metadata()) {
+            return;
+        }
+        if should_skip(&record) {
             return;
         }
 
@@ -63,13 +66,24 @@ impl Log for Dashboard {
     }
 }
 
-pub fn init_log_impl(verbosity: u8, _quiet: bool) {
+pub fn init_log_impl(verbosity: u8) {
     set_logger(&*INSTANCE).unwrap();
 
     // Устанавливаем уровень логгирования в зависимости от verbosity
     log::set_max_level(match verbosity {
-        0 => log::LevelFilter::Info,
-        1 => log::LevelFilter::Debug,
+        0 => log::LevelFilter::Warn,
+        1 => log::LevelFilter::Info,
+        2 => log::LevelFilter::Debug,
         _ => log::LevelFilter::Trace,
     });
+}
+
+fn should_skip(record: &Record) -> bool {
+    match record.target() {
+        t if t.starts_with("ureq") => true,
+        t if t.starts_with("globset") => true,
+        t if t.starts_with("ignore") => true,
+        t if t.starts_with("rustls") => true,
+        _ => false
+    }
 }
