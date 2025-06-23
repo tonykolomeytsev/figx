@@ -32,7 +32,6 @@ lib_metrics = { path = "crates/lib/metrics" }
 lib_dashboard = { path = "crates/lib/dashboard" }
 
 
-
 usvg = { version = "0.45.1", default-features = false }
 resvg = { version = "0.45.1", default-features = false, features = [
     "raster-images",
@@ -60,7 +59,9 @@ ureq = { version = "3.0", default-features = false, features = [
 ] }
 ordermap = "0.5.7"
 webp = { git = "https://github.com/tonykolomeytsev/webp.git" }
-crossterm = { version = "0.29", default-features = false }
+crossterm = { version = "0.29", default-features = false, features = [
+    "windows",
+] }
 ignore = "0.4.23"
 codespan-reporting = "0.12"
 unindent = "0.2.4"
