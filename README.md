@@ -1,6 +1,11 @@
+<img src=".github/header.webp" width=100% />
+
+<p align="center">
+
 ![GitHub Release](https://img.shields.io/github/v/release/tonykolomeytsev/figx?color=%23595bd4)
 ![GitHub License](https://img.shields.io/github/license/tonykolomeytsev/figx)
 
+</p>
 
 # FigX - Pragmatic Design Asset Management
 
@@ -8,18 +13,13 @@ FigX is a no-nonsense CLI tool for importing design assets from Figma into your 
 
 > 🚧 The project is in the active development phase 🚧
 
-See also:
-- [**🚀 GitHub Action Available**](https://github.com/marketplace/actions/figx-action)
-- [**🐳 Docker Image Available**](https://github.com/tonykolomeytsev/figx/pkgs/container/figx)
-- [Differences from figma-export](#differences-from-figma-export)
-
-[**See full documentation**](https://tonykolomeytsev.github.io/figx)
+[**📚 See full documentation**](https://tonykolomeytsev.github.io/figx) • [**🚀 GitHub Action Available**](https://github.com/marketplace/actions/figx-action) • [**🐳 Docker Image Available**](https://github.com/tonykolomeytsev/figx/pkgs/container/figx)
 
 <img src=".github/preview.gif" width=100% />
 
-<p align="center">
+<!-- <p align="center">
 <img src=".github/color-logo.svg" width=50 />
-</p>
+</p> -->
 
 # Features
 
