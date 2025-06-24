@@ -599,7 +599,6 @@ dependencies = [
  "lib_dashboard",
  "lib_label",
  "lib_metrics",
- "lib_progress_bar",
  "lib_svg2compose",
  "log",
  "phase_evaluation",
@@ -1047,14 +1046,6 @@ dependencies = [
  "dashmap 6.1.0",
  "log",
  "quantiles",
-]
-
-[[package]]
-name = "lib_progress_bar"
-version = "0.7.2"
-dependencies = [
- "crossterm",
- "ordermap",
 ]
 
 [[package]]

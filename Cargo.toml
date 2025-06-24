@@ -25,7 +25,6 @@ command_clean = { path = "crates/command/clean" }
 ## Common code
 lib_figma_fluent = { path = "crates/lib/figma-fluent" }
 lib_label = { path = "crates/lib/label" }
-lib_progress_bar = { path = "crates/lib/progress_bar" }
 lib_cache = { path = "crates/lib/cache" }
 lib_svg2compose = { path = "crates/lib/svg2compose" }
 lib_metrics = { path = "crates/lib/metrics" }

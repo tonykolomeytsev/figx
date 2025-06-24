@@ -1,8 +1,0 @@
-[package]
-name = "lib_progress_bar"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-crossterm.workspace = true
-ordermap.workspace = true
