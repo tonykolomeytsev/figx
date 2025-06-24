@@ -71,7 +71,6 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
     let _instant = evaluation_duration.record();
     // setup rayon thread pool
     set_up_rayon(args.concurrency);
-    let ctx = init_eval_context(&ws, args, &metrics)?;
     let requested_remotes = ws
         .packages
         .iter()
@@ -117,13 +116,10 @@ pub fn evaluate(ws: Workspace, args: EvalArgs) -> Result<()> {
         requested_targets,
         requested_remotes,
         loaded_packages,
-        process_name: if ctx.eval_args.fetch {
-            "Fetching"
-        } else {
-            "Importing"
-        },
+        process_name: if args.fetch { "Fetching" } else { "Importing" },
     });
 
+    let ctx = init_eval_context(&ws, args, &metrics)?;
     let result = remote_to_resources
         .into_iter()
         .par_bridge()

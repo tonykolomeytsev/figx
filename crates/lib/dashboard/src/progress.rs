@@ -110,7 +110,7 @@ impl Display for ProgressBar {
                         let color_index = (state / 2) as usize % Self::ANSI_SECONDARY.len();
                         Self::ANSI_SECONDARY[color_index]
                     } else {
-                        Self::ANSI_SECONDARY[0]
+                        Self::ANSI_SECONDARY[1]
                     };
                     write!(
                         f,

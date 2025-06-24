@@ -6,13 +6,12 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{Clear, ClearType},
 };
-use ordermap::OrderSet;
 use slab::Slab;
 use std::{
-    io::{IsTerminal, stderr},
+    collections::HashSet,
+    io::{stderr, IsTerminal, Write},
     sync::{
-        Arc, LazyLock, Mutex, OnceLock,
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicUsize, Ordering}, Arc, LazyLock, Mutex, OnceLock
     },
     thread::{self},
     time::Duration,
@@ -85,48 +84,44 @@ pub(crate) fn render_progress_bar(pb: &mut ProgressBar) -> std::io::Result<()> {
         Print(format!("{: >12} ", process_name).cyan().bold()),
         Print(pb),
     )?;
+    let _ = stderr.flush()?;
 
     // second line
-    let items_to_render = {
+    let in_progress_line = {
         let slab = INSTANCE.in_progress_targets.lock().unwrap();
         if slab.is_empty() {
-            queue!(stderr, MoveToColumn(0))?;
+            queue!(stderr, Clear(ClearType::UntilNewLine), MoveToColumn(0))?;
             return Ok(());
         }
-        let vec = slab
-            .iter()
-            .map(|(_, v)| v.to_owned())
-            .collect::<OrderSet<_>>();
-        vec
+        let mut unique_items = HashSet::with_capacity(slab.len());
+        slab.iter()
+            .map(|(_, v)| v.as_str())
+            .filter(|it| {
+                if !unique_items.contains(it) {
+                    unique_items.insert(*it);
+                    true
+                } else {
+                    false
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
     };
-
-    let mut length = 0;
     let max_length = if let Some((Width(w), _)) = terminal_size::terminal_size_of(&stderr) {
         (w as usize).saturating_sub(13).saturating_sub(60)
     } else {
         30
     };
-    let mut trimmed = false;
-    let mut items_to_render = items_to_render
-        .into_iter()
-        .take_while(|v| {
-            if length + v.len() + 2 <= max_length {
-                length += v.len() + 2;
-                true
-            } else {
-                trimmed = true;
-                false
-            }
-        })
-        .collect::<Vec<_>>();
-    if trimmed {
-        items_to_render.push("...".to_string());
-    }
+    let in_progress_line = if in_progress_line.len() > max_length {
+        format!("{}...", &in_progress_line[..(max_length.saturating_sub(3))])
+    } else {
+        in_progress_line
+    };
 
     queue!(
         stderr,
         Print(": "),
-        Print(items_to_render.join(", ")),
+        Print(in_progress_line),
         Clear(ClearType::UntilNewLine),
         MoveToColumn(0),
     )?;

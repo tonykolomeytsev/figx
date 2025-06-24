@@ -1014,7 +1014,6 @@ dependencies = [
  "crossterm",
  "is_ci",
  "log",
- "ordermap",
  "slab",
  "supports-color",
  "terminal_size",

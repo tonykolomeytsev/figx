@@ -10,5 +10,4 @@ log.workspace = true
 supports-color.workspace = true
 slab.workspace = true
 terminal_size.workspace = true
-ordermap.workspace = true
 is_ci.workspace = true
