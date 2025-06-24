@@ -1,10 +1,7 @@
 <img src=".github/header.webp" width=100% />
 
 <p align="center">
-
-![GitHub Release](https://img.shields.io/github/v/release/tonykolomeytsev/figx?color=%23595bd4)
-![GitHub License](https://img.shields.io/github/license/tonykolomeytsev/figx)
-
+<img src="https://img.shields.io/github/v/release/tonykolomeytsev/figx?color=%23595bd4" /> <img src="https://img.shields.io/github/license/tonykolomeytsev/figx" />
 </p>
 
 # FigX - Pragmatic Design Asset Management
