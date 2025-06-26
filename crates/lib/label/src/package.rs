@@ -123,4 +123,18 @@ mod test {
     fn display_empty_package__EXPECT__predictable_result() {
         assert_eq!("//", Package::empty().to_string(),)
     }
+
+    #[test]
+    fn package_can_be_referenced_as_path() {
+        let path = PathBuf::from("path/to/package");
+        let package = Package::with_path("path/to/package").unwrap();
+        assert_eq!(path, AsRef::<Path>::as_ref(&package))
+    }
+
+    #[test]
+    fn package_can_be_referenced_as_str() {
+        let path = "path/to/package";
+        let package = Package::with_path("path/to/package").unwrap();
+        assert_eq!(path, AsRef::<str>::as_ref(&package))
+    }
 }

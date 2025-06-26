@@ -87,3 +87,75 @@ impl From<PackageParsingError> for LabelError {
 }
 
 // endregion: Error
+
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    #[test]
+    fn test_create_from_package_and_name() {
+        // Given
+        let package = Package(PathBuf::from("path/to/package"));
+        let name = Name("res_name".to_string());
+
+        // When
+        let label: Label = (package, name).into();
+
+        // Then
+        assert_eq!("//path/to/package:res_name", label.to_string());
+    }
+
+    #[test]
+    fn test_label_display() {
+        // Given
+        let package = Package(PathBuf::from("path/to/package"));
+        let name = Name("res_name".to_string());
+
+        // When
+        let label: Label = (package, name).into();
+
+        // Then
+        assert_eq!("//path/to/package:res_name", format!("{label}"));
+    }
+
+    #[test]
+    fn test_label_debug() {
+        // Given
+        let package = Package(PathBuf::from("path/to/package"));
+        let name = Name("res_name".to_string());
+
+        // When
+        let label: Label = (package, name).into();
+
+        // Then
+        assert_eq!("//path/to/package:res_name", format!("{label:?}"));
+    }
+
+    #[test]
+    fn test_invalid_package() {
+        // Given
+        let package = "/path/to/package";
+        let name = "valid_name";
+
+        // When
+        let result = Label::from_package_and_name(package, name);
+
+        // Then
+        assert!(matches!(result, Err(LabelError::BadPackage(_))));
+    }
+
+    #[test]
+    fn test_invalid_name() {
+        // Given
+        let package = "path/to/package";
+        let name = "in§valid_name";
+
+        // When
+        let result = Label::from_package_and_name(package, name);
+
+        // Then
+        assert!(matches!(result, Err(LabelError::BadName(_))));
+    }
+}

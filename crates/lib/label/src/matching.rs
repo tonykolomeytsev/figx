@@ -717,6 +717,8 @@ mod tests {
 
     // endregion: parsing tests
 
+    // region: composed patterns
+
     #[test]
     fn matches_all_targets_in_absolute_package__EXPECT__ok() {
         let p = LabelPattern::from_str("//foo/bar").unwrap();
@@ -938,10 +940,47 @@ mod tests {
         assert!(!matches(&p, &target("//foo/bar/baz:foo"), &path("")));
     }
 
+    // endregion: composed patterns
+
+    #[test]
+    fn matches_wildcard_targets__EXPECT__ok() {
+        let p = LabelPattern::from_str("...:ic_*_24").unwrap();
+        assert!(matches(&p, &target("//:ic_coffee_24"), &path("")));
+        assert!(matches(&p, &target("//path:ic_moon_24"), &path("")));
+        assert!(matches(&p, &target("//path/to:ic_grocery_24"), &path("")));
+    }
+
+    #[test]
+    fn matches_package_only_single__EXPECT__ok() {
+        let p = LabelPattern::from_str("foo/...").unwrap();
+        let pm = package_matches;
+        assert!(pm(&p, &package("//foo/jkl"), &path("")));
+        assert!(pm(&p, &package("//foo/abc"), &path("")));
+        assert!(pm(&p, &package("//foo/xyz/pvp"), &path("")));
+    }
+
+    #[test]
+    fn matches_package_only_composed__EXPECT__ok() {
+        let p = LabelPattern::try_from(vec!["//foo/...".to_string(), "-//foo/bar/...".to_string()])
+            .unwrap();
+        let pm = package_matches;
+        assert!(pm(&p, &package("//foo/jkl"), &path("")));
+        assert!(pm(&p, &package("//foo/abc"), &path("")));
+        assert!(pm(&p, &package("//foo/xyz/pvp"), &path("")));
+        assert!(!pm(&p, &package("//foo/bar/qwe"), &path("")));
+        assert!(!pm(&p, &package("//foo/bar/abc"), &path("")));
+        assert!(!pm(&p, &package("//foo/bar/baz"), &path("")));
+    }
+
     // Util function
     fn target(s: &str) -> Label {
         let (package, name) = s.rsplit_once(':').unwrap();
         Label::from_package_and_name(package.trim_start_matches("//"), name).unwrap()
+    }
+
+    // Util function
+    fn package(s: &str) -> Package {
+        Package(PathBuf::from(s.trim_start_matches("//")))
     }
 
     fn path(s: &str) -> PathBuf {
