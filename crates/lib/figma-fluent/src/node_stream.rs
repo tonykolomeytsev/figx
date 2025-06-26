@@ -37,10 +37,6 @@ impl NodeStreamError {
     fn parser(e: JsonParseError) -> Self {
         Self(e.to_string())
     }
-
-    fn msg(s: &str) -> Self {
-        Self(s.to_owned())
-    }
 }
 
 impl From<JsonParseError> for NodeStreamError {
@@ -160,7 +156,8 @@ impl<R: Read> Iterator for NodeStream<R> {
                 },
                 ExpectingFills => match event {
                     JsonEvent::StartArray => self.state = ReadingFills,
-                    _ => return Some(Err(NodeStreamError::msg("reading fills: expected array"))),
+                    // maybe we got to the "variables" section and someone named the variable "fills"
+                    _ => self.state = Default,
                 },
                 ReadingFills => match event {
                     JsonEvent::EndArray => self.state = Default,
@@ -237,6 +234,7 @@ mod test {
                     "children": [
                         {
                             "id":"0-3",
+                            "visible":false,
                             "name":"Icon / Leaf"
                         }
                     ]
@@ -252,9 +250,9 @@ mod test {
             Node {
                 id: "0-3".to_string(),
                 name: "Icon / Leaf".to_string(),
-                visible: true,
+                visible: false,
                 has_raster_fills: false,
-                hash: 15384143807047250368,
+                hash: 16189061432891903998,
             },
             Node {
                 id: "0-4".to_string(),
@@ -416,5 +414,43 @@ mod test {
 
         // Then
         assert_ne!(node1.hash, node2.hash);
+    }
+
+    #[test]
+    fn encounter_invalid_type_then_no_error() {
+        // Given
+        let json = r#"
+        {
+            "id":"0-1",
+            "children": [
+                {
+                    "id":"0-2",
+                    "children": [
+                        {
+                            "id":"0-3",
+                            "name":"Icon / Coffee",
+                            "fills": "huills"
+                        }
+                    ]
+                },
+                {
+                    "id":"0-3",
+                    "name":"Icon / Coffee",
+                    "visible":"huisible",
+                    "fills": [ {"blendMode":"MULTIPLY","type":"GRADIENT"} ]
+                }
+            ]
+        }
+        "#;
+
+        // When
+        let iter = NodeStream::from(BufReader::new(json.as_bytes()));
+        let actual_nodes = iter.collect::<std::result::Result<Vec<Node>, _>>().unwrap();
+        let node1 = actual_nodes.first();
+        let node2 = actual_nodes.last();
+
+        // Then
+        assert!(node1.is_some());
+        assert!(node2.is_some());
     }
 }
