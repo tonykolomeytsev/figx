@@ -1,0 +1,7 @@
+[package]
+name = "lib_rainbow_bar"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+supports-color.workspace = true

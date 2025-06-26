@@ -1,4 +1,3 @@
-use crate::progress::ProgressBar;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use crossterm::{
     cursor::MoveToColumn,
@@ -6,12 +5,14 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{Clear, ClearType},
 };
+use lib_rainbow_bar::{ProgressBar, ProgressBarOptions};
 use slab::Slab;
 use std::{
     collections::HashSet,
-    io::{stderr, IsTerminal, Write},
+    io::{IsTerminal, Write, stderr},
     sync::{
-        atomic::{AtomicUsize, Ordering}, Arc, LazyLock, Mutex, OnceLock
+        Arc, LazyLock, Mutex, OnceLock,
+        atomic::{AtomicUsize, Ordering},
     },
     thread::{self},
     time::Duration,
@@ -20,7 +21,6 @@ use terminal_size::Width;
 
 mod logger;
 pub use logger::*;
-mod progress;
 
 static INSTANCE: LazyLock<Dashboard> = LazyLock::new(|| Dashboard::new());
 
@@ -49,7 +49,10 @@ impl Dashboard {
             loaded_packages: Default::default(),
             in_progress_targets: Default::default(),
             process_name: OnceLock::new(),
-            progress_bar: Default::default(),
+            progress_bar: Arc::new(Mutex::new(ProgressBar::new(ProgressBarOptions {
+                bar_width: 40,
+                ..Default::default()
+            }))),
         }
     }
 }
@@ -77,12 +80,12 @@ pub(crate) fn render_progress_bar(pb: &mut ProgressBar) -> std::io::Result<()> {
     };
 
     // first line: progress bar
-    pb.set_max(max);
-    pb.set_current(INSTANCE.current_targets.load(Ordering::Relaxed));
+    pb.max = max;
+    pb.current = INSTANCE.current_targets.load(Ordering::Relaxed);
     queue!(
         stderr,
         Print(format!("{: >12} ", process_name).cyan().bold()),
-        Print(pb),
+        Print(&pb),
     )?;
     let _ = stderr.flush()?;
 
@@ -108,7 +111,7 @@ pub(crate) fn render_progress_bar(pb: &mut ProgressBar) -> std::io::Result<()> {
             .join(", ")
     };
     let max_length = if let Some((Width(w), _)) = terminal_size::terminal_size_of(&stderr) {
-        (w as usize).saturating_sub(13).saturating_sub(60)
+        (w as usize).saturating_sub(15 + pb.len())
     } else {
         30
     };

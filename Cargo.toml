@@ -29,6 +29,7 @@ lib_cache = { path = "crates/lib/cache" }
 lib_svg2compose = { path = "crates/lib/svg2compose" }
 lib_metrics = { path = "crates/lib/metrics" }
 lib_dashboard = { path = "crates/lib/dashboard" }
+lib_rainbow_bar = { path = "crates/lib/rainbow_bar" }
 
 
 # SVG and Image Processing

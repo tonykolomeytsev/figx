@@ -1013,9 +1013,9 @@ dependencies = [
  "crossbeam-channel",
  "crossterm",
  "is_ci",
+ "lib_rainbow_bar",
  "log",
  "slab",
- "supports-color",
  "terminal_size",
 ]
 
@@ -1045,6 +1045,13 @@ dependencies = [
  "dashmap 6.1.0",
  "log",
  "quantiles",
+]
+
+[[package]]
+name = "lib_rainbow_bar"
+version = "0.7.2"
+dependencies = [
+ "supports-color",
 ]
 
 [[package]]
