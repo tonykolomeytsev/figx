@@ -1,0 +1,19 @@
+[config]
+workspace = true
+
+# This packages only reuses other packages 
+# and do not have their own logic
+exclude = [
+    "figx",
+    "command_clean",
+    "command_explain",
+    "command_fetch",
+    "command_import",
+    "command_info",
+    "command_query",
+]
+
+exclude-files = [
+    # This files is always for error impl boilerplate
+    "**/error.rs",
+]
