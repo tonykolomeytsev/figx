@@ -18,6 +18,8 @@ exclude-files = [
     "**/error.rs",
     # Cannot test ureq's network requests now
     "crates/lib/figma-fluent/src/data.rs",
+    # Just plain structs of parser api, no need to cover
+    "crates/phase/loading/src/api.rs",
 ]
 
 out = ["Html", "Xml"]

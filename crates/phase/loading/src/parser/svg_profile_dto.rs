@@ -77,7 +77,7 @@ mod test {
 
     use super::*;
     use crate::{ParseWithContext, variant_dto};
-    use ordermap::ordermap;
+    use ordermap::{OrderMap, ordermap};
     use toml_span::Span;
     use unindent::unindent;
 
@@ -198,5 +198,42 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn SvgProfileDto__one_variant_extend_another__EXPECT__predictable_result() {
+        // Given
+        let first = SvgProfileDto {
+            remote_id: Some("remote".to_string()),
+            output_dir: None,
+            variants: Some(VariantsDto {
+                all_variants: Some(OrderMap::new()),
+                use_variants: None,
+            }),
+        };
+        let second = SvgProfileDto {
+            remote_id: None,
+            output_dir: Some(PathBuf::from("path/to")),
+            variants: Some(VariantsDto {
+                all_variants: None,
+                use_variants: Some(Vec::new()),
+            }),
+        };
+
+        // When
+        let third = first.extend(&second);
+
+        // Then
+        assert_eq!(
+            SvgProfileDto {
+                remote_id: Some("remote".to_string()),
+                output_dir: Some(PathBuf::from("path/to")),
+                variants: Some(VariantsDto {
+                    all_variants: Some(OrderMap::new()),
+                    use_variants: Some(Vec::new()),
+                }),
+            },
+            third,
+        );
     }
 }

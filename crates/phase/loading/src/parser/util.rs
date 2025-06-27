@@ -42,3 +42,41 @@ pub(crate) fn validate_non_empty<T>(
     }
     Ok(list.map(|it| it.value))
 }
+
+#[cfg(test)]
+#[allow(non_snake_case)]
+mod test {
+    use toml_span::Span;
+
+    use super::*;
+
+    #[test]
+    fn validate_non_empty__valid_data__ok() {
+        // Given
+        let valid_value = Some(Spanned {
+            value: vec![1, 2, 3],
+            span: Span::new(0, 1),
+        });
+        
+        // When
+        let result = validate_non_empty(valid_value, || "".to_string());
+        
+        // Then
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn validate_non_empty__INvalid_data__err() {
+        // Given
+        let valid_value: Option<Spanned<Vec<i32>>> = Some(Spanned {
+            value: vec![],
+            span: Span::new(0, 1),
+        });
+        
+        // When
+        let result = validate_non_empty(valid_value, || "ERROR".to_string());
+        
+        // Then
+        assert!(result.is_err());
+    }
+}

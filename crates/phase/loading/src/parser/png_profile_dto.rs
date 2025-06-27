@@ -85,7 +85,7 @@ mod test {
 
     use super::*;
     use crate::{ParseWithContext, variant_dto};
-    use ordermap::ordermap;
+    use ordermap::{ordermap, OrderMap};
     use toml_span::Span;
     use unindent::unindent;
 
@@ -214,5 +214,48 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn PngProfileDto__one_variant_extend_another__EXPECT__predictable_result() {
+        // Given
+        let first = PngProfileDto {
+            remote_id: Some("remote".to_string()),
+            scale: None,
+            output_dir: None,
+            variants: Some(VariantsDto {
+                all_variants: Some(OrderMap::new()),
+                use_variants: None,
+            }),
+            legacy_loader: Some(false),
+        };
+        let second = PngProfileDto {
+            remote_id: None,
+            scale: Some(ExportScale(1.0)),
+            output_dir: Some(PathBuf::from("path/to")),
+            variants: Some(VariantsDto {
+                all_variants: None,
+                use_variants: Some(Vec::new()),
+            }),
+            legacy_loader: None,
+        };
+
+        // When
+        let third = first.extend(&second);
+
+        // Then
+        assert_eq!(
+            PngProfileDto {
+                remote_id: Some("remote".to_string()),
+                scale: Some(ExportScale(1.0)),
+                output_dir: Some(PathBuf::from("path/to")),
+                variants: Some(VariantsDto {
+                    all_variants: Some(OrderMap::new()),
+                    use_variants: Some(Vec::new()),
+                }),
+                legacy_loader: Some(false),
+            },
+            third,
+        );
     }
 }

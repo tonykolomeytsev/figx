@@ -49,6 +49,7 @@ mod test {
         quality3 = 100
         quality4 = -1
         quality5 = 101
+        quality6 = "text?"
         "#;
         let quality1 = WebpQuality(0.0);
         let quality2 = WebpQuality(75.0);
@@ -64,5 +65,6 @@ mod test {
         assert_eq!(quality3, th.required::<WebpQuality>("quality3").unwrap());
         assert!(th.required::<WebpQuality>("quality4").is_err());
         assert!(th.required::<WebpQuality>("quality5").is_err());
+        assert!(th.required::<WebpQuality>("quality6").is_err());
     }
 }

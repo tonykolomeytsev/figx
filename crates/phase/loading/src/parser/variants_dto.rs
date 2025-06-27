@@ -106,3 +106,102 @@ pub(super) mod de {
         }
     }
 }
+
+#[cfg(test)]
+#[allow(non_snake_case)]
+mod test {
+    use super::*;
+    use ordermap::ordermap;
+    use toml_span::de_helpers::TableHelper;
+
+    #[test]
+    fn VariantsDto__empty_variants__EXPECT__none() {
+        // Given
+        let toml = "[variants]";
+
+        // When
+        let mut value = toml_span::parse(toml).unwrap();
+        let variants = TableHelper::new(&mut value)
+            .unwrap()
+            .optional::<VariantsDto>("variants");
+
+        // Then
+        assert_eq!(
+            Some(VariantsDto {
+                all_variants: None,
+                use_variants: None
+            }),
+            variants
+        );
+    }
+
+    #[test]
+    fn VariantsDto__valid_variants__EXPECT__predictable_result() {
+        // Given
+        let toml = r#"
+        [variants]
+        use = ["x1", "x2", "x3"]
+        x1 = { output_name = "{base}", figma_name = "{base}", scale = 1.0 }
+        x2 = { output_name = "{base}", figma_name = "{base}", scale = 2.0 }
+        x3 = { output_name = "{base}", figma_name = "{base}", scale = 3.0 }
+        "#;
+
+        // When
+        let mut value = toml_span::parse(toml).unwrap();
+        let variants = TableHelper::new(&mut value)
+            .unwrap()
+            .required::<VariantsDto>("variants")
+            .unwrap();
+
+        // Then
+        assert_eq!(
+            Some(vec!["x1".to_string(), "x2".to_string(), "x3".to_string()]),
+            variants.use_variants
+        );
+        assert_eq!(
+            Some(ordermap! {
+                "x1".to_string() => VariantDto { output_name: "{base}".into(), figma_name: "{base}".into(), scale: Some(ExportScale(1.0)) },
+                "x2".to_string() => VariantDto { output_name: "{base}".into(), figma_name: "{base}".into(), scale: Some(ExportScale(2.0)) },
+                "x3".to_string() => VariantDto { output_name: "{base}".into(), figma_name: "{base}".into(), scale: Some(ExportScale(3.0)) },
+            }),
+            variants.all_variants
+        );
+    }
+
+    #[test]
+    fn VariantsDto__one_variant_extend_another__EXPECT__predictable_result() {
+        // Given
+        let first = VariantsDto {
+            all_variants: None,
+            use_variants: Some(vec!["x1".to_string(), "x2".to_string()]),
+        };
+        let second = VariantsDto {
+            all_variants: Some(ordermap! {
+                "x1".to_string() => VariantDto { output_name: "{base]1".into(), figma_name: "{base}_1".into(), scale: Some(ExportScale(1.0)) },
+                "x2".to_string() => VariantDto { output_name: "{base]2".into(), figma_name: "{base}_2".into(), scale: Some(ExportScale(2.0)) },
+            }),
+            use_variants: None,
+        };
+
+        // When
+        let third = first.extend(&second);
+
+        // Then
+        assert_eq!(
+            VariantsDto {
+                all_variants: Some(ordermap! {
+                    "x1".to_string() => VariantDto { output_name: "{base]1".into(), figma_name: "{base}_1".into(), scale: Some(ExportScale(1.0)) },
+                    "x2".to_string() => VariantDto { output_name: "{base]2".into(), figma_name: "{base}_2".into(), scale: Some(ExportScale(2.0)) },
+                }),
+                use_variants: Some(vec!["x1".to_string(), "x2".to_string()]),
+            },
+            third,
+        );
+    }
+
+    impl From<&str> for SingleNamePattern {
+        fn from(value: &str) -> Self {
+            SingleNamePattern(value.to_owned())
+        }
+    }
+}
