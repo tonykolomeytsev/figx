@@ -16,4 +16,8 @@ exclude = [
 exclude-files = [
     # This files is always for error impl boilerplate
     "**/error.rs",
+    # Cannot test ureq's network requests now
+    "crates/lib/figma-fluent/src/data.rs",
 ]
+
+out = ["Html", "Xml"]
