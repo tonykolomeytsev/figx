@@ -1,7 +1,7 @@
 <img src=".github/header.webp" width=100% />
 
 <p align="center">
-<img src="https://img.shields.io/github/v/release/tonykolomeytsev/figx?color=%23595bd4" /> <img src="https://img.shields.io/github/license/tonykolomeytsev/figx" />
+<img src="https://img.shields.io/github/v/release/tonykolomeytsev/figx?color=%23595bd4" /> <img src="https://img.shields.io/github/license/tonykolomeytsev/figx" /> <img alt="Code coverage" src="https://img.shields.io/codecov/c/gh/tonykolomeytsev/figx?token=WEF1P2AYM7">
 </p>
 
 # FigX - Pragmatic Design Asset Management
