@@ -123,3 +123,67 @@ impl CacheKeyBuilder {
         }
     }
 }
+
+#[cfg(test)]
+#[allow(non_snake_case)]
+mod test {
+    use crate::CacheKey;
+
+    #[test]
+    fn same_operators_order__LEADS_TO__same_keys() {
+        let key1 = CacheKey::builder()
+            .write(b"123")
+            .write_bool(true)
+            .write_i128(1)
+            .write_u128(2)
+            .write_str("hello")
+            .build();
+        let key2 = CacheKey::builder()
+            .write(b"123")
+            .write_bool(true)
+            .write_i128(1)
+            .write_u128(2)
+            .write_str("hello")
+            .build();
+        assert_eq!(key1, key2);
+    }
+
+    #[test]
+    fn different_operators_order__LEADS_TO__different_keys() {
+        let key1 = CacheKey::builder()
+            .write(b"123")
+            .write_bool(true)
+            .write_i128(1)
+            .write_u128(2)
+            .write_str("hello")
+            .build();
+        let key2 = CacheKey::builder()
+            .write(b"123")
+            .write_i128(1)
+            .write_bool(true)
+            .write_u128(2)
+            .write_str("hello")
+            .build();
+        assert_ne!(key1, key2);
+    }
+
+    #[test]
+    fn tag_is_always_inside_key() {
+        let key = CacheKey::builder().set_tag(42).write_str("hello").build();
+        assert_eq!(42, key.hash[0]);
+    }
+
+    #[test]
+    fn test_ser_de() {
+        let source_key = CacheKey::builder()
+            .set_tag(123)
+            .write_bool(true)
+            .write_i8(1)
+            .build();
+        let serialized_key =
+            bincode::encode_to_vec(&source_key, bincode::config::standard()).unwrap();
+        let (deserialized_key, _): (CacheKey, usize) =
+            bincode::decode_from_slice(&serialized_key, bincode::config::standard()).unwrap();
+        assert_eq!(source_key, deserialized_key);
+    }
+}

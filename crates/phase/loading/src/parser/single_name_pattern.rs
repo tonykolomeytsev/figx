@@ -42,6 +42,7 @@ mod test {
         s3 = "doubled: {base}X{base}"
         s4 = "smth"
         s5 = "no base? :("
+        s6 = 1234
         "#;
         let s1 = SingleNamePattern("{base}-big".to_string());
         let s2 = SingleNamePattern("prefix / {base} / suffix".to_string());
@@ -57,5 +58,6 @@ mod test {
         assert_eq!(s3, th.required::<SingleNamePattern>("s3").unwrap());
         assert!(th.required::<SingleNamePattern>("s4").is_err());
         assert!(th.required::<SingleNamePattern>("s5").is_err());
+        assert!(th.required::<SingleNamePattern>("s6").is_err());
     }
 }
