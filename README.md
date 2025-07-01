@@ -155,7 +155,7 @@ Key distinctions between the tools:
 | No Jetpack Compose `ImageVector` support | Generates native `ImageVector` graphics as ready-to-use Kotlin code |
 | Resource imports determined by Figma file contents or CLI arguments | Granular resource specification via dedicated manifest files per project package/module |
 | Limited built-in import profiles (icons/illustrations) without project domain consideration | Extensible profile system supporting unlimited custom profiles with configurable import flows and identifiers |
-| Complex multi-module resource targeting - tends toward hardcoded monolithic output directories | Designed for modular projects - immune to refactoring and path changes through proper package isolation |
+| Complex multi-module resource targeting | Designed for modular projects - immune to refactoring and path changes through proper package isolation |
 | Optimized primarily for local developer use | CI-optimized with aggressive caching to minimize resource waste in pipelines |
 
 # License
