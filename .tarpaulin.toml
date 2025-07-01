@@ -20,6 +20,8 @@ exclude-files = [
     "crates/lib/figma-fluent/src/data.rs",
     # Just plain structs of parser api, no need to cover
     "crates/phase/loading/src/api.rs",
+    # Experimental + infallible
+    "crates/lib/metrics/**/*.rs",
 ]
 
 out = ["Html", "Xml"]
