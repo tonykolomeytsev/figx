@@ -3,7 +3,7 @@ name: Unit-test Coverage
 on:
   push:
     branches: [ master ]
-    paths: [ 'crates/**', '.tarpaulin.toml' ]
+    paths: [ 'crates/**', '.tarpaulin.toml', '.github/workflows/coverage.yml' ]
 
 jobs:
   test:
