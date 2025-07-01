@@ -68,7 +68,6 @@ Example output:
 //app/src/main/java/com/example/figxdemo/ui/icons:Sun
 ├── 📤 Export SVG from remote @icons/MhjeA23R15tAR3PO2JamCv
 │      ┆ node: Environment / Sun
-│      ┆ scale: 1
 ├── ✨ Transform SVG to Compose
 │      ┆ package: com.example.figxdemo.ui.icons
 ╰── 💾 Write to file

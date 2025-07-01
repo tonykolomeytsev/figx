@@ -52,50 +52,89 @@ figx query -o package //...
 Explain the import flow for specific resources:
 
 ```bash
-figx explain //app:all //.../ui/icons:Sun
+figx explain //app:ill_travel //.../ui/icons:Sun
 ```
 
 Example output:
 
 ```text
-//app:ill_travellers
+//app:ill_travel
 ├── Variant 'hdpi'
-│   ├── 📤 Export PNG from remote @illustrations/rqeqh3mlmLVTDS0OEan67m
-│   │      ┆ node: Image
+│   ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+│   │      ┆ node: Illustration/Travels
+│   ├── 🎨 Render PNG locally
 │   │      ┆ scale: 1.5
 │   ├── ✨ Transform PNG to WEBP
 │   │      ┆ quality: 100
 │   ╰── 💾 Write to file
-│          ┆ output: drawable-hdpi/ill_travellers.webp
+│          ┆ output: drawable-hdpi/ill_travel.webp
+├── Variant 'night-hdpi'
+│   ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+│   │      ┆ node: Illustration/Travels (Dark)
+│   ├── 🎨 Render PNG locally
+│   │      ┆ scale: 1.5
+│   ├── ✨ Transform PNG to WEBP
+│   │      ┆ quality: 100
+│   ╰── 💾 Write to file
+│          ┆ output: drawable-night-hdpi/ill_travel.webp
 ├── Variant 'xhdpi'
-│   ├── 📤 Export PNG from remote @illustrations/rqeqh3mlmLVTDS0OEan67m
-│   │      ┆ node: Image
+│   ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+│   │      ┆ node: Illustration/Travels
+│   ├── 🎨 Render PNG locally
 │   │      ┆ scale: 2
 │   ├── ✨ Transform PNG to WEBP
 │   │      ┆ quality: 100
 │   ╰── 💾 Write to file
-│          ┆ output: drawable-xhdpi/ill_travellers.webp
+│          ┆ output: drawable-xhdpi/ill_travel.webp
+├── Variant 'night-xhdpi'
+│   ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+│   │      ┆ node: Illustration/Travels (Dark)
+│   ├── 🎨 Render PNG locally
+│   │      ┆ scale: 2
+│   ├── ✨ Transform PNG to WEBP
+│   │      ┆ quality: 100
+│   ╰── 💾 Write to file
+│          ┆ output: drawable-night-xhdpi/ill_travel.webp
 ├── Variant 'xxhdpi'
-│   ├── 📤 Export PNG from remote @illustrations/rqeqh3mlmLVTDS0OEan67m
-│   │      ┆ node: Image
+│   ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+│   │      ┆ node: Illustration/Travels
+│   ├── 🎨 Render PNG locally
 │   │      ┆ scale: 3
 │   ├── ✨ Transform PNG to WEBP
 │   │      ┆ quality: 100
 │   ╰── 💾 Write to file
-│          ┆ output: drawable-xxhdpi/ill_travellers.webp
-╰── Variant 'xxxhdpi'
-    ├── 📤 Export PNG from remote @illustrations/rqeqh3mlmLVTDS0OEan67m
-    │      ┆ node: Image
+│          ┆ output: drawable-xxhdpi/ill_travel.webp
+├── Variant 'night-xxhdpi'
+│   ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+│   │      ┆ node: Illustration/Travels (Dark)
+│   ├── 🎨 Render PNG locally
+│   │      ┆ scale: 3
+│   ├── ✨ Transform PNG to WEBP
+│   │      ┆ quality: 100
+│   ╰── 💾 Write to file
+│          ┆ output: drawable-night-xxhdpi/ill_travel.webp
+├── Variant 'xxxhdpi'
+│   ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+│   │      ┆ node: Illustration/Travels
+│   ├── 🎨 Render PNG locally
+│   │      ┆ scale: 4
+│   ├── ✨ Transform PNG to WEBP
+│   │      ┆ quality: 100
+│   ╰── 💾 Write to file
+│          ┆ output: drawable-xxxhdpi/ill_travel.webp
+╰── Variant 'night-xxxhdpi'
+    ├── 📤 Export SVG from remote @illustrations/Q5KZlwws4rsDW8grU91xLR
+    │      ┆ node: Illustration/Travels (Dark)
+    ├── 🎨 Render PNG locally
     │      ┆ scale: 4
     ├── ✨ Transform PNG to WEBP
     │      ┆ quality: 100
     ╰── 💾 Write to file
-           ┆ output: drawable-xxxhdpi/ill_travellers.webp
+           ┆ output: drawable-night-xxxhdpi/ill_travel.webp
 
 //app/src/main/java/com/example/figxdemo/ui/icons:Sun
-├── 📤 Export SVG from remote @icons/MhjeA23R15tAR3PO2JamCv
+├── 📤 Export SVG from remote @icons/Q5KZlwws4rsDW8grU91xLR
 │      ┆ node: Environment / Sun
-│      ┆ scale: 1
 ├── ✨ Transform SVG to Compose
 │      ┆ package: com.example.figxdemo.ui.icons
 ╰── 💾 Write to file
