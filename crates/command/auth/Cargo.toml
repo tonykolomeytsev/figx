@@ -1,0 +1,10 @@
+[package]
+name = "command_auth"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+lib_auth.workspace = true
+log.workspace = true
+tiny_http.workspace = true
+open.workspace = true

@@ -1,0 +1,7 @@
+[package]
+name = "lib_auth"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+keyring.workspace = true

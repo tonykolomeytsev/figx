@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figma Token Setup</title>
+    <style>
+        body {
+            font-family: monospace, sans-serif;
+            font-size: 11pt;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: black;
+        }
+
+        h2 {
+            font-size: 14pt;
+            margin-top: 0px;
+            margin-bottom: 12px;
+        }
+
+        .step {
+            display: none;
+            padding: 12px 20px;
+            border: 2px solid #3F3F3F;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        button {
+            padding: 12px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            float: right;
+            border: 2px solid #3F3F3F;
+            background-color: #3F3F3F;
+            color: #f8f9fa;
+            font-family: inherit;
+        }
+
+        button:hover {
+            border-color: #5f5f5f;
+            background-color: #5f5f5f;
+        }
+
+        button.secondary {
+            border: 2px solid #686868;
+            background-color: transparent;
+            color: #686868;
+            margin-right: 10px;
+        }
+
+        button.secondary:hover {
+            background-color: #0000001f;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 10px;
+            margin: 12px 0;
+            font-family: inherit;
+            box-sizing: border-box;
+            border-radius: 0 !important;
+            border: 2px solid #5f5f5f !important;
+            background-color: transparent;
+        }
+
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        ol {
+            padding-left: 3em;
+        }
+
+        a {
+            color: black;
+        }
+
+        p {
+            margin-bottom: 0;
+        }
+
+        #message {
+            margin-top: 0px;
+            margin-bottom: 12px;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="step active" id="step1">
+        <h2>Step 1: Get Figma Personal Access Token</h2>
+        <div class="step-content">
+            <p>To generate your Personal Access Token:</p>
+            <ol>
+                <li>Login to your Figma account.</li>
+                <li>From the <a href="https://figma.com" target="_blank">file browser</a>, click the account menu in the
+                    top-left corner
+                    and select <strong>Settings</strong>.
+                </li>
+                <li>Select the <strong>Security</strong> tab.</li>
+                <li>In the <strong>Personal access tokens</strong> section, click <strong>Generate new token</strong> to
+                    open the configuration modal.</li>
+                <li>Make sure the token has the <strong>File content</strong> scope set to <strong>Read-only</strong>.
+                </li>
+                <li>Click <strong>Generate token</strong>.</li>
+            </ol>
+        </div>
+        <button onclick="showStep(2)">Continue</button>
+    </div>
+
+    <div id="step2" class="step">
+        <h2>Step 2: Save Your Token</h2>
+        <p>Please paste your Figma Personal Access Token below:</p>
+        <input type="text" id="tokenInput" placeholder="Paste your token here">
+        <p id="message" style="color: green;"></p>
+        <button id="saveButton" onclick="saveToken()">Save Token</button>
+        <button onclick="showStep(1)" class="secondary">Back</button>
+    </div>
+
+    <div id="step3" class="step">
+        <h2>Token saved successfully!</h2>
+        <p>You can close this page and return to the CLI</p>
+    </div>
+
+    <script>
+        function showStep(stepNumber) {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            // Show the selected step
+            document.getElementById(`step${stepNumber}`).classList.add('active');
+        }
+
+        function saveToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const messageElement = document.getElementById('message');
+            const saveButton = document.getElementById('saveButton');
+
+            if (!token) {
+                messageElement.textContent = "Please enter a token";
+                messageElement.style.color = "red";
+                return;
+            }
+
+            // Show loading state
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving...";
+
+            fetch('./save_token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain',
+                    'X-Figma-Token': token,
+                },
+                body: "",
+            })
+                .then(response => {
+                    if (response.ok) {
+                        showStep(3)
+                    } else {
+                        messageElement.textContent = `Error saving token: ${response.statusText}`;
+                        messageElement.style.color = "red";
+                    }
+                })
+                .catch(error => {
+                    messageElement.textContent = "Network error: " + error.message;
+                    messageElement.style.color = "red";
+                })
+                .finally(() => {
+                    saveButton.disabled = false;
+                    saveButton.textContent = "Save Token";
+                });
+        }
+    </script>
+</body>
+
+</html>

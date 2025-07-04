@@ -33,6 +33,9 @@ pub enum Error {
 
     #[from]
     Clean(command_clean::Error),
+
+    #[from]
+    Auth(command_auth::Error),
 }
 
 pub fn handle_error(err: Error) {
@@ -44,6 +47,7 @@ pub fn handle_error(err: Error) {
         Fetch(err) => handle_cmd_fetch_error(err),
         Import(err) => handle_cmd_import_error(err),
         Clean(err) => handle_cmd_clean_error(err),
+        Auth(err) => eprintln!("auth err: {err}"),
     }
 }
 

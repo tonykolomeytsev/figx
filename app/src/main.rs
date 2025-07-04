@@ -76,6 +76,8 @@ fn run_app() -> Result<()> {
         CliSubcommand::Clean(CommandCleanArgs { all }) => {
             command_clean::clean(FeatureCleanOptions { all })?
         }
+
+        CliSubcommand::Auth => command_auth::auth()?,
     }
     Ok(())
 }

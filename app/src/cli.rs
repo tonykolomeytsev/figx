@@ -40,6 +40,9 @@ pub enum CliSubcommand {
 
     /// Clean up application cache
     Clean(CommandCleanArgs),
+
+    /// Add Figma personal token to secure storage
+    Auth,
 }
 
 #[derive(Args, Debug)]

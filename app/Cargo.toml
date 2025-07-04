@@ -15,6 +15,7 @@ command_explain.workspace = true
 command_fetch.workspace = true
 command_import.workspace = true
 command_clean.workspace = true
+command_auth.workspace = true
 
 phase_loading.workspace = true
 phase_evaluation.workspace = true
