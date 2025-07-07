@@ -1,13 +1,18 @@
 mod error;
 pub use error::*;
-use lib_auth::set_token;
+use lib_auth::{delete_token, set_token};
 use log::{error, warn};
 use tiny_http::{Header, Request, Response, Server, StatusCode};
 
 const SELF_ADDR: &str = "0.0.0.0:8182";
 const SELF_URL: &str = "http://0.0.0.0:8182";
 
-pub fn auth() -> Result<()> {
+pub fn auth(delete: bool) -> Result<()> {
+    if delete {
+        delete_token()?;
+        return Ok(());
+    }
+
     let server = Server::http(SELF_ADDR).map_err(Error::server_creation)?;
 
     eprintln!("Open {SELF_URL} in your browser and follow the instructions");

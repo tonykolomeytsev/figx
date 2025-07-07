@@ -17,6 +17,8 @@ pub enum Error {
     WorkspaceRead(std::io::Error),
     WorkspaceParse(toml_span::DeserError, PathBuf),
     WorkspaceRemoteNoAccessToken(String, PathBuf, Span),
+    WorkspaceRemoteEmptyKeychain(String, PathBuf, Span),
+    WorkspaceRemoteKeychainError(lib_auth::Error),
     // endregion: Workspace
 
     // region: FigFiles

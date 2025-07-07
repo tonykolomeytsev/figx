@@ -17,6 +17,8 @@ mod error;
 use error::*;
 use lib_dashboard::init_log_impl;
 
+use crate::cli::CommandAuthArgs;
+
 pub fn main() -> ExitCode {
     let result = run_app();
     match result {
@@ -77,7 +79,7 @@ fn run_app() -> Result<()> {
             command_clean::clean(FeatureCleanOptions { all })?
         }
 
-        CliSubcommand::Auth => command_auth::auth()?,
+        CliSubcommand::Auth(CommandAuthArgs { delete }) => command_auth::auth(delete)?,
     }
     Ok(())
 }

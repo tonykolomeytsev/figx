@@ -1348,6 +1348,7 @@ name = "phase_loading"
 version = "0.7.3"
 dependencies = [
  "ignore",
+ "lib_auth",
  "lib_label",
  "log",
  "ordermap",

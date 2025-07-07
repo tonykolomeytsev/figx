@@ -23,3 +23,9 @@ pub fn get_token() -> Result<Option<String>> {
     };
     Ok(token)
 }
+
+pub fn delete_token() -> Result<()> {
+    let entry = Entry::new(DEFAULT_SERVICE_NAME, DEFAULT_USER_NAME)?;
+    entry.delete_credential()?;
+    Ok(())
+}

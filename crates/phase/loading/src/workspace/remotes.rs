@@ -1,9 +1,11 @@
 use crate::RemoteSource;
 use crate::parser::{AccessTokenDefinitionDto, RemotesDto};
 use crate::{Error, Result};
+use lib_auth::get_token;
 use ordermap::OrderMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use toml_span::Span;
 
 pub(crate) fn parse_remotes(
     RemotesDto(remotes): RemotesDto,
@@ -16,15 +18,39 @@ pub(crate) fn parse_remotes(
             id: id.clone(),
             file_key: dto.file_key.to_owned(),
             container_node_ids: dto.container_node_ids.to_owned(),
-            access_token: match &dto.access_token {
-                AccessTokenDefinitionDto::Explicit(token) => token.to_owned(),
-                AccessTokenDefinitionDto::Env(env) => std::env::var(env).map_err(|_| {
-                    Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), dto.key_span)
-                })?,
-            },
+            access_token: parse_access_token_definition(id, &dto.access_token, &dto.key_span)?,
         };
         all_remotes.insert(id.to_owned(), Arc::new(remote));
     }
 
     Ok(all_remotes)
+}
+
+fn parse_access_token_definition(
+    id: &str,
+    dto: &AccessTokenDefinitionDto,
+    span: &Span,
+) -> Result<String> {
+    match &dto {
+        AccessTokenDefinitionDto::Explicit(token) => Ok(token.to_owned()),
+        AccessTokenDefinitionDto::Env(env) => std::env::var(env)
+            .map_err(|_| Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), *span)),
+        AccessTokenDefinitionDto::Keychain => match get_token() {
+            Ok(Some(token)) => Ok(token),
+            Ok(None) => Err(Error::WorkspaceRemoteEmptyKeychain(
+                id.to_owned(),
+                PathBuf::new(),
+                *span,
+            )),
+            Err(e) => Err(Error::WorkspaceRemoteKeychainError(e)),
+        },
+        AccessTokenDefinitionDto::Priority(defs) => {
+            for def in defs {
+                if let Ok(token) = parse_access_token_definition(id, def, span) {
+                    return Ok(token);
+                }
+            }
+            Err(Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), *span))
+        }
+    }
 }

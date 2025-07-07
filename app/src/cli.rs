@@ -42,7 +42,7 @@ pub enum CliSubcommand {
     Clean(CommandCleanArgs),
 
     /// Add Figma personal token to secure storage
-    Auth,
+    Auth(CommandAuthArgs),
 }
 
 #[derive(Args, Debug)]
@@ -104,6 +104,13 @@ pub struct CommandCleanArgs {
     /// Remove all metadata about remotes and all downloaded images
     #[arg(long)]
     pub all: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct CommandAuthArgs {
+    /// Delete token from keychain
+    #[arg(short, long)]
+    pub delete: bool,
 }
 
 fn get_styles() -> Styles {

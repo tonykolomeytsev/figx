@@ -47,7 +47,7 @@ pub fn handle_error(err: Error) {
         Fetch(err) => handle_cmd_fetch_error(err),
         Import(err) => handle_cmd_import_error(err),
         Clean(err) => handle_cmd_clean_error(err),
-        Auth(err) => eprintln!("auth err: {err}"),
+        Auth(err) => handle_cmd_auth_error(err),
     }
 }
 
@@ -105,6 +105,28 @@ fn handle_cmd_clean_error(err: command_clean::Error) {
             labels: &[],
         }),
         Evaluation(err) => handle_evaluation_error(err),
+    }
+}
+
+fn handle_cmd_auth_error(err: command_auth::Error) {
+    use command_auth::Error::*;
+    match err {
+        ServerCreation(s) => cli_input_error(CliInputDiagnostics {
+            message: &format!("unable to start local server for web UI: {s}"),
+            labels: &[],
+        }),
+        Io(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("[internal] local server io error: {err}"),
+            labels: &[],
+        }),
+        Auth(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("platform auth service error: {err}"),
+            labels: &[],
+        }),
+        Custom(s) => cli_input_error(CliInputDiagnostics {
+            message: &format!("[internal]: {s}"),
+            labels: &[],
+        }),
     }
 }
 
@@ -202,6 +224,24 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
                 .with_label(Label::primary((), span));
             print_codespan_diag(diagnostic, &file);
         }
+        WorkspaceRemoteEmptyKeychain(id, path, span) => {
+            let file = create_simple_file(&path);
+            let diagnostic = Diagnostic::error()
+                .with_message(format!(
+                    "there is no token in the keychain for remote `{id}`"
+                ))
+                .with_note(unindent(
+                    "
+                        to add a token to the keychain run `figx auth`
+                    ",
+                ))
+                .with_label(Label::primary((), span));
+            print_codespan_diag(diagnostic, &file);
+        }
+        WorkspaceRemoteKeychainError(err) => cli_input_error(CliInputDiagnostics {
+            message: &format!("unable to get token from keychain: {err}"),
+            labels: &[],
+        }),
         FigTraversing(err) => cli_input_error(CliInputDiagnostics {
             message: &format!("[internal] fig-files traversing: {err}"),
             labels: &[CliInputLabel::Tip(
