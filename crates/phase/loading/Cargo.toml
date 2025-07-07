@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 # Internal
 lib_label.workspace = true
+lib_auth.workspace = true
 
 # External
 toml-span.workspace = true

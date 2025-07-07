@@ -22,6 +22,8 @@ exclude-files = [
     "crates/phase/loading/src/api.rs",
     # Experimental + infallible
     "crates/lib/metrics/**/*.rs",
+    # Experimental + platform specific
+    "crates/lib/auth/**/*.rs",
 ]
 
 out = ["Html", "Xml"]

@@ -1,3 +1,4 @@
+use crate::parser::AccessTokenDefinitionDto;
 use ordermap::OrderMap;
 use toml_span::{Span, Spanned};
 
@@ -19,23 +20,11 @@ pub(crate) struct RemoteDto {
     pub key_span: Span,
 }
 
-#[cfg_attr(test, derive(PartialEq, Debug))]
-pub(crate) enum AccessTokenDefinitionDto {
-    Explicit(String),
-    Env(String),
-}
-
-impl Default for AccessTokenDefinitionDto {
-    fn default() -> Self {
-        Self::Env("FIGMA_PERSONAL_TOKEN".to_owned())
-    }
-}
-
 mod de {
     use super::*;
     use crate::ParseWithContext;
     use ordermap::OrderMap;
-    use toml_span::{ErrorKind, de_helpers::TableHelper};
+    use toml_span::{Deserialize, ErrorKind, de_helpers::TableHelper};
 
     impl<'de> ParseWithContext<'de> for RemotesDto {
         type Context = RemotesDtoContext;
@@ -109,7 +98,7 @@ mod de {
             let file_key = th.required_s::<String>("file_key")?;
             let container_node_ids = th.required_s::<Vec<Spanned<String>>>("container_node_ids")?;
             let access_token = if let Some((_, mut value)) = th.take("access_token") {
-                AccessTokenDefinitionDto::parse_with_ctx(&mut value, ())?
+                AccessTokenDefinitionDto::deserialize(&mut value)?
             } else {
                 AccessTokenDefinitionDto::default()
             };
@@ -159,39 +148,6 @@ mod de {
                 default,
                 key_span: Default::default(),
             })
-        }
-    }
-
-    impl<'de> ParseWithContext<'de> for AccessTokenDefinitionDto {
-        type Context = ();
-
-        fn parse_with_ctx(
-            value: &mut toml_span::Value<'de>,
-            _ctx: Self::Context,
-        ) -> std::result::Result<Self, toml_span::DeserError> {
-            if let Some(s) = value.as_str() {
-                if s.is_empty() {
-                    return Err(toml_span::Error::from((
-                        ErrorKind::Custom("access token cannot be empty".into()),
-                        value.span,
-                    ))
-                    .into());
-                }
-                Ok(Self::Explicit(s.to_owned()))
-            } else {
-                let mut th = TableHelper::new(value)?;
-                let env = th.required_s::<String>("env")?;
-                if env.value.is_empty() {
-                    return Err(toml_span::Error::from((
-                        ErrorKind::Custom(
-                            "access token environment variable name cannot be empty".into(),
-                        ),
-                        env.span,
-                    ))
-                    .into());
-                }
-                Ok(Self::Env(env.value))
-            }
         }
     }
 }

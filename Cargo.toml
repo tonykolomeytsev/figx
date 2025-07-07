@@ -22,6 +22,7 @@ command_explain = { path = "crates/command/explain" }
 command_fetch = { path = "crates/command/fetch" }
 command_import = { path = "crates/command/import" }
 command_clean = { path = "crates/command/clean" }
+command_auth = { path = "crates/command/auth" }
 ## Common code
 lib_figma_fluent = { path = "crates/lib/figma-fluent" }
 lib_label = { path = "crates/lib/label" }
@@ -30,6 +31,7 @@ lib_svg2compose = { path = "crates/lib/svg2compose" }
 lib_metrics = { path = "crates/lib/metrics" }
 lib_dashboard = { path = "crates/lib/dashboard" }
 lib_rainbow_bar = { path = "crates/lib/rainbow_bar" }
+lib_auth = { path = "crates/lib/auth" }
 
 
 # SVG and Image Processing
@@ -81,6 +83,7 @@ ureq = { version = "3.0", default-features = false, features = [
     "gzip",
     "json",
 ] }
+tiny_http = "0.12.0"
 
 # Data Structures and Algorithms
 ordermap = "0.5.7"
@@ -92,7 +95,12 @@ retry = "2.1.0"
 unindent = "0.2.4"
 bytes = { version = "1.10", default-features = false }
 is_ci = "1.2.0"
+open = "5.3.2"
 
-# Key-Value Stores and Hashing
+# Key-Value Stores / Hashing / Security
 surrealkv = "0.9"
 xxhash-rust = { version = "0.8", features = ["xxh64"] }
+keyring = { version = "3.6.2", features = [
+    "apple-native",
+    "windows-native",
+], default-features = false }

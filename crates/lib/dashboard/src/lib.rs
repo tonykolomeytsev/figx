@@ -12,7 +12,7 @@ use std::{
     io::{IsTerminal, Write, stderr},
     sync::{
         Arc, LazyLock, Mutex, OnceLock,
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     thread::{self},
     time::Duration,
@@ -27,6 +27,7 @@ static INSTANCE: LazyLock<Dashboard> = LazyLock::new(|| Dashboard::new());
 pub struct Dashboard {
     start_trigger: Sender<()>,
     is_interactive: bool,
+    pb_enabled: Arc<AtomicBool>,
     max_targets: Arc<AtomicUsize>,
     current_targets: Arc<AtomicUsize>,
     requested_remotes: Arc<AtomicUsize>,
@@ -43,6 +44,7 @@ impl Dashboard {
         Self {
             start_trigger,
             is_interactive: stderr().is_terminal() && !is_ci::cached(),
+            pb_enabled: Default::default(),
             max_targets: Default::default(),
             current_targets: Default::default(),
             requested_remotes: Default::default(),
@@ -69,7 +71,8 @@ fn lifecycle_loop(start_receiver: Receiver<()>) {
 }
 
 pub(crate) fn render_progress_bar(pb: &mut ProgressBar) -> std::io::Result<()> {
-    if !INSTANCE.is_interactive {
+    let pb_enabled = INSTANCE.pb_enabled.load(Ordering::Relaxed);
+    if !INSTANCE.is_interactive || !pb_enabled {
         return Ok(());
     }
     let mut stderr = stderr().lock();
@@ -141,6 +144,7 @@ pub fn init_dashboard(params: InitDashboardParams) {
     INSTANCE
         .loaded_packages
         .store(params.loaded_packages, Ordering::Relaxed);
+    INSTANCE.pb_enabled.store(true, Ordering::Relaxed);
     let _ = INSTANCE.process_name.set(params.process_name.to_string());
     let _ = INSTANCE.start_trigger.send(());
 }
