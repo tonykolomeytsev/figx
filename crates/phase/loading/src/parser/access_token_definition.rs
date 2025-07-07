@@ -62,10 +62,9 @@ impl<'de> Deserialize<'de> for AccessTokenDefinitionDto {
                     return Ok(Self::Keychain);
                 } else {
                     return Err(toml_span::Error::from((
-                        ErrorKind::UnexpectedValue {
-                            expected: &["{ env = \"SOME_ENV\" }", "{ keychain = true }"],
-                            value: None,
-                        },
+                        ErrorKind::Custom(
+                            "expected `{ env = \"SOME_ENV\" }` or `{ keychain = true }`".into(),
+                        ),
                         value.span,
                     ))
                     .into());
