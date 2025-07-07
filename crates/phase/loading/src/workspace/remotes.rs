@@ -2,6 +2,7 @@ use crate::RemoteSource;
 use crate::parser::{AccessTokenDefinitionDto, RemotesDto};
 use crate::{Error, Result};
 use lib_auth::get_token;
+use log::{debug, warn};
 use ordermap::OrderMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -32,11 +33,24 @@ fn parse_access_token_definition(
     span: &Span,
 ) -> Result<String> {
     match &dto {
-        AccessTokenDefinitionDto::Explicit(token) => Ok(token.to_owned()),
-        AccessTokenDefinitionDto::Env(env) => std::env::var(env)
-            .map_err(|_| Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), *span)),
+        AccessTokenDefinitionDto::Explicit(token) => {
+            warn!(target: "Remotes", "use an explicitly specified token for remote `{id}`");
+            Ok(token.to_owned())
+        }
+        AccessTokenDefinitionDto::Env(env) => {
+            let result = std::env::var(env).map_err(|_| {
+                Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), *span)
+            });
+            if result.is_ok() {
+                debug!(target: "Remotes", "take access token for remote `{id}` from env `{env}`");
+            }
+            result
+        }
         AccessTokenDefinitionDto::Keychain => match get_token() {
-            Ok(Some(token)) => Ok(token),
+            Ok(Some(token)) => {
+                debug!(target: "Remotes", "take access token for remote `{id}` from platform keychain");
+                Ok(token)
+            }
             Ok(None) => Err(Error::WorkspaceRemoteEmptyKeychain(
                 id.to_owned(),
                 PathBuf::new(),
@@ -50,7 +64,11 @@ fn parse_access_token_definition(
                     return Ok(token);
                 }
             }
-            Err(Error::WorkspaceRemoteNoAccessToken(id.to_owned(), PathBuf::new(), *span))
+            Err(Error::WorkspaceRemoteNoAccessToken(
+                id.to_owned(),
+                PathBuf::new(),
+                *span,
+            ))
         }
     }
 }
