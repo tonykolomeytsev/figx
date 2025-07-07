@@ -1,5 +1,26 @@
 # Unreleased
 
+# 0.7.4
+
+Access tokens can now be stored securely in the system keychain on local machines, eliminating the need to set them manually via environment variables — because nobody really likes dealing with environment variables.
+
+To add an access token to the keychain, use the `figx auth` command. It will open a web interface with further instructions.
+   
+**This feature is currently supported on macOS and Windows only.**
+
+Additionally, you can now explicitly configure the priority order for how `figx` searches for access tokens in the remote configuration. Example:
+
+```toml
+[remotes.icons]
+...
+access_token = [
+   { env = "FIGMA_ACCESS_TOKEN" }, # Check environment variable first (e.g., for CI)
+   { keychain = true }, # Then fallback to system keychain (for local use)
+]
+```
+
+**ALSO:** Fixed a bug where a progress bar was incorrectly displayed in contexts where it shouldn’t appear.
+
 # 0.7.3
 
 - Minor improvements and optimizations for interactive output
