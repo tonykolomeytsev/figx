@@ -311,7 +311,7 @@ checksum = "54261aba646433cb567ec89844be4c4825ca92a4f8afba52fc4dd88436e31bbd"
 
 [[package]]
 name = "command_auth"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "lib_auth",
  "log",
@@ -321,7 +321,7 @@ dependencies = [
 
 [[package]]
 name = "command_clean"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "lib_cache",
  "log",
@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "command_explain"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "crossterm",
  "lib_label",
@@ -341,7 +341,7 @@ dependencies = [
 
 [[package]]
 name = "command_fetch"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "lib_label",
  "lib_metrics",
@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "command_import"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "lib_label",
  "lib_metrics",
@@ -361,14 +361,14 @@ dependencies = [
 
 [[package]]
 name = "command_info"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "phase_loading",
 ]
 
 [[package]]
 name = "command_query"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "crossterm",
  "lib_label",
@@ -632,7 +632,7 @@ dependencies = [
 
 [[package]]
 name = "figx"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "clap",
  "codespan-reporting",
@@ -1084,14 +1084,14 @@ dependencies = [
 
 [[package]]
 name = "lib_auth"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "keyring",
 ]
 
 [[package]]
 name = "lib_cache"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "bincode",
  "bytes",
@@ -1102,7 +1102,7 @@ dependencies = [
 
 [[package]]
 name = "lib_dashboard"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "crossbeam-channel",
  "crossterm",
@@ -1115,7 +1115,7 @@ dependencies = [
 
 [[package]]
 name = "lib_figma_fluent"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "bytes",
  "json-event-parser",
@@ -1127,14 +1127,14 @@ dependencies = [
 
 [[package]]
 name = "lib_label"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "fast-glob",
 ]
 
 [[package]]
 name = "lib_metrics"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "dashmap 6.1.0",
  "log",
@@ -1143,14 +1143,14 @@ dependencies = [
 
 [[package]]
 name = "lib_rainbow_bar"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "supports-color",
 ]
 
 [[package]]
 name = "lib_svg2compose"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "colorsys",
  "log",
@@ -1317,7 +1317,7 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "phase_evaluation"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "bincode",
  "crossbeam-channel",
@@ -1345,7 +1345,7 @@ dependencies = [
 
 [[package]]
 name = "phase_loading"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "ignore",
  "lib_auth",
