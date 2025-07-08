@@ -78,6 +78,9 @@ pub fn load_workspace(
         Error::WorkspaceRemoteNoAccessToken(id, _, span) => {
             Error::WorkspaceRemoteNoAccessToken(id, ws_file, span)
         }
+        Error::WorkspaceRemoteEmptyKeychain(id, _, span) => {
+            Error::WorkspaceRemoteEmptyKeychain(id, ws_file, span)
+        }
         e => e,
     })
 }
