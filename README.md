@@ -40,6 +40,14 @@ FigX comes with built-in import profiles for various formats, enabling immediate
 
 > Profiles `png`, `svg`, `pdf` and `compose` support matrix-like import configurations — multiple variants (e.g. `light`/`night`, sizes `16`/`20`/`24`) for a single resource, similar to GitHub Actions matrices.
 
+## Secure Local Token Storage
+
+On **macOS** and **Windows**, you can securely store your access token using the system keychain. And `figx` will automatically retrieve the token from secure storage when needed.
+
+For more details, see the documentation: [**FIGX / Concepts / Remotes**](https://tonykolomeytsev.github.io/figx/user_guide/2.1.2-remotes.html).
+
+Release notes: [v0.7.4](https://github.com/tonykolomeytsev/figx/releases/tag/v0.7.4)
+
 ## Help in resource control
 
 FigX can show you which resources are already declared in the project, which packages/modules exist, or what flow specific resources follow during import before they are included in the project.
