@@ -2,7 +2,7 @@ use crate::RemoteSource;
 use crate::parser::{AccessTokenDefinitionDto, RemotesDto};
 use crate::{Error, Result};
 use lib_auth::get_token;
-use log::{debug, warn};
+use log::debug;
 use ordermap::OrderMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -34,7 +34,7 @@ fn parse_access_token_definition(
 ) -> Result<String> {
     match &dto {
         AccessTokenDefinitionDto::Explicit(token) => {
-            warn!(target: "Remotes", "use an explicitly specified token for remote `{id}`");
+            debug!(target: "Remotes", "use an explicitly specified token for remote `{id}`");
             Ok(token.to_owned())
         }
         AccessTokenDefinitionDto::Env(env) => {
