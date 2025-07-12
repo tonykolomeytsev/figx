@@ -305,9 +305,9 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "colorsys"
-version = "0.6.7"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54261aba646433cb567ec89844be4c4825ca92a4f8afba52fc4dd88436e31bbd"
+checksum = "aee37dd2dc25d67ce9bca2709c384843c46d1582158ed5e2483d52b6da30e7d8"
 
 [[package]]
 name = "command_auth"
@@ -1126,6 +1126,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "lib_image_vector"
+version = "0.7.6"
+dependencies = [
+ "colorsys",
+ "usvg",
+]
+
+[[package]]
 name = "lib_label"
 version = "0.7.6"
 dependencies = [
@@ -1153,6 +1161,7 @@ name = "lib_svg2compose"
 version = "0.7.6"
 dependencies = [
  "colorsys",
+ "lib_image_vector",
  "log",
  "usvg",
 ]

@@ -32,6 +32,7 @@ lib_metrics = { path = "crates/lib/metrics" }
 lib_dashboard = { path = "crates/lib/dashboard" }
 lib_rainbow_bar = { path = "crates/lib/rainbow_bar" }
 lib_auth = { path = "crates/lib/auth" }
+lib_image_vector = { path = "crates/lib/image_vector" }
 
 
 # SVG and Image Processing
@@ -41,6 +42,7 @@ resvg = { version = "0.45.1", default-features = false, features = [
 ] }
 image = { version = "0.25", default-features = false, features = ["png"] }
 webp = { git = "https://github.com/tonykolomeytsev/webp.git" }
+colorsys = "0.7.0"
 
 # Serialization / Deserialization
 serde = { version = "1.0", features = [

@@ -24,6 +24,8 @@ exclude-files = [
     "crates/lib/metrics/**/*.rs",
     # Experimental + platform specific
     "crates/lib/auth/**/*.rs",
+    # Only API, models, and mappers
+    "crates/lib/image_vector/**/*.rs",
 ]
 
 out = ["Html", "Xml"]

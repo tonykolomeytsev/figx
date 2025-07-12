@@ -1,0 +1,12 @@
+[package]
+name = "lib_image_vector"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = ["usvg"]
+usvg = ["dep:usvg"]
+
+[dependencies]
+colorsys.workspace = true
+usvg = { workspace = true, optional = true }
