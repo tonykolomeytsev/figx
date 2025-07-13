@@ -53,4 +53,3 @@ private fun MoonPreview() {
         contentDescription = null,
     )
 }
-

@@ -56,4 +56,3 @@ private fun WaterDropPreview() {
         contentDescription = null,
     )
 }
-

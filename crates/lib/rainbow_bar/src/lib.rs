@@ -234,7 +234,7 @@ impl ProgressBar {
             Self::XTERM_COLORS_TRACK[2]
         };
 
-        let rev_anim_state = usize::MAX - anim_state;
+        let rev_anim_state = usize::MAX / 2 - anim_state;
         for i in 0..f1x {
             let color = Self::XTERM_COLORS_BAR[(i + rev_anim_state) % 30];
             write!(f, "\x1b[38;5;{color}m━")?;

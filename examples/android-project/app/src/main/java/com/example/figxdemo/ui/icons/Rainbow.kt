@@ -60,4 +60,3 @@ private fun RainbowPreview() {
         contentDescription = null,
     )
 }
-

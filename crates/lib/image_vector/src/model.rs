@@ -101,7 +101,6 @@ pub enum Join {
     Round,
 }
 
-#[non_exhaustive]
 pub enum Color {
     SolidColor(colorsys::Rgb),
 }
