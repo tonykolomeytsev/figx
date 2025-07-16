@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+lib_image_vector.workspace = true
 usvg.workspace = true
 log.workspace = true
-colorsys = "0.6.7"
+colorsys.workspace = true

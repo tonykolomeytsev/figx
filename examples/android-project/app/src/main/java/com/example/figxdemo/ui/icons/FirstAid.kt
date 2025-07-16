@@ -67,4 +67,3 @@ private fun FirstAidPreview() {
         contentDescription = null,
     )
 }
-

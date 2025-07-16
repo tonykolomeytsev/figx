@@ -62,4 +62,3 @@ private fun PlanetPreview() {
         contentDescription = null,
     )
 }
-

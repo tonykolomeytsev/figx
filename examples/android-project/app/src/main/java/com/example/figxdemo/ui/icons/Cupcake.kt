@@ -82,4 +82,3 @@ private fun CupcakePreview() {
         contentDescription = null,
     )
 }
-

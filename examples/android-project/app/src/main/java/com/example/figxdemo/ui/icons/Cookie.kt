@@ -186,4 +186,3 @@ private fun CookiePreview() {
         contentDescription = null,
     )
 }
-

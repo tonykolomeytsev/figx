@@ -70,4 +70,3 @@ private fun PuzzlePreview() {
         contentDescription = null,
     )
 }
-
