@@ -43,6 +43,9 @@ pub enum CliSubcommand {
 
     /// Add Figma personal token to secure storage
     Auth(CommandAuthArgs),
+
+    /// Scan selected remotes and generate an output file with indexed remote metadata
+    Scan(CommandScanArgs),
 }
 
 #[derive(Args, Debug)]
@@ -111,6 +114,17 @@ pub struct CommandAuthArgs {
     /// Delete token from keychain
     #[arg(short, long)]
     pub delete: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct CommandScanArgs {
+    /// List of remotes to index
+    pub remotes: Vec<String>,
+
+    /// Calculate checksum of the nodes.
+    /// Slows down scanning speed when enabled
+    #[arg(long)]
+    pub checksum: bool,
 }
 
 fn get_styles() -> Styles {

@@ -36,6 +36,9 @@ pub enum Error {
 
     #[from]
     Auth(command_auth::Error),
+
+    #[from]
+    Scan(command_scan::Error),
 }
 
 pub fn handle_error(err: Error) {
@@ -48,6 +51,7 @@ pub fn handle_error(err: Error) {
         Import(err) => handle_cmd_import_error(err),
         Clean(err) => handle_cmd_clean_error(err),
         Auth(err) => handle_cmd_auth_error(err),
+        Scan(err) => handle_cmd_scan_error(err),
     }
 }
 
@@ -127,6 +131,29 @@ fn handle_cmd_auth_error(err: command_auth::Error) {
             message: &format!("[internal]: {s}"),
             labels: &[],
         }),
+    }
+}
+
+fn handle_cmd_scan_error(err: command_scan::Error) {
+    use command_scan::Error::*;
+    match err {
+        WorkspaceError(error) => handle_phase_loading_error(error),
+        UserError(error) => cli_input_error(CliInputDiagnostics {
+            message: &format!("incorrect user input: {error}"),
+            labels: &[],
+        }),
+        Io(error) => eprintln!(
+            "{err_label} io error: {error}",
+            err_label = "error:".red().bold(),
+        ),
+        FigmaError(error) => eprintln!(
+            "{err_label} firma error: {error}",
+            err_label = "error:".red().bold(),
+        ),
+        IndexingRemote(error) => eprintln!(
+            "{err_label} indexing remote: {error}",
+            err_label = "error:".red().bold(),
+        ),
     }
 }
 

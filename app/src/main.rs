@@ -14,10 +14,11 @@ use command_query::FeatureQueryOptions;
 
 mod cli;
 mod error;
+use command_scan::FeatureScanOptions;
 use error::*;
 use lib_dashboard::init_log_impl;
 
-use crate::cli::CommandAuthArgs;
+use crate::cli::{CommandAuthArgs, CommandScanArgs};
 
 pub fn main() -> ExitCode {
     let result = run_app();
@@ -80,6 +81,10 @@ fn run_app() -> Result<()> {
         }
 
         CliSubcommand::Auth(CommandAuthArgs { delete }) => command_auth::auth(delete)?,
+
+        CliSubcommand::Scan(CommandScanArgs { remotes, checksum }) => {
+            command_scan::scan(FeatureScanOptions { remotes, checksum })?
+        }
     }
     Ok(())
 }
