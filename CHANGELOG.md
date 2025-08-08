@@ -1,5 +1,9 @@
 # Unreleased
 
+# 0.7.7
+
+- Added experimental command `figx scan` which scans remote figma file content and outputs it to the file. The collected metadata can be used by external scripts for any purpose.
+
 # 0.7.4
 
 Access tokens can now be stored securely in the system keychain on local machines, eliminating the need to set them manually via environment variables — because nobody really likes dealing with environment variables.
