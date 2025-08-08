@@ -376,6 +376,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "command_scan"
+version = "0.7.6"
+dependencies = [
+ "lib_figma_fluent",
+ "lib_label",
+ "log",
+ "phase_loading",
+]
+
+[[package]]
 name = "cookie"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -643,6 +653,7 @@ dependencies = [
  "command_import",
  "command_info",
  "command_query",
+ "command_scan",
  "crossterm",
  "derive_more",
  "lib_dashboard",

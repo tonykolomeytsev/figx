@@ -17,6 +17,7 @@ pub use error::*;
 
 static WORKSPACE_FILE_NAME: &str = ".figtree.toml";
 static RESOURCES_FILE_NAME: &str = ".fig.toml";
+static OUT_DIR: &str = ".figx-out";
 static CACHE_DIR: &str = ".figx-out/caches";
 
 pub fn load_invocation_context() -> Result<InvocationContext> {
@@ -62,6 +63,7 @@ pub fn load_invocation_context() -> Result<InvocationContext> {
         current_dir,
         current_package,
         fig_files: loaded_fig_files,
+        out_dir: ws_file.parent_dir.join(OUT_DIR),
         cache_dir: ws_file.parent_dir.join(CACHE_DIR),
     })
 }

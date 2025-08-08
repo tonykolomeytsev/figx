@@ -23,6 +23,7 @@ command_fetch = { path = "crates/command/fetch" }
 command_import = { path = "crates/command/import" }
 command_clean = { path = "crates/command/clean" }
 command_auth = { path = "crates/command/auth" }
+command_scan = { path = "crates/command/scan" }
 ## Common code
 lib_figma_fluent = { path = "crates/lib/figma-fluent" }
 lib_label = { path = "crates/lib/label" }

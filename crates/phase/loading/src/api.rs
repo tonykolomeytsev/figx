@@ -27,6 +27,7 @@ pub struct InvocationContext {
     pub current_dir: PathBuf,
     pub current_package: Option<PackageLabel>,
     pub fig_files: Vec<LoadedFigFile>,
+    pub out_dir: PathBuf,
     pub cache_dir: PathBuf,
 }
 

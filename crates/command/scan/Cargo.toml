@@ -1,0 +1,10 @@
+[package]
+name = "command_scan"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+phase_loading.workspace = true
+lib_figma_fluent.workspace = true
+lib_label.workspace = true
+log.workspace = true
