@@ -49,10 +49,13 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
 
         stream.try_for_each(|item| match item {
             Ok(node) => {
+                if !node.visible || node.r#type != "COMPONENT" {
+                    return Ok(());
+                }
+
                 writer.write(b"[[node]]\n")?;
                 writer.write_fmt(format_args!("id = \"{}\"\n", node.id))?;
                 writer.write_fmt(format_args!("name = \"{}\"\n", node.name))?;
-                writer.write_fmt(format_args!("visible = {}\n", node.visible))?;
                 if opts.checksum {
                     writer.write_fmt(format_args!("checksum = {}\n", node.hash))?;
                 }

@@ -70,10 +70,13 @@ impl RemoteIndex {
 
         let iter = stream.filter_map(|item| match item {
             Ok(node) => {
+                // Ignore nodes which are not components or are not visible, do not store them in the index
+                if node.r#type != "COMPONENT" || !node.visible {
+                    return None;
+                }
                 let node = NodeMetadata {
                     id: node.id,
                     name: node.name,
-                    visible: node.visible,
                     hash: node.hash,
                     uses_raster_paints: node.has_raster_fills,
                 };

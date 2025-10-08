@@ -10,7 +10,6 @@ pub struct RemoteMetadata {
 pub struct NodeMetadata {
     pub id: String,
     pub name: String,
-    pub visible: bool,
     pub hash: u64,
     pub uses_raster_paints: bool,
 }
