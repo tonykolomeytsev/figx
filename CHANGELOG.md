@@ -1,5 +1,10 @@
 # Unreleased
 
+# 0.8.0
+
+- Command `figx import` / `figx i` now imports only visible nodes with type `COMPONENT`. Before this change you could import any node type. This was done because in real projects, some components with illustrations can be used within others. This leads to confusion during import. Nodes with type `COMPONENT` have unique names, so now only those can be imported.
+- Experimental command `figx scan` now outputs only metadata for visible nodes with type `COMPONENT` for the same reasons.
+
 # 0.7.7
 
 - Added experimental command `figx scan` which scans remote figma file content and outputs it to the file. The collected metadata can be used by external scripts for any purpose.
@@ -9,7 +14,7 @@
 Access tokens can now be stored securely in the system keychain on local machines, eliminating the need to set them manually via environment variables — because nobody really likes dealing with environment variables.
 
 To add an access token to the keychain, use the `figx auth` command. It will open a web interface with further instructions.
-   
+
 **This feature is currently supported on macOS and Windows only.**
 
 Additionally, you can now explicitly configure the priority order for how `figx` searches for access tokens in the remote configuration. Example:
@@ -39,7 +44,7 @@ access_token = [
 
 # 0.7.0
 
-- Figma file indexing now runs in parallel with resource import, streaming data as it becomes available. As soon as a Figma node ID is identified for a resource, it is immediately queued for download.   
+- Figma file indexing now runs in parallel with resource import, streaming data as it becomes available. As soon as a Figma node ID is identified for a resource, it is immediately queued for download.
    **This greatly shortens the wait time for resource loading, especially in large Figma files.**
 
 - The `figx fetch` command no longer causes resource transformation. Only downloads from Figma.
