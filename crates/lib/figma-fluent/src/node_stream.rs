@@ -6,6 +6,7 @@ pub struct Node {
     pub id: String,
     pub name: String,
     pub visible: bool,
+    pub r#type: String,
     pub has_raster_fills: bool,
     pub hash: u64,
 }
@@ -62,6 +63,7 @@ pub struct NodeDto {
     pub id: Option<String>,
     pub name: Option<String>,
     pub visible: Option<bool>,
+    pub r#type: Option<String>,
     pub has_raster_fills: bool,
     pub hasher: xxhash_rust::xxh64::Xxh64,
 }
@@ -99,7 +101,20 @@ impl<R: Read> Iterator for NodeStream<R> {
             use NodeStreamState::*;
             match self.state {
                 Default => match event {
-                    JsonEvent::StartObject => self.stack.push_back(NodeDto::default()),
+                    JsonEvent::StartObject => {
+                        if let Some(NodeDto {
+                            visible: Some(false),
+                            ..
+                        }) = self.stack.back_mut()
+                        {
+                            self.stack.push_back(NodeDto {
+                                visible: Some(false),
+                                ..NodeDto::default()
+                            });
+                        } else {
+                            self.stack.push_back(NodeDto::default())
+                        }
+                    }
                     JsonEvent::EndObject => {
                         let Some(dto) = self.stack.pop_back() else {
                             continue;
@@ -113,6 +128,7 @@ impl<R: Read> Iterator for NodeStream<R> {
                             id: Some(id),
                             name: Some(name),
                             visible,
+                            r#type: Some(r#type),
                             has_raster_fills,
                             hasher,
                         } = dto
@@ -121,6 +137,7 @@ impl<R: Read> Iterator for NodeStream<R> {
                                 id,
                                 name,
                                 visible: visible.unwrap_or(true),
+                                r#type,
                                 has_raster_fills,
                                 hash: hasher.digest(),
                             }));
@@ -144,8 +161,15 @@ impl<R: Read> Iterator for NodeStream<R> {
                         "visible" => {
                             let visible = parse_next_value!(self.reader, JsonEvent::Boolean);
                             if let (Some(dto), Some(visible)) = (self.stack.back_mut(), visible) {
-                                dto.visible = Some(visible);
+                                dto.visible.get_or_insert(visible);
                                 update_hash(dto, &JsonEvent::Boolean(visible));
+                            }
+                        }
+                        "type" => {
+                            let r#type = parse_next_value!(self.reader, JsonEvent::String);
+                            if let (Some(dto), Some(r#type)) = (self.stack.back_mut(), r#type) {
+                                dto.r#type = Some(r#type.to_string());
+                                update_hash(dto, &JsonEvent::String(r#type));
                             }
                         }
                         "fills" => self.state = ExpectingFills,
@@ -205,13 +229,14 @@ mod test {
     #[test]
     fn parse_single_relevant_node() {
         // Given
-        let json = r#" {"id":"0-1","name":"Icon / Coffee"} "#;
+        let json = r#" {"id":"0-1","name":"Icon / Coffee","type":"COMPONENT"} "#;
         let expected_nodes: &[_] = &[Node {
             id: "0-1".to_string(),
             name: "Icon / Coffee".to_string(),
             visible: true,
+            r#type: "COMPONENT".to_string(),
             has_raster_fills: false,
-            hash: 17989534996362531265,
+            hash: 628479688892445678,
         }];
 
         // When
@@ -228,20 +253,24 @@ mod test {
         let json = r#"
         {
             "id":"0-1",
+            "type":"FRAME",
             "children": [
                 {
                     "id":"0-2",
+                    "type":"FRAME",
                     "children": [
                         {
                             "id":"0-3",
                             "visible":false,
-                            "name":"Icon / Leaf"
+                            "name":"Icon / Leaf",
+                            "type":"FRAME"
                         }
                     ]
                 },
                 {
                     "id":"0-4",
-                    "name":"Icon / Coffee"
+                    "name":"Icon / Coffee",
+                    "type":"COMPONENT"
                 }
             ]
         }
@@ -251,15 +280,17 @@ mod test {
                 id: "0-3".to_string(),
                 name: "Icon / Leaf".to_string(),
                 visible: false,
+                r#type: "FRAME".to_string(),
                 has_raster_fills: false,
-                hash: 16189061432891903998,
+                hash: 6074447386681386455,
             },
             Node {
                 id: "0-4".to_string(),
                 name: "Icon / Coffee".to_string(),
                 visible: true,
+                r#type: "COMPONENT".to_string(),
                 has_raster_fills: false,
-                hash: 9053959461058680569,
+                hash: 871105605844001166,
             },
         ];
 
@@ -278,14 +309,16 @@ mod test {
         {
             "id":"0-1",
             "name":"Icon / Coffee",
-            "fills": [ {"blendMode":"NORMAL","type":"IMAGE"} ]
+            "fills": [ {"blendMode":"NORMAL","type":"IMAGE"} ],
+            "type":"FRAME"
         } "#;
         let expected_nodes: &[_] = &[Node {
             id: "0-1".to_string(),
             name: "Icon / Coffee".to_string(),
             visible: true,
+            r#type: "FRAME".to_string(),
             has_raster_fills: true,
-            hash: 10040623593275229939,
+            hash: 5252844981246604711,
         }];
 
         // When
@@ -302,21 +335,25 @@ mod test {
         let json = r#"
         {
             "id":"0-1",
+            "type":"FRAME",
             "children": [
                 {
                     "id":"0-2",
+                    "type":"FRAME",
                     "children": [
                         {
                             "id":"0-3",
                             "name":"Icon / Leaf",
-                            "fills": [ {"blendMode":"MULTIPLY","type":"IMAGE"} ]
+                            "fills": [ {"blendMode":"MULTIPLY","type":"IMAGE"} ],
+                            "type":"FRAME"
                         }
                     ]
                 },
                 {
                     "id":"0-4",
                     "name":"Icon / Coffee",
-                    "fills": [ {"blendMode":"NORMAL","type":"IMAGE"} ]
+                    "fills": [ {"blendMode":"NORMAL","type":"IMAGE"} ],
+                    "type":"COMPONENT"
                 }
             ]
         }
@@ -326,15 +363,17 @@ mod test {
                 id: "0-3".to_string(),
                 name: "Icon / Leaf".to_string(),
                 visible: true,
+                r#type: "FRAME".to_string(),
                 has_raster_fills: true,
-                hash: 15472301963993704598,
+                hash: 14579911610367628434,
             },
             Node {
                 id: "0-4".to_string(),
                 name: "Icon / Coffee".to_string(),
                 visible: true,
+                r#type: "COMPONENT".to_string(),
                 has_raster_fills: true,
-                hash: 16736626037856730157,
+                hash: 3273161997491380655,
             },
         ];
 
@@ -352,19 +391,23 @@ mod test {
         let json = r#"
         {
             "id":"0-1",
+            "type":"FRAME",
             "children": [
                 {
                     "id":"0-2",
+                    "type":"FRAME",
                     "children": [
                         {
                             "id":"0-3",
                             "name":"Icon / Coffee"
+                            "type":"FRAME"
                         }
                     ]
                 },
                 {
                     "id":"0-4",
-                    "name":"Icon / Coffee"
+                    "name":"Icon / Coffee",
+                    "type":"FRAME"
                 }
             ]
         }
@@ -386,21 +429,25 @@ mod test {
         let json = r#"
         {
             "id":"0-1",
+            "type":"FRAME",
             "children": [
                 {
                     "id":"0-2",
+                    "type":"FRAME",
                     "children": [
                         {
                             "id":"0-3",
                             "name":"Icon / Coffee",
-                            "fills": [ {"blendMode":"MULTIPLY","type":"IMAGE"} ]
+                            "fills": [ {"blendMode":"MULTIPLY","type":"IMAGE"} ],
+                            "type":"FRAME"
                         }
                     ]
                 },
                 {
                     "id":"0-3",
                     "name":"Icon / Coffee",
-                    "fills": [ {"blendMode":"MULTIPLY","type":"GRADIENT"} ]
+                    "fills": [ {"blendMode":"MULTIPLY","type":"GRADIENT"} ],
+                    "type":"COMPONENT"
                 }
             ]
         }
@@ -429,7 +476,8 @@ mod test {
                         {
                             "id":"0-3",
                             "name":"Icon / Coffee",
-                            "fills": "huills"
+                            "fills": "huills",
+                            "type":"FRAME"
                         }
                     ]
                 },
@@ -437,7 +485,8 @@ mod test {
                     "id":"0-3",
                     "name":"Icon / Coffee",
                     "visible":"huisible",
-                    "fills": [ {"blendMode":"MULTIPLY","type":"GRADIENT"} ]
+                    "fills": [ {"blendMode":"MULTIPLY","type":"GRADIENT"} ],
+                    "type":"COMPONENT"
                 }
             ]
         }
