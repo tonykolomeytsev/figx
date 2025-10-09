@@ -3,6 +3,8 @@ mod convert_png_to_webp;
 pub use convert_png_to_webp::*;
 mod convert_svg_to_compose;
 pub use convert_svg_to_compose::*;
+mod convert_svg_to_vector_drawable;
+pub use convert_svg_to_vector_drawable::*;
 mod render_svg_to_png;
 pub use render_svg_to_png::*;
 // endregion: transform actions
@@ -17,6 +19,8 @@ pub use materialize::*;
 // endregion: io actions
 
 // region: root actions
+mod import_android_drawable;
+pub use import_android_drawable::*;
 mod import_android_webp;
 pub use import_android_webp::*;
 mod import_compose;

@@ -1,3 +1,5 @@
+use crate::parser::{AndroidDrawableProfileDto, AndroidDrawableProfileDtoContext};
+
 use super::{
     AndroidWebpProfileDtoContext, ComposeProfileDto, PdfProfileDto, PdfProfileDtoContext,
     PngProfileDto, PngProfileDtoContext, SvgProfileDto, SvgProfileDtoContext, WebpProfileDto,
@@ -34,6 +36,7 @@ from_ctx_impl!(ProfilesDtoContext, PdfProfileDtoContext);
 from_ctx_impl!(ProfilesDtoContext, WebpProfileDtoContext);
 from_ctx_impl!(ProfilesDtoContext, ComposeProfileDtoContext);
 from_ctx_impl!(ProfilesDtoContext, AndroidWebpProfileDtoContext);
+from_ctx_impl!(ProfilesDtoContext, AndroidDrawableProfileDtoContext);
 
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) enum ProfileDto {
@@ -43,6 +46,7 @@ pub(crate) enum ProfileDto {
     Webp(WebpProfileDto),
     Compose(ComposeProfileDto),
     AndroidWebp(AndroidWebpProfileDto),
+    AndroidDrawable(AndroidDrawableProfileDto),
 }
 
 mod de {
@@ -91,6 +95,12 @@ mod de {
                 }
                 None => AndroidWebpProfileDto::default(),
             };
+            let android_drawable_profile_dto = match th.take("android-drawable") {
+                Some((_, mut value)) => {
+                    AndroidDrawableProfileDto::parse_with_ctx(&mut value, ctx.into())?
+                }
+                None => AndroidDrawableProfileDto::default(),
+            };
             // region: built-ins
 
             for (key, value) in th.table.iter_mut() {
@@ -121,6 +131,11 @@ mod de {
                         android_webp_profile_dto
                             .extend(&AndroidWebpProfileDto::parse_with_ctx(value, ctx.into())?),
                     ),
+                    "android-drawable" => {
+                        ProfileDto::AndroidDrawable(android_drawable_profile_dto.extend(
+                            &AndroidDrawableProfileDto::parse_with_ctx(value, ctx.into())?,
+                        ))
+                    }
                     unknown => {
                         return Err(toml_span::Error::from((
                             ErrorKind::UnexpectedValue {
@@ -135,7 +150,7 @@ mod de {
                 profiles.insert(profile_id, profile);
             }
             th.finalize(Some(value))?;
-            
+
             profiles.append(&mut ordermap! {
                 "png".to_string() => ProfileDto::Png(png_profile_dto),
                 "svg".to_string() => ProfileDto::Svg(svg_profile_dto),
@@ -143,6 +158,7 @@ mod de {
                 "webp".to_string() => ProfileDto::Webp(webp_profile_dto),
                 "compose".to_string() => ProfileDto::Compose(compose_profile_dto),
                 "android-webp".to_string() => ProfileDto::AndroidWebp(android_webp_profile_dto),
+                "android-drawable".to_string() => ProfileDto::AndroidDrawable(android_drawable_profile_dto),
             });
             // endregion: extract
 

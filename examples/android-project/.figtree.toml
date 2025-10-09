@@ -2,11 +2,22 @@
 file_key = "Q5KZlwws4rsDW8grU91xLR"
 container_node_ids = ["5-1641"]
 default = true
+access_token.keychain = true
 
 [remotes.illustrations]
 file_key = "Q5KZlwws4rsDW8grU91xLR"
 container_node_ids = ["5-2"]
+access_token.keychain = true
 
+[remotes.indriver-icons]
+file_key = "VXmPoarVoCQSNjdlROoJLO"
+container_node_ids = [
+    "318-8059",
+    "375-2796",
+    "375-3364",
+    "375-3398",
+]
+access_token.keychain = true
 
 
 [profiles.illustrations]
@@ -25,3 +36,7 @@ color_mappings = [
 ]
 # Access our icons via FigxDemoIcons.{IconName}
 extension_target = "com.example.figxdemo.ui.theme.FigxDemoIcons"
+
+[profiles.xml-icons]
+extends = "android-drawable"
+remote = "indriver-icons"

@@ -1,10 +1,10 @@
 use crate::{
-    AndroidWebpProfile, CanBeExtendedBy, ComposeProfile, PdfProfile, PngProfile, ResourceVariants,
-    SvgProfile, WebpProfile,
+    AndroidDrawableProfile, AndroidWebpProfile, CanBeExtendedBy, ComposeProfile, PdfProfile,
+    PngProfile, ResourceVariants, SvgProfile, WebpProfile,
     parser::{
-        AndroidDensityDto, AndroidWebpProfileDto, ColorMappingDto, ComposePreviewDto,
-        ComposeProfileDto, PdfProfileDto, PngProfileDto, SvgProfileDto, VariantDto, VariantsDto,
-        WebpProfileDto,
+        AndroidDensityDto, AndroidDrawableProfileDto, AndroidWebpProfileDto, ColorMappingDto,
+        ComposePreviewDto, ComposeProfileDto, PdfProfileDto, PngProfileDto, SvgProfileDto,
+        VariantDto, VariantsDto, WebpProfileDto,
     },
 };
 
@@ -169,6 +169,24 @@ impl CanBeExtendedBy<AndroidWebpProfileDto> for AndroidWebpProfile {
                 .unwrap_or_else(|| self.scales.clone()),
             night: another.night.clone().or_else(|| self.night.clone()),
             legacy_loader: another.legacy_loader.unwrap_or(self.legacy_loader),
+        }
+    }
+}
+
+impl CanBeExtendedBy<AndroidDrawableProfileDto> for AndroidDrawableProfile {
+    fn extend(&self, another: &AndroidDrawableProfileDto) -> Self {
+        Self {
+            remote_id: another
+                .remote_id
+                .as_ref()
+                .unwrap_or(&self.remote_id)
+                .clone(),
+            android_res_dir: another
+                .android_res_dir
+                .as_ref()
+                .unwrap_or(&self.android_res_dir)
+                .clone(),
+            night: another.night.clone().or_else(|| self.night.clone()),
         }
     }
 }

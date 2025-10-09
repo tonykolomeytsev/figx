@@ -35,9 +35,12 @@ pub use hashing::*;
 mod targets;
 pub use targets::*;
 
-use crate::figma::{
-    NodeMetadata,
-    indexing::{RemoteIndex, Subscription, SubscriptionHandle},
+use crate::{
+    actions::{ImportAndroidDrawableArgs, import_android_drawable},
+    figma::{
+        NodeMetadata,
+        indexing::{RemoteIndex, Subscription, SubscriptionHandle},
+    },
 };
 
 #[derive(Clone)]
@@ -259,6 +262,10 @@ fn import_target(target: Target<'_>, ctx: &EvalContext, node: &NodeMetadata) -> 
         AndroidWebp(android_webp_profile) => import_android_webp(
             &ctx,
             ImportAndroidWebpArgs::new(node, target, android_webp_profile),
+        ),
+        AndroidDrawable(android_drawable_profile) => import_android_drawable(
+            &ctx,
+            ImportAndroidDrawableArgs::new(node, target, android_drawable_profile),
         ),
     }
 }

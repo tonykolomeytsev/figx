@@ -76,6 +76,7 @@ pub enum Profile {
     Webp(WebpProfile),
     Compose(ComposeProfile),
     AndroidWebp(AndroidWebpProfile),
+    AndroidDrawable(AndroidDrawableProfile),
 }
 
 impl Profile {
@@ -88,6 +89,7 @@ impl Profile {
             Webp(p) => p.remote_id.as_str(),
             Compose(p) => p.remote_id.as_str(),
             AndroidWebp(p) => p.remote_id.as_str(),
+            AndroidDrawable(p) => p.remote_id.as_str(),
         }
     }
 
@@ -282,6 +284,27 @@ pub enum AndroidDensity {
 }
 
 // endregion: ANDROID-WEBP Profile
+
+// region: ANDROID-DRAWABLE Profile
+
+#[cfg_attr(test, derive(PartialEq, Debug))]
+pub struct AndroidDrawableProfile {
+    pub remote_id: RemoteId,
+    pub android_res_dir: PathBuf,
+    pub night: Option<SingleNamePattern>,
+}
+
+impl Default for AndroidDrawableProfile {
+    fn default() -> Self {
+        Self {
+            remote_id: String::new(),
+            android_res_dir: PathBuf::from("src/main/res"),
+            night: None,
+        }
+    }
+}
+
+// endregion: ANDROID-DRAWABLE Profile
 
 // region VARIANTS-API
 

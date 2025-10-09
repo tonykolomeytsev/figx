@@ -2,10 +2,10 @@ use super::{
     AndroidWebpProfileDtoContext, ComposeProfileDtoContext, PdfProfileDtoContext,
     PngProfileDtoContext, ProfileDto, SvgProfileDtoContext, WebpProfileDtoContext,
 };
-use crate::Profile;
+use crate::{Profile, parser::AndroidDrawableProfileDtoContext};
 use ordermap::OrderMap;
-use toml_span::Span;
 use std::{collections::HashSet, sync::Arc};
+use toml_span::Span;
 
 #[derive(Default)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -48,6 +48,7 @@ from_ctx_impl!(ResourceDtoContext, PdfProfileDtoContext);
 from_ctx_impl!(ResourceDtoContext, WebpProfileDtoContext);
 from_ctx_impl!(ResourceDtoContext, ComposeProfileDtoContext);
 from_ctx_impl!(ResourceDtoContext, AndroidWebpProfileDtoContext);
+from_ctx_impl!(ResourceDtoContext, AndroidDrawableProfileDtoContext);
 
 mod de {
     use toml_span::{ErrorKind, de_helpers::TableHelper};
@@ -56,8 +57,8 @@ mod de {
     use crate::{
         ParseWithContext,
         parser::{
-            AndroidWebpProfileDto, ComposeProfileDto, PdfProfileDto, PngProfileDto, SvgProfileDto,
-            WebpProfileDto,
+            AndroidDrawableProfileDto, AndroidWebpProfileDto, ComposeProfileDto, PdfProfileDto,
+            PngProfileDto, SvgProfileDto, WebpProfileDto,
         },
     };
 
@@ -147,6 +148,9 @@ mod de {
                         )?),
                         AndroidWebp(_) => ProfileDto::AndroidWebp(
                             AndroidWebpProfileDto::parse_with_ctx(value, ctx.into())?,
+                        ),
+                        AndroidDrawable(_) => ProfileDto::AndroidDrawable(
+                            AndroidDrawableProfileDto::parse_with_ctx(value, ctx.into())?,
                         ),
                     };
                     (name, Some(override_profile))

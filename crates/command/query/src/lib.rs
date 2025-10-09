@@ -51,6 +51,7 @@ fn print_profiles(ws: Workspace) -> Result<()> {
                 Profile::Webp(_) => "webp",
                 Profile::Compose(_) => "compose",
                 Profile::AndroidWebp(_) => "android-webp",
+                Profile::AndroidDrawable(_) => "android-drawable",
             };
             println!("{} {label}", profile.bold())
         });
@@ -81,6 +82,7 @@ fn print_trees(ws: Workspace) -> Result<()> {
                 Profile::Webp(_) => "webp",
                 Profile::Compose(_) => "compose",
                 Profile::AndroidWebp(_) => "android-webp",
+                Profile::AndroidDrawable(_) => "android-drawable",
             };
             println!("{tab}{} {}", profile.bold(), res.attrs.label.name);
         }

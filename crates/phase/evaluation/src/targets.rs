@@ -1,5 +1,6 @@
 use phase_loading::{
-    AndroidDensity, AndroidWebpProfile, Profile, Resource, ResourceAttrs, ResourceVariants,
+    AndroidDensity, AndroidDrawableProfile, AndroidWebpProfile, Profile, Resource, ResourceAttrs,
+    ResourceVariants,
 };
 
 pub struct Target<'a> {
@@ -34,6 +35,7 @@ pub fn targets_from_resource(res: &Resource) -> Vec<Target> {
         Webp(p) => p.variants.as_ref(),
         Compose(p) => p.variants.as_ref(),
         AndroidWebp(p) => return android_webp_targets(res, p),
+        AndroidDrawable(p) => return android_drawable_targets(res, p),
     };
 
     match variants {
@@ -146,4 +148,39 @@ pub fn density_name(d: &AndroidDensity) -> &str {
         XXHDPI => "xxhdpi",
         XXXHDPI => "xxxhdpi",
     }
+}
+
+pub fn android_drawable_targets<'a>(
+    res: &'a Resource,
+    profile: &'a AndroidDrawableProfile,
+) -> Vec<Target<'a>> {
+    let themes: &[_] = if let Some(night_variant) = &profile.night {
+        let light_variant = &res.attrs.node_name;
+        let night_variant = night_variant.as_ref().replace("{base}", &light_variant);
+        &[(light_variant.to_owned(), false), (night_variant, true)]
+    } else {
+        let light_variant = &res.attrs.node_name;
+        &[(light_variant.to_owned(), false)]
+    };
+    let all_variants = themes;
+
+    all_variants
+        .into_iter()
+        .map(|(figma_name, night)| {
+            let variant_name = if !night {
+                format!("")
+            } else {
+                format!("night")
+            };
+
+            Target {
+                id: Some(variant_name.clone()),
+                attrs: &res.attrs,
+                profile: &res.profile,
+                figma_name: Some(figma_name.to_owned()),
+                output_name: Some(res.attrs.label.name.to_string()),
+                scale: Some(1.0),
+            }
+        })
+        .collect()
 }

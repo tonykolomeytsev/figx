@@ -5,8 +5,8 @@ use phase_evaluation::{
     targets_from_resource,
 };
 use phase_loading::{
-    AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile, Resource, SvgProfile,
-    WebpProfile,
+    AndroidDrawableProfile, AndroidWebpProfile, ComposeProfile, PdfProfile, PngProfile, Profile,
+    Resource, SvgProfile, WebpProfile,
 };
 
 mod error;
@@ -48,6 +48,7 @@ pub fn explain(opts: FeatureExplainOptions) -> Result<()> {
             Profile::Webp(p) => webp_resource_tree(res, p),
             Profile::Compose(p) => compose_resource_tree(res, p),
             Profile::AndroidWebp(p) => android_webp_resource_tree(res, p),
+            Profile::AndroidDrawable(p) => android_drawable_resource_tree(res, p),
         };
         nodes.push(node);
     }
@@ -364,6 +365,50 @@ fn android_webp_resource_tree(res: &Resource, p: &AndroidWebpProfile) -> Node {
                     "💾 Write to file",
                     [("output", format!("drawable-{variant_name}/{res_name}.webp"))]
                 ));
+                Node {
+                    name: format!("Variant '{variant_name}'"),
+                    children: child_nodes,
+                    params: Default::default(),
+                }
+            })
+            .collect(),
+        ..Default::default()
+    }
+}
+
+fn android_drawable_resource_tree(res: &Resource, _: &AndroidDrawableProfile) -> Node {
+    let attrs = &res.attrs;
+    let targets = targets_from_resource(res);
+
+    let res_name = attrs.label.name.to_string();
+    Node {
+        name: attrs.label.to_string(),
+        children: targets
+            .into_iter()
+            .map(|target| {
+                let variant_name = target.id.as_ref().expect("always present");
+                let drawable_dir_name = if variant_name.is_empty() {
+                    "drawable".to_string()
+                } else {
+                    format!("drawable-{variant_name}")
+                };
+                let mut child_nodes = Vec::with_capacity(4);
+
+                child_nodes.push(node!(
+                    format!("📤 Export SVG from remote {}", attrs.remote),
+                    [("node", target.figma_name().to_string())]
+                ));
+                child_nodes.push(node!("✨ Transform SVG to Android Drawable", []));
+                child_nodes.push(node!(
+                    "💾 Write to file",
+                    [("output", format!("{drawable_dir_name}/{res_name}.webp"))]
+                ));
+
+                let variant_name = if variant_name.is_empty() {
+                    "light".to_string()
+                } else {
+                    variant_name.to_string()
+                };
                 Node {
                     name: format!("Variant '{variant_name}'"),
                     children: child_nodes,

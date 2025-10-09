@@ -1,4 +1,5 @@
 mod access_token_definition;
+mod android_drawable_profile_dto;
 mod android_webp_profile_dto;
 mod compose_profile_dto;
 mod export_scale;
@@ -16,6 +17,7 @@ mod webp_quality;
 mod workspace_dto;
 
 pub(crate) use access_token_definition::*;
+pub(crate) use android_drawable_profile_dto::*;
 pub(crate) use android_webp_profile_dto::*;
 pub(crate) use compose_profile_dto::*;
 pub(crate) use pdf_profile_dto::*;

@@ -3,8 +3,8 @@ use std::sync::Arc;
 use ordermap::OrderMap;
 
 use crate::{
-    AndroidWebpProfile, CanBeExtendedBy, ComposeProfile, PdfProfile, PngProfile, Profile, Result,
-    SvgProfile, WebpProfile,
+    AndroidDrawableProfile, AndroidWebpProfile, CanBeExtendedBy, ComposeProfile, PdfProfile,
+    PngProfile, Profile, Result, SvgProfile, WebpProfile,
     parser::{ProfileDto, ProfilesDto},
 };
 
@@ -22,6 +22,9 @@ pub fn parse_profiles(
             ProfileDto::Compose(p) => Profile::Compose(ComposeProfile::default().extend(&p)),
             ProfileDto::AndroidWebp(p) => {
                 Profile::AndroidWebp(AndroidWebpProfile::default().extend(&p))
+            }
+            ProfileDto::AndroidDrawable(p) => {
+                Profile::AndroidDrawable(AndroidDrawableProfile::default().extend(&p))
             }
         };
         output.insert(id, Arc::new(profile));
