@@ -89,6 +89,7 @@ impl Default for Stroke {
 
 #[derive(Debug)]
 pub enum Cap {
+    /// Default
     Butt,
     Round,
     Square,
@@ -96,6 +97,7 @@ pub enum Cap {
 
 #[derive(Debug)]
 pub enum Join {
+    /// Default
     Bevel,
     Miter,
     Round,

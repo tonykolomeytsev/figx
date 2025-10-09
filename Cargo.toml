@@ -34,6 +34,7 @@ lib_dashboard = { path = "crates/lib/dashboard" }
 lib_rainbow_bar = { path = "crates/lib/rainbow_bar" }
 lib_auth = { path = "crates/lib/auth" }
 lib_image_vector = { path = "crates/lib/image_vector" }
+lib_svg2drawable = { path = "crates/lib/svg2drawable" }
 
 
 # SVG and Image Processing
@@ -53,6 +54,7 @@ serde_json = "1.0"
 bincode = "2.0"
 toml-span = "0.5"
 json-event-parser = "0.2.2"
+xmlwriter = "0.1.0"
 
 # CLI and Terminal
 clap = { version = "4.5", features = ["derive"] }

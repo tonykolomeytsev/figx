@@ -1178,6 +1178,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "lib_svg2drawable"
+version = "0.8.1"
+dependencies = [
+ "colorsys",
+ "lib_image_vector",
+ "log",
+ "usvg",
+ "xmlwriter",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.174"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1350,6 +1361,7 @@ dependencies = [
  "lib_label",
  "lib_metrics",
  "lib_svg2compose",
+ "lib_svg2drawable",
  "log",
  "ordermap",
  "phase_loading",

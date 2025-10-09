@@ -1,0 +1,11 @@
+[package]
+name = "lib_svg2drawable"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+lib_image_vector.workspace = true
+usvg.workspace = true
+log.workspace = true
+colorsys.workspace = true
+xmlwriter.workspace = true

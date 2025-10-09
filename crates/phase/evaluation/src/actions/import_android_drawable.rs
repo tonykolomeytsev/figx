@@ -48,11 +48,16 @@ pub fn import_android_drawable(ctx: &EvalContext, args: ImportAndroidDrawableArg
         },
     )?;
 
+    let drawable_dir_name = if variant_name.is_empty() {
+        "drawable".to_string()
+    } else {
+        format!("drawable-{variant_name}")
+    };
     let output_dir = target
         .attrs
         .package_dir
         .join(&profile.android_res_dir)
-        .join(&format!("drawable-{variant_name}"));
+        .join(&drawable_dir_name);
 
     let variant = target
         .id

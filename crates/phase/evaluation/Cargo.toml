@@ -9,6 +9,7 @@ lib_figma_fluent.workspace = true
 lib_label.workspace = true
 lib_cache.workspace = true
 lib_svg2compose.workspace = true
+lib_svg2drawable.workspace = true
 lib_metrics.workspace = true
 lib_dashboard.workspace = true
 
