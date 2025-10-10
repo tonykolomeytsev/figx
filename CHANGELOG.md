@@ -1,5 +1,10 @@
 # Unreleased
 
+# 0.8.1
+
+- Add support for Linux musl binary
+- Add new profile `android-drawable` for Android Drawable XML vector icons
+
 # 0.8.0
 
 - Command `figx import` / `figx i` now imports only visible nodes with type `COMPONENT`. Before this change you could import any node type. This was done because in real projects, some components with illustrations can be used within others. This leads to confusion during import. Nodes with type `COMPONENT` have unique names, so now only those can be imported.
