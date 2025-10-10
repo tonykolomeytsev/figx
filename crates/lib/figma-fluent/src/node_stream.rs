@@ -399,7 +399,7 @@ mod test {
                     "children": [
                         {
                             "id":"0-3",
-                            "name":"Icon / Coffee"
+                            "name":"Icon / Coffee",
                             "type":"FRAME"
                         }
                     ]

@@ -75,7 +75,7 @@ mod test {
     use unindent::unindent;
 
     #[test]
-    fn AndroidWebpProfileDto__valid_fully_defined_toml__EXPECT__valid_dto() {
+    fn AndroidDrawableProfileDto__valid_fully_defined_toml__EXPECT__valid_dto() {
         // Given
         let toml = r#"
         remote = "figma"
@@ -101,7 +101,7 @@ mod test {
     }
 
     #[test]
-    fn AndroidWebpProfileDto__valid_empty_toml__EXPECT__valid_dto() {
+    fn AndroidDrawableProfileDto__valid_empty_toml__EXPECT__valid_dto() {
         // Given
         let toml = r#"
         "#;
@@ -124,7 +124,7 @@ mod test {
     }
 
     #[test]
-    fn AndroidWebpProfileDto__valid_invalid_remote__EXPECT__error_with_correct_span() {
+    fn AndroidDrawableProfileDto__valid_invalid_remote__EXPECT__error_with_correct_span() {
         // Given
         let toml = unindent(
             r#"
@@ -133,7 +133,7 @@ mod test {
             "#,
         );
         let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
-        let err_spans = [Span::new(10, 20)];
+        let err_spans = [Span::new(0, 35)];
 
         // When
         let mut value = toml_span::parse(&toml).unwrap();
@@ -150,7 +150,7 @@ mod test {
     }
 
     #[test]
-    fn AndroidWebpProfileDto__valid_undeclared_key__EXPECT__error_with_correct_span() {
+    fn AndroidDrawableProfileDto__valid_undeclared_key__EXPECT__error_with_correct_span() {
         // Given
         let toml = unindent(
             r#"
