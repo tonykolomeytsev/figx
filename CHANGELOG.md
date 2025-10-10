@@ -1,5 +1,9 @@
 # Unreleased
 
+# 0.8.2
+
+- Improved logging for http requests in debug mode
+
 # 0.8.1
 
 - Add support for Linux with GLIBC 2.35 binary
