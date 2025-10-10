@@ -37,6 +37,7 @@
     - [WEBP profile](./reference/1.4-webp-profile.md)
     - [Compose profile](./reference/1.5-compose-profile.md)
     - [Android-Webp profile](./reference/1.6-android-webp-profile.md)
+    - [Android drawable profile](./reference/1.7-android-drawable-profile.md)
 - [Remotes](./reference/2-remotes.md)
 - [Commands]()
     - [figx init]()
