@@ -5,7 +5,7 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{Clear, ClearType},
 };
-use log::{Log, Record, max_level, set_logger};
+use log::{Level, Log, Record, max_level, set_logger};
 use std::io::{Write, stderr};
 
 impl Log for Dashboard {
@@ -80,7 +80,10 @@ pub fn init_log_impl(verbosity: u8) {
 
 fn should_skip(record: &Record) -> bool {
     match record.target() {
-        t if t.starts_with("ureq") => true,
+        t if t.starts_with("ureq") => match record.level() {
+            Level::Error | Level::Warn | Level::Info => false,
+            _ => true,
+        },
         t if t.starts_with("globset") => true,
         t if t.starts_with("ignore") => true,
         t if t.starts_with("rustls") => true,
