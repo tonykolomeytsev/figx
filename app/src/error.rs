@@ -147,7 +147,7 @@ fn handle_cmd_scan_error(err: command_scan::Error) {
             err_label = "error:".red().bold(),
         ),
         FigmaError(error) => eprintln!(
-            "{err_label} firma error: {error}",
+            "{err_label} figma error: {error}",
             err_label = "error:".red().bold(),
         ),
         IndexingRemote(error) => eprintln!(
@@ -165,7 +165,7 @@ fn handle_pattern_error(err: lib_label::PatternError) {
             labels: &[
                 CliInputLabel::Tip(&unindent::unindent(
                     "
-                        valid package patterns are: 
+                        valid package patterns are:
                         - `//foo/bar`
                         - `buz/...`
                         - `//...`
@@ -186,7 +186,7 @@ fn handle_pattern_error(err: lib_label::PatternError) {
                 labels: &[
                     CliInputLabel::Tip(&unindent::unindent(
                         "
-                        valid target patterns are: 
+                        valid target patterns are:
                         - *
                         - *-16,
                         - ic_*_24
@@ -220,7 +220,7 @@ fn handle_phase_loading_error(err: phase_loading::Error) {
             message: "current working directory is not part of the FigX workspace",
             labels: &[CliInputLabel::Tip(&unindent::unindent(
                 "
-                    A `workspace` is the root directory of a project/repository that contains 
+                    A `workspace` is the root directory of a project/repository that contains
                     the marker file `.figtree.toml` and all its child directories.
                 ",
             ))],
@@ -366,7 +366,7 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
                 .with_message(format!("cannot find node with name `{node_name}`"))
                 .with_note(unindent(
                     "
-                        make sure a node with that name exists in the Figma file, 
+                        make sure a node with that name exists in the Figma file,
                         or fix the name locally
                     ",
                 ))
