@@ -120,5 +120,5 @@ jobs:
           files: |
             figx-windows-x86_64.zip
             figx-linux-gnu-x86_64.tar.gz
-            figx-linux-musl-x86_64.tar.gz
+            figx-linux-glibc235-x86_64.tar.gz
             figx-macos-arm64.tar.gz
