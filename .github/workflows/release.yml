@@ -24,7 +24,7 @@ jobs:
           name: release-binary (macos)
           path: target/aarch64-apple-darwin/release/figx
 
-  build-linux-gnu:
+  build-linux:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -37,24 +37,24 @@ jobs:
           strip: true
       - uses: actions/upload-artifact@v4
         with:
-          name: release-binary (linux-gnu)
+          name: release-binary (linux)
           path: target/x86_64-unknown-linux-gnu/release/figx
 
-  build-linux-musl:
-    runs-on: ubuntu-24.04
+  build-linux-glibc235:
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: houseabsolute/actions-rust-cross@v1
         with:
           command: build
-          target: x86_64-unknown-linux-musl
+          target: x86_64-unknown-linux-gnu
           args: "--locked --release"
           toolchain: stable
           strip: true
       - uses: actions/upload-artifact@v4
         with:
-          name: release-binary (linux-musl)
-          path: target/x86_64-unknown-linux-musl/release/figx
+          name: release-binary (linux-glibc235)
+          path: target/x86_64-unknown-linux-gnu/release/figx
 
   build-windows:
     runs-on: windows-latest
@@ -81,8 +81,8 @@ jobs:
     name: "Publish Artifacts"
     needs:
       - build-macos
-      - build-linux-gnu
-      - build-linux-musl
+      - build-linux
+      - build-linux-glibc235
       - build-windows
     runs-on: ubuntu-latest
     permissions:
@@ -103,11 +103,11 @@ jobs:
           cp "./target/release-binary (windows)/wix/"figx-*.msi ./figx-installer.msi
           zip -j figx-windows-x86_64.zip ./figx-installer.msi
 
-          echo "Packaging Linux GNU binary to figx-linux-gnu-x86_64.tar.gz"
-          tar -czf figx-linux-gnu-x86_64.tar.gz -C "./target/release-binary (linux-gnu)" figx
+          echo "Packaging Linux binary to figx-linux-gnu-x86_64.tar.gz"
+          tar -czf figx-linux-gnu-x86_64.tar.gz -C "./target/release-binary (linux)" figx
 
-          echo "Packaging Linux MUSL binary to figx-linux-musl-x86_64.tar.gz"
-          tar -czf figx-linux-musl-x86_64.tar.gz -C "./target/release-binary (linux-musl)" figx
+          echo "Packaging Linux Glibc2.35 binary to figx-linux-glibc235-x86_64.tar.gz"
+          tar -czf figx-linux-glibc235-x86_64.tar.gz -C "./target/release-binary (linux-glibc235)" figx
 
           echo "Packaging macOS ARM64 binary to figx-macos-arm64.tar.gz"
           tar -czf figx-macos-arm64.tar.gz -C "./target/release-binary (macos)" figx
