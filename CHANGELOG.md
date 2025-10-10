@@ -2,7 +2,7 @@
 
 # 0.8.1
 
-- Add support for Linux musl binary
+- Add support for Linux with GLIBC 2.35 binary
 - Add new profile `android-drawable` for Android Drawable XML vector icons
 
 # 0.8.0
