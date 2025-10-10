@@ -24,21 +24,37 @@ jobs:
           name: release-binary (macos)
           path: target/aarch64-apple-darwin/release/figx
 
-  build-linux:
+  build-linux-gnu:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
-    - uses: houseabsolute/actions-rust-cross@v1
-      with:
-        command: build
-        target: x86_64-unknown-linux-gnu
-        args: "--locked --release"
-        toolchain: stable
-        strip: true
-    - uses: actions/upload-artifact@v4
-      with:
-        name: release-binary (linux)
-        path: target/x86_64-unknown-linux-gnu/release/figx
+      - uses: actions/checkout@v4
+      - uses: houseabsolute/actions-rust-cross@v1
+        with:
+          command: build
+          target: x86_64-unknown-linux-gnu
+          args: "--locked --release"
+          toolchain: stable
+          strip: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-binary (linux-gnu)
+          path: target/x86_64-unknown-linux-gnu/release/figx
+
+  build-linux-musl:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: houseabsolute/actions-rust-cross@v1
+        with:
+          command: build
+          target: x86_64-unknown-linux-musl
+          args: "--locked --release"
+          toolchain: stable
+          strip: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-binary (linux-musl)
+          path: target/x86_64-unknown-linux-musl/release/figx
 
   build-windows:
     runs-on: windows-latest
@@ -63,9 +79,10 @@ jobs:
 
   publish-artifacts:
     name: "Publish Artifacts"
-    needs: 
+    needs:
       - build-macos
-      - build-linux
+      - build-linux-gnu
+      - build-linux-musl
       - build-windows
     runs-on: ubuntu-latest
     permissions:
@@ -76,7 +93,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./target
-      
+
       - name: Collecting artifacts
         run: |
           set -euo pipefail
@@ -85,13 +102,16 @@ jobs:
           echo "Packaging Windows MSI to figx-windows-x86_64.zip"
           cp "./target/release-binary (windows)/wix/"figx-*.msi ./figx-installer.msi
           zip -j figx-windows-x86_64.zip ./figx-installer.msi
-      
-          echo "Packaging Linux binary to figx-linux-gnu-x86_64.tar.gz"
-          tar -czf figx-linux-gnu-x86_64.tar.gz -C "./target/release-binary (linux)" figx
-      
+
+          echo "Packaging Linux GNU binary to figx-linux-gnu-x86_64.tar.gz"
+          tar -czf figx-linux-gnu-x86_64.tar.gz -C "./target/release-binary (linux-gnu)" figx
+
+          echo "Packaging Linux MUSL binary to figx-linux-musl-x86_64.tar.gz"
+          tar -czf figx-linux-musl-x86_64.tar.gz -C "./target/release-binary (linux-musl)" figx
+
           echo "Packaging macOS ARM64 binary to figx-macos-arm64.tar.gz"
           tar -czf figx-macos-arm64.tar.gz -C "./target/release-binary (macos)" figx
-      
+
           echo "Final workspace contents:"
           ls -lh
 
@@ -100,5 +120,5 @@ jobs:
           files: |
             figx-windows-x86_64.zip
             figx-linux-gnu-x86_64.tar.gz
+            figx-linux-musl-x86_64.tar.gz
             figx-macos-arm64.tar.gz
-  
