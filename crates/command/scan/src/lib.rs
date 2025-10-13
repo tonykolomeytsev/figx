@@ -6,7 +6,7 @@ use std::{
 };
 
 pub use error::*;
-use lib_figma_fluent::{FigmaApi, GetFileNodesQueryParameters};
+use lib_figma_fluent::{FigmaApi, GetFileNodesStreamQueryParameters};
 use lib_label::LabelPattern;
 use log::{info, warn};
 use phase_loading::load_workspace;
@@ -40,7 +40,7 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
         let mut stream = api.get_file_nodes_stream(
             &remote.access_token,
             &remote.file_key,
-            GetFileNodesQueryParameters {
+            GetFileNodesStreamQueryParameters {
                 ids: Some(&remote.container_node_ids),
                 geometry: if opts.checksum { Some("paths") } else { None },
                 ..Default::default()
