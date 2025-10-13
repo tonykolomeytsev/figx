@@ -58,7 +58,7 @@ impl RemoteIndex {
         }
 
         debug!(target: "Updating", "remote index {remote}");
-        let stream = self.api.get_file_nodes(
+        let stream = self.api.get_file_nodes_stream(
             &remote.access_token,
             &remote.file_key,
             GetFileNodesQueryParameters {

@@ -37,7 +37,7 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
         writer.write(b"version = 1\n\n")?;
 
         let api = FigmaApi::default();
-        let mut stream = api.get_file_nodes(
+        let mut stream = api.get_file_nodes_stream(
             &remote.access_token,
             &remote.file_key,
             GetFileNodesQueryParameters {
