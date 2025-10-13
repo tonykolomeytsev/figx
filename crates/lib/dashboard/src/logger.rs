@@ -5,7 +5,7 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{Clear, ClearType},
 };
-use log::{Level, Log, Record, max_level, set_logger};
+use log::{Level, Log, Record, info, max_level, set_logger};
 use std::io::{Write, stderr};
 
 impl Log for Dashboard {
@@ -70,12 +70,26 @@ pub fn init_log_impl(verbosity: u8) {
     set_logger(&*INSTANCE).unwrap();
 
     // Устанавливаем уровень логгирования в зависимости от verbosity
-    log::set_max_level(match verbosity {
-        0 => log::LevelFilter::Warn,
-        1 => log::LevelFilter::Info,
-        2 => log::LevelFilter::Debug,
+    let running_on_ci = is_ci::uncached();
+    let force_debug_logging = std::env::var("DEBUG")
+        .or(std::env::var("ACTIONS_RUNNER_DEBUG"))
+        .or(std::env::var("ACTIONS_STEP_DEBUG"))
+        .is_ok();
+    log::set_max_level(match (verbosity, running_on_ci, force_debug_logging) {
+        (_, _, true) => log::LevelFilter::Debug,
+        (_, true, _) => log::LevelFilter::Info,
+        (0, _, _) => log::LevelFilter::Warn,
+        (1, _, _) => log::LevelFilter::Info,
+        (2, _, _) => log::LevelFilter::Debug,
         _ => log::LevelFilter::Trace,
     });
+
+    if running_on_ci && !force_debug_logging {
+        info!(target: "Logger", "CI environment detected, set verbosity to INFO")
+    }
+    if force_debug_logging {
+        info!(target: "Logger", "Debug logs were enabled via environment variables")
+    }
 }
 
 fn should_skip(record: &Record) -> bool {

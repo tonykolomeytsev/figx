@@ -1,5 +1,10 @@
 # Unreleased
 
+# 0.8.3
+
+- `figx` will automatically enable basic logging if it detects the environment variable `CI`.
+- `figx` will automatically enable **debug** logging if it detects one of the following environment variable: `DEBUG`, `ACTIONS_RUNNER_DEBUG`, or `ACTIONS_STEP_DEBUG`.
+
 # 0.8.2
 
 - Improved logging for http requests in debug mode
