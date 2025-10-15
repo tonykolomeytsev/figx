@@ -82,8 +82,8 @@ fn run_app() -> Result<()> {
 
         CliSubcommand::Auth(CommandAuthArgs { delete }) => command_auth::auth(delete)?,
 
-        CliSubcommand::Scan(CommandScanArgs { remotes, checksum }) => {
-            command_scan::scan(FeatureScanOptions { remotes, checksum })?
+        CliSubcommand::Scan(CommandScanArgs { remotes }) => {
+            command_scan::scan(FeatureScanOptions { remotes })?
         }
     }
     Ok(())

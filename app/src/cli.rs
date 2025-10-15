@@ -120,11 +120,6 @@ pub struct CommandAuthArgs {
 pub struct CommandScanArgs {
     /// List of remotes to index
     pub remotes: Vec<String>,
-
-    /// Calculate checksum of the nodes.
-    /// Slows down scanning speed when enabled
-    #[arg(long)]
-    pub checksum: bool,
 }
 
 fn get_styles() -> Styles {

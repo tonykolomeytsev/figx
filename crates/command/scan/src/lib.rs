@@ -1,19 +1,19 @@
 mod error;
 use std::{
+    collections::VecDeque,
     fs::File,
     io::{BufWriter, Write},
     str::FromStr,
 };
 
 pub use error::*;
-use lib_figma_fluent::{FigmaApi, GetFileNodesStreamQueryParameters};
+use lib_figma_fluent::{FigmaApi, GetFileNodesScanQueryParameters, ScannedNodeDto};
 use lib_label::LabelPattern;
 use log::{info, warn};
 use phase_loading::load_workspace;
 
 pub struct FeatureScanOptions {
     pub remotes: Vec<String>,
-    pub checksum: bool,
 }
 
 pub fn scan(opts: FeatureScanOptions) -> Result<()> {
@@ -37,36 +37,58 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
         writer.write(b"version = 1\n\n")?;
 
         let api = FigmaApi::default();
-        let mut stream = api.get_file_nodes_stream(
+        let response = api.get_file_nodes_scan(
             &remote.access_token,
             &remote.file_key,
-            GetFileNodesStreamQueryParameters {
+            GetFileNodesScanQueryParameters {
                 ids: Some(&remote.container_node_ids),
-                geometry: if opts.checksum { Some("paths") } else { None },
                 ..Default::default()
             },
         )?;
 
-        stream.try_for_each(|item| match item {
-            Ok(node) => {
-                if !node.visible || node.r#type != "COMPONENT" {
-                    return Ok(());
-                }
+        for (_container_node_id, dto) in response.nodes {
+            let scanned_nodes = extract_metadata(&dto.document.children);
 
+            for node in scanned_nodes {
                 writer.write(b"[[node]]\n")?;
                 writer.write_fmt(format_args!("id = \"{}\"\n", node.id))?;
                 writer.write_fmt(format_args!("name = \"{}\"\n", node.name))?;
-                if opts.checksum {
-                    writer.write_fmt(format_args!("checksum = {}\n", node.hash))?;
-                }
                 writer.write(b"\n")?;
-                Ok(())
             }
-            Err(e) => Err(Error::IndexingRemote(e.to_string())),
-        })?;
+        }
 
         writer.flush()?;
         info!(target: "Scan", "scan saved to: {}", output_file.display());
     }
     Ok(())
+}
+
+/// Mapper from response to metadata
+fn extract_metadata(values: &[ScannedNodeDto]) -> Vec<ScannedNode> {
+    let mut queue = VecDeque::new();
+    let mut output_nodes = Vec::with_capacity(4096);
+    for value in values {
+        if value.visible {
+            queue.push_back(value);
+        }
+    }
+    while let Some(current) = queue.pop_front() {
+        if !current.name.is_empty() && current.r#type == "COMPONENT" {
+            output_nodes.push(ScannedNode {
+                id: current.id.clone(),
+                name: current.name.clone(),
+            });
+        }
+        for child in &current.children {
+            if child.visible {
+                queue.push_back(child);
+            }
+        }
+    }
+    output_nodes
+}
+
+struct ScannedNode {
+    pub id: String,
+    pub name: String,
 }

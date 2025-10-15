@@ -207,9 +207,15 @@ pub struct IdentifiedNodeDto {
 pub struct ScannedNodeDto {
     pub id: String,
     pub name: String,
+    #[serde(default = "yes")]
     pub visible: bool,
+    #[serde(default)]
     pub children: Vec<ScannedNodeDto>,
     pub r#type: String,
+}
+
+fn yes() -> bool {
+    true
 }
 
 // endregion: GET file nodes scan
