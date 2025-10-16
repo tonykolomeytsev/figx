@@ -10,7 +10,7 @@ pub use error::*;
 use lib_figma_fluent::{FigmaApi, GetFileNodesScanQueryParameters, ScannedNodeDto};
 use lib_label::LabelPattern;
 use log::{info, warn};
-use phase_loading::load_workspace;
+use phase_loading::{NodeIdList, load_workspace};
 
 pub struct FeatureScanOptions {
     pub remotes: Vec<String>,
@@ -41,18 +41,34 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
             &remote.access_token,
             &remote.file_key,
             GetFileNodesScanQueryParameters {
-                ids: Some(&remote.container_node_ids),
+                ids: Some(&remote.container_node_ids.to_string_id_list()),
                 ..Default::default()
             },
         )?;
 
-        for (_container_node_id, dto) in response.nodes {
+        for (container_node_id, dto) in response.nodes {
+            let container_node_tag = if let NodeIdList::IdToTag(table) = &remote.container_node_ids
+            {
+                if let Some(tag) = table.get(&container_node_id.replace(":", "-")) {
+                    Some(tag.to_owned())
+                } else {
+                    return Err(Error::IndexingRemote(format!(
+                        "tag for every node from figma must be present: node-id={container_node_id}"
+                    )));
+                }
+            } else {
+                None
+            };
+
             let scanned_nodes = extract_metadata(&dto.document.children);
 
             for node in scanned_nodes {
                 writer.write(b"[[node]]\n")?;
                 writer.write_fmt(format_args!("id = \"{}\"\n", node.id))?;
                 writer.write_fmt(format_args!("name = \"{}\"\n", node.name))?;
+                if let Some(tag) = &container_node_tag {
+                    writer.write_fmt(format_args!("tag = \"{tag}\"\n"))?;
+                }
                 writer.write(b"\n")?;
             }
         }

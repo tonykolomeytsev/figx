@@ -1,6 +1,6 @@
-use crate::RemoteSource;
-use crate::parser::{AccessTokenDefinitionDto, RemotesDto};
+use crate::parser::{AccessTokenDefinitionDto, NodeIdListDto, RemotesDto};
 use crate::{Error, Result};
+use crate::{NodeIdList, RemoteSource};
 use lib_auth::get_token;
 use log::debug;
 use ordermap::OrderMap;
@@ -18,7 +18,7 @@ pub(crate) fn parse_remotes(
         let remote = RemoteSource {
             id: id.clone(),
             file_key: dto.file_key.to_owned(),
-            container_node_ids: dto.container_node_ids.to_owned(),
+            container_node_ids: parse_container_node_ids(&dto.container_node_ids),
             access_token: parse_access_token_definition(id, &dto.access_token, &dto.key_span)?,
         };
         all_remotes.insert(id.to_owned(), Arc::new(remote));
@@ -70,5 +70,12 @@ fn parse_access_token_definition(
                 *span,
             ))
         }
+    }
+}
+
+fn parse_container_node_ids(dto: &NodeIdListDto) -> NodeIdList {
+    match dto {
+        NodeIdListDto::Plain(ids) => NodeIdList::Plain(ids.to_owned()),
+        NodeIdListDto::IdToTag(table) => NodeIdList::IdToTag(table.to_owned()),
     }
 }

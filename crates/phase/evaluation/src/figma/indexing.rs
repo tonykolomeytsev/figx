@@ -40,11 +40,12 @@ impl RemoteIndex {
         remote: &'a RemoteSource,
         refetch: bool,
     ) -> Result<(SubscriptionHandle, Subscription<'a>)> {
+        let container_node_ids = remote.container_node_ids.to_string_id_list();
         // construct unique cache key
         let cache_key = CacheKey::builder()
             .set_tag(Self::REMOTE_SOURCE_TAG)
             .write_str(&remote.file_key)
-            .write_str(&remote.container_node_ids.join(","))
+            .write_str(&container_node_ids.join(","))
             .build();
 
         // return cached value if it exists
@@ -62,7 +63,8 @@ impl RemoteIndex {
             &remote.access_token,
             &remote.file_key,
             GetFileNodesStreamQueryParameters {
-                ids: Some(&remote.container_node_ids),
+                // TODO: fix this leak
+                ids: Some(container_node_ids.leak()),
                 geometry: Some("paths"),
                 ..Default::default()
             },

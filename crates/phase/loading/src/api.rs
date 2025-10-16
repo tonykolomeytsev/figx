@@ -51,6 +51,15 @@ pub enum NodeIdList {
     IdToTag(BTreeMap<String, String>),
 }
 
+impl NodeIdList {
+    pub fn to_string_id_list(&self) -> Vec<String> {
+        match self {
+            Self::Plain(ids) => ids.to_owned(),
+            Self::IdToTag(table) => table.keys().cloned().collect(),
+        }
+    }
+}
+
 pub type RemoteId = String;
 
 impl Display for RemoteSource {
