@@ -10,3 +10,4 @@ usvg = ["dep:usvg"]
 [dependencies]
 colorsys.workspace = true
 usvg = { workspace = true, optional = true }
+log.workspace = true

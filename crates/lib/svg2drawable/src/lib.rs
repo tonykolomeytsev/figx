@@ -1,5 +1,7 @@
+use colorsys::ColorAlpha;
 use lib_image_vector::{
-    Cap, Color, Command, FillType, GroupNode, ImageVector, Join, Node, PathNode, Point,
+    Cap, Color, Command, FillType, GroupNode, ImageVector, Join, LinearGradient, Node, PathNode,
+    Point, RadialGradient,
 };
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -43,6 +45,11 @@ fn codegen_xml(iv: ImageVector, options: SvgToDrawableOptions) -> Result<String>
         "xmlns:android",
         "http://schemas.android.com/apk/res/android",
     );
+
+    if nodes.iter().any(has_gradients) {
+        w.write_attribute("xmlns:aapt", "http://schemas.android.com/aapt");
+    }
+
     w.write_attribute("android:height", &format!("{}dp", height));
     w.write_attribute("android:width", &format!("{}dp", width));
     w.write_attribute("android:viewportWidth", &format!("{}", viewport_width));
@@ -76,17 +83,21 @@ fn codegen_group_node(w: &mut xmlwriter::XmlWriter, group: GroupNode) -> Result<
         w.write_attribute("android:name", &name);
     }
     if rotate != 0.0 {
-        w.write_attribute("android:rotation", &format!("{rotate}f"));
+        w.write_attribute("android:rotation", &format!("{rotate}"));
         w.write_attribute("android:pivotX", &format!("{}", pivot.x));
         w.write_attribute("android:pivotY", &format!("{}", pivot.y));
     }
-    if scale.x != 1.0 || scale.y != 1.0 {
+    if scale.x != 1.0 {
         w.write_attribute("android:scaleX", &format!("{}", scale.x));
+    }
+    if scale.y != 1.0 {
         w.write_attribute("android:scaleY", &format!("{}", scale.y));
     }
-    if translation.x != 0.0 || translation.y != 0.0 {
-        w.write_attribute("android:translationX", &format!("{}", translation.x));
-        w.write_attribute("android:translationY", &format!("{}", translation.y));
+    if translation.x != 0.0 {
+        w.write_attribute("android:translateX", &format!("{}", translation.x));
+    }
+    if translation.y != 0.0 {
+        w.write_attribute("android:translateY", &format!("{}", translation.y));
     }
 
     for node in nodes {
@@ -109,7 +120,7 @@ fn codegen_path_node(w: &mut xmlwriter::XmlWriter, path: PathNode) -> Result<()>
     w.start_element("path");
 
     codegen_commands(w, &commands);
-    if let Some(Color::SolidColor(rgb)) = fill_color {
+    if let Some(Color::SolidColor(rgb)) = &fill_color {
         w.write_attribute("android:fillColor", &format!("{}", rgb.to_hex_string()));
     }
     if let FillType::EvenOdd = fill_type {
@@ -119,7 +130,7 @@ fn codegen_path_node(w: &mut xmlwriter::XmlWriter, path: PathNode) -> Result<()>
     if alpha != 1.0 {
         w.write_attribute("android:fillAlpha", &format!("{}", alpha));
     }
-    if let Some(Color::SolidColor(rgb)) = stroke.color {
+    if let Some(Color::SolidColor(rgb)) = &stroke.color {
         w.write_attribute("android:strokeColor", &format!("{}", rgb.to_hex_string()));
     }
     match stroke.cap {
@@ -140,6 +151,17 @@ fn codegen_path_node(w: &mut xmlwriter::XmlWriter, path: PathNode) -> Result<()>
     }
     if stroke.miter != 1.0 {
         w.write_attribute("android:strokeMiterLimit", &format!("{}", stroke.miter));
+    }
+
+    match &fill_color {
+        Some(Color::LinearGradient(g)) => codegen_linear_gradient(w, &g, "android:fillColor"),
+        Some(Color::RadialGradient(g)) => codegen_radial_gradient(w, &g, "android:fillColor"),
+        _ => (),
+    }
+    match &stroke.color {
+        Some(Color::LinearGradient(g)) => codegen_linear_gradient(w, &g, "android:strokeColor"),
+        Some(Color::RadialGradient(g)) => codegen_radial_gradient(w, &g, "android:strokeColor"),
+        _ => (),
     }
 
     w.end_element();
@@ -172,4 +194,66 @@ fn codegen_commands(w: &mut xmlwriter::XmlWriter, commands: &[Command]) {
         }
     }
     w.write_attribute("android:pathData", &path_data);
+}
+
+fn codegen_linear_gradient(w: &mut xmlwriter::XmlWriter, g: &LinearGradient, attr_name: &str) {
+    w.start_element("aapt:attr");
+    w.write_attribute("name", attr_name);
+    w.start_element("gradient");
+    w.write_attribute("android:startX", &format!("{}", g.start_x));
+    w.write_attribute("android:startY", &format!("{}", g.start_y));
+    w.write_attribute("android:endX", &format!("{}", g.end_x));
+    w.write_attribute("android:endY", &format!("{}", g.end_y));
+    w.write_attribute("android:type", "linear");
+
+    for stop in g.stops.iter() {
+        w.start_element("item");
+        w.write_attribute("android:offset", &format!("{}", stop.offset));
+        w.write_attribute("android:color", &hex_argb(&stop.color));
+        w.end_element();
+    }
+
+    w.end_element();
+    w.end_element();
+}
+
+fn codegen_radial_gradient(w: &mut xmlwriter::XmlWriter, g: &RadialGradient, attr_name: &str) {
+    w.start_element("aapt:attr");
+    w.write_attribute("name", attr_name);
+    w.start_element("gradient");
+    w.write_attribute("android:gradientRadius", &format!("{}", g.gradient_radius));
+    w.write_attribute("android:centerX", &format!("{}", g.center_x));
+    w.write_attribute("android:centerY", &format!("{}", g.center_y));
+    w.write_attribute("android:type", "radial");
+
+    for stop in g.stops.iter() {
+        w.start_element("item");
+        w.write_attribute("android:offset", &format!("{}", stop.offset));
+        w.write_attribute("android:color", &hex_argb(&stop.color));
+        w.end_element();
+    }
+
+    w.end_element();
+    w.end_element();
+}
+
+fn has_gradients(node: &Node) -> bool {
+    match node {
+        Node::Path(p) => match (&p.fill_color, &p.stroke.color) {
+            (Some(Color::LinearGradient(_)), _)
+            | (Some(Color::RadialGradient(_)), _)
+            | (_, Some(Color::LinearGradient(_)))
+            | (_, Some(Color::RadialGradient(_))) => true,
+            _ => false,
+        },
+        Node::Group(g) => g.nodes.iter().any(has_gradients),
+    }
+}
+
+fn hex_argb(color: &colorsys::Rgb) -> String {
+    let a = (color.alpha() * 255.0).round() as u8;
+    let r = (color.red().round()) as u8;
+    let g = (color.green().round()) as u8;
+    let b = (color.blue().round()) as u8;
+    format!("#{a:02x}{r:02x}{g:02x}{b:02x}")
 }

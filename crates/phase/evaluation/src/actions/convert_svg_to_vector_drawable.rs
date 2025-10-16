@@ -36,7 +36,13 @@ pub fn convert_svg_to_vector_drawable(
         SvgToDrawableOptions {
             xml_declaration: false,
         },
-    )?;
+    )
+    .map_err(|err| {
+        crate::Error::ConversionError(format!(
+            "unable to convert SVG to Drawable XML ({}): {err}",
+            args.label,
+        ))
+    })?;
 
     // remember result to cache
     ctx.cache.put_bytes(&cache_key, &xml)?;

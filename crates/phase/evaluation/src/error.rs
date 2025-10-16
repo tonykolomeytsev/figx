@@ -23,6 +23,7 @@ pub enum Error {
     },
     SvgToCompose(lib_svg2compose::Error),
     RenderSvg(String),
+    ConversionError(String),
 }
 
 impl Display for Error {

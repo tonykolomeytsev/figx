@@ -105,4 +105,31 @@ pub enum Join {
 
 pub enum Color {
     SolidColor(colorsys::Rgb),
+    LinearGradient(LinearGradient),
+    RadialGradient(RadialGradient),
+}
+
+pub struct LinearGradient {
+    pub start_x: f32,
+    pub start_y: f32,
+    pub end_x: f32,
+    pub end_y: f32,
+    pub stops: Vec<LinearGradientStop>,
+}
+
+pub struct LinearGradientStop {
+    pub offset: f32,
+    pub color: colorsys::Rgb,
+}
+
+pub struct RadialGradient {
+    pub gradient_radius: f32,
+    pub center_x: f32,
+    pub center_y: f32,
+    pub stops: Vec<RadialGradientStop>,
+}
+
+pub struct RadialGradientStop {
+    pub offset: f32,
+    pub color: colorsys::Rgb,
 }

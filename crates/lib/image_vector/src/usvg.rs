@@ -1,8 +1,10 @@
 use crate::{
-    Cap, Color, Command, FillType, GroupNode, ImageVector, Join, Node, PathNode, Point, Scale,
-    Stroke, Translation,
+    Cap, Color, Command, FillType, GroupNode, ImageVector, Join, LinearGradient,
+    LinearGradientStop, Node, PathNode, Point, RadialGradient, RadialGradientStop, Scale, Stroke,
+    Translation,
 };
 use colorsys::Rgb;
+use log::debug;
 use std::fmt::Display;
 use usvg::{Fill, Tree};
 
@@ -82,9 +84,22 @@ impl TryFrom<&usvg::Group> for Node {
             tx,
             ty,
         } = group.transform();
-        let scale_x = (sx.powi(2) + ky.powi(2)).sqrt();
-        let scale_y = (kx.powi(2) + sy.powi(2)).sqrt();
-        let rotation = f32::atan2(ky / scale_x, sx / scale_x);
+        let mut scale_x = (sx.powi(2) + ky.powi(2)).sqrt();
+        let mut scale_y = (kx.powi(2) + sy.powi(2)).sqrt();
+
+        // Check if we have a reflection (flip)
+        let det = sx * sy - kx * ky;
+        if det < 0.0 {
+            debug!("FUCK designer for this FLIPPED group node!");
+            // Determine which axis to negate
+            if sx > sy {
+                scale_y = -scale_y;
+            } else {
+                scale_x = -scale_x;
+            }
+        }
+
+        let rotation = ky.atan2(sx);
         let translate_x = tx;
         let translate_y = ty;
 
@@ -124,14 +139,10 @@ impl TryFrom<&usvg::Path> for Node {
             Some(usvg::Paint::Color(c)) => {
                 Some(Color::SolidColor(Rgb::from((c.red, c.green, c.blue))))
             }
-            Some(usvg::Paint::LinearGradient(_)) => {
-                return Err(UnsupportedFillPaint("linear-gradient"));
-            }
+            Some(usvg::Paint::LinearGradient(g)) => Some(Color::LinearGradient(g.as_ref().into())),
+            Some(usvg::Paint::RadialGradient(g)) => Some(Color::RadialGradient(g.as_ref().into())),
             Some(usvg::Paint::Pattern(_)) => {
                 return Err(UnsupportedFillPaint("pattern"));
-            }
-            Some(usvg::Paint::RadialGradient(_)) => {
-                return Err(UnsupportedFillPaint("radial-gradient"));
             }
             None => None,
         };
@@ -140,14 +151,10 @@ impl TryFrom<&usvg::Path> for Node {
             Some(usvg::Paint::Color(c)) => {
                 Some(Color::SolidColor(Rgb::from((c.red, c.green, c.blue))))
             }
-            Some(usvg::Paint::LinearGradient(_)) => {
-                return Err(UnsupportedStrokePaint("linear-gradient"));
-            }
+            Some(usvg::Paint::LinearGradient(g)) => Some(Color::LinearGradient(g.as_ref().into())),
+            Some(usvg::Paint::RadialGradient(g)) => Some(Color::RadialGradient(g.as_ref().into())),
             Some(usvg::Paint::Pattern(_)) => {
                 return Err(UnsupportedStrokePaint("pattern"));
-            }
-            Some(usvg::Paint::RadialGradient(_)) => {
-                return Err(UnsupportedStrokePaint("radial-gradient"));
             }
             None => None,
         };
@@ -182,6 +189,61 @@ impl TryFrom<&usvg::Path> for Node {
             stroke,
         };
         Ok(Self::Path(path))
+    }
+}
+
+impl From<&usvg::LinearGradient> for LinearGradient {
+    fn from(value: &usvg::LinearGradient) -> Self {
+        LinearGradient {
+            start_x: value.x1(),
+            start_y: value.y1(),
+            end_x: value.x2(),
+            end_y: value.y2(),
+            stops: value
+                .stops()
+                .iter()
+                .map(|s| {
+                    let c = s.color();
+                    LinearGradientStop {
+                        offset: s.offset().get(),
+                        color: Rgb::new(
+                            c.red as f64,
+                            c.green as f64,
+                            c.blue as f64,
+                            Some(s.opacity().get() as f64),
+                        ),
+                    }
+                })
+                .collect(),
+        }
+    }
+}
+
+impl From<&usvg::RadialGradient> for RadialGradient {
+    fn from(value: &usvg::RadialGradient) -> Self {
+        debug!("radius: {:?}", &value.r());
+        debug!("transform: {:?}", &value.transform());
+        RadialGradient {
+            gradient_radius: value.r().get() * value.transform().ky,
+            center_x: value.transform().tx,
+            center_y: value.transform().ty,
+            stops: value
+                .stops()
+                .iter()
+                .map(|s| {
+                    let c = s.color();
+                    RadialGradientStop {
+                        offset: s.offset().get(),
+                        color: Rgb::new(
+                            c.red as f64,
+                            c.green as f64,
+                            c.blue as f64,
+                            Some(s.opacity().get() as f64),
+                        ),
+                    }
+                })
+                .collect(),
+        }
     }
 }
 

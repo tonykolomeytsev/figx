@@ -71,7 +71,13 @@ pub fn convert_svg_to_compose(ctx: &EvalContext, args: ConvertSvgToComposeArgs) 
                 }),
             composable_get: args.composable_get,
         },
-    )?;
+    )
+    .map_err(|err| {
+        crate::Error::ConversionError(format!(
+            "unable to convert SVG to Compose ({}): {err}",
+            args.label
+        ))
+    })?;
 
     // remember result to cache
     ctx.cache.put_bytes(&cache_key, &compose)?;

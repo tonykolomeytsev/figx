@@ -14,6 +14,7 @@ type Result<T> = std::result::Result<T, IVBuilderError>;
 #[derive(Debug)]
 pub enum IVBuilderError {
     InvalidMappingColor(colorsys::ParseError),
+    UnsupportedFillType(String),
 }
 
 // region: Error boilerplate
@@ -23,6 +24,7 @@ impl Display for IVBuilderError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InvalidMappingColor(e) => write!(f, "invalid mapping color: {e}"),
+            Self::UnsupportedFillType(t) => write!(f, "unsupported fill type: {t}"),
         }
     }
 }
@@ -222,6 +224,16 @@ impl From<Command> for CodeBlock {
 fn mapped_color(c: Color, color_mappings: &[ColorMapping]) -> Result<(String, Vec<String>)> {
     let rgb = match c {
         Color::SolidColor(c) => c,
+        Color::LinearGradient(_) => {
+            return Err(IVBuilderError::UnsupportedFillType(
+                "linear-gradient".to_string(),
+            ));
+        }
+        Color::RadialGradient(_) => {
+            return Err(IVBuilderError::UnsupportedFillType(
+                "radial-gradient".to_string(),
+            ));
+        }
     };
     for mapping in color_mappings {
         if mapping.from == "*"

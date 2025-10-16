@@ -379,6 +379,9 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
         RenderSvg(err) => {
             eprintln!("{err_label} {err:?}", err_label = "error:".red().bold());
         }
+        ConversionError(err) => {
+            eprintln!("{err_label} {err}", err_label = "error:".red().bold());
+        }
     }
 }
 
