@@ -1,5 +1,10 @@
 # Unreleased
 
+# 0.8.4
+
+- Added experimental syntax for `.figtree.toml`, allowing for the tagging of `container_node_ids` values for further use in the scan output.
+- Each node in the scan output now has a "tag" value indicating its source container node.
+
 # 0.8.3
 
 - `figx` will automatically enable basic logging if it detects the environment variable `CI`.

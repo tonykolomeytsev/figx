@@ -1,6 +1,6 @@
-use crate::parser::AccessTokenDefinitionDto;
+use crate::parser::{AccessTokenDefinitionDto, NodeIdListDto};
 use ordermap::OrderMap;
-use toml_span::{Span, Spanned};
+use toml_span::Span;
 
 #[derive(Default)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -14,7 +14,7 @@ pub struct RemotesDtoContext {
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub(crate) struct RemoteDto {
     pub file_key: String,
-    pub container_node_ids: Vec<String>,
+    pub container_node_ids: NodeIdListDto,
     pub access_token: AccessTokenDefinitionDto,
     pub default: Option<bool>,
     pub key_span: Span,
@@ -96,7 +96,7 @@ mod de {
             // region: extract
             let mut th = TableHelper::new(value)?;
             let file_key = th.required_s::<String>("file_key")?;
-            let container_node_ids = th.required_s::<Vec<Spanned<String>>>("container_node_ids")?;
+            let container_node_ids = th.required_s::<NodeIdListDto>("container_node_ids")?.value;
             let access_token = if let Some((_, mut value)) = th.take("access_token") {
                 AccessTokenDefinitionDto::deserialize(&mut value)?
             } else {
@@ -117,28 +117,6 @@ mod de {
                 }
                 s => s.to_owned(),
             };
-            if container_node_ids.value.is_empty() {
-                return Err(toml_span::Error::from((
-                    ErrorKind::Custom("container_node_ids cannot be empty".into()),
-                    container_node_ids.span,
-                ))
-                .into());
-            }
-            let container_node_ids = container_node_ids
-                .value
-                .into_iter()
-                .map(|id| {
-                    if id.value.is_empty() {
-                        Err(toml_span::Error::from((
-                            ErrorKind::Custom("node id cannot be empty".into()),
-                            id.span,
-                        )))
-                    } else {
-                        Ok(id.value)
-                    }
-                })
-                .collect::<std::result::Result<Vec<_>, _>>()?;
-
             // endregion: validate
 
             Ok(Self {
@@ -184,7 +162,7 @@ mod test {
                 "icons".to_owned(),
                 RemoteDto {
                     file_key: "abcdefg".to_string(),
-                    container_node_ids: vec!["42-42".to_string()],
+                    container_node_ids: NodeIdListDto::Plain(vec!["42-42".to_string()]),
                     access_token: AccessTokenDefinitionDto::Explicit("fig_123456789".to_string()),
                     default: Some(true),
                     key_span: Span::new(1, 6),
@@ -194,7 +172,7 @@ mod test {
                 "illustrations".to_owned(),
                 RemoteDto {
                     file_key: "hijklmno".to_string(),
-                    container_node_ids: vec!["0-1".to_string()],
+                    container_node_ids: NodeIdListDto::Plain(vec!["0-1".to_string()]),
                     access_token: AccessTokenDefinitionDto::Explicit("fig_987654321".to_string()),
                     default: None,
                     key_span: Span::new(108, 121),
@@ -281,7 +259,7 @@ mod test {
         "#;
         let expected_dto = RemoteDto {
             file_key: "abcdefg".to_string(),
-            container_node_ids: vec!["42-42".to_string()],
+            container_node_ids: NodeIdListDto::Plain(vec!["42-42".to_string()]),
             access_token: AccessTokenDefinitionDto::Explicit("fig_123456789".to_string()),
             default: Some(true),
             key_span: Default::default(),

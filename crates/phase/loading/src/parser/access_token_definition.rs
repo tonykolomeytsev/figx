@@ -143,8 +143,8 @@ mod test {
         // Given
         let toml = unindent(
             r#"
-                access_token = [ 
-                    { env = "ENV_ENV_ENV" }, 
+                access_token = [
+                    { env = "ENV_ENV_ENV" },
                     { keychain = true },
                     "fallback_key",
                 ]

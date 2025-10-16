@@ -21,7 +21,7 @@ fn codegen_xml(iv: ImageVector, options: SvgToDrawableOptions) -> Result<String>
     let opt = xmlwriter::Options {
         use_single_quote: false,
         indent: xmlwriter::Indent::Spaces(2),
-        attributes_indent: xmlwriter::Indent::Spaces(2),
+        attributes_indent: xmlwriter::Indent::Spaces(4),
     };
     let mut w = xmlwriter::XmlWriter::new(opt);
 

@@ -1,5 +1,6 @@
 use crate::{
-    node_stream::{NodeStream, NodeStreamError}, Node, Result
+    Node, Result,
+    node_stream::{NodeStream, NodeStreamError},
 };
 use bytes::Bytes;
 use log::debug;
@@ -57,14 +58,16 @@ impl FigmaApi {
     const X_FIGMA_TOKEN: &str = "X-FIGMA-TOKEN";
     const BASE_URL: &str = "https://api.figma.com";
 
-    pub fn get_file_nodes(
+    /// Streaming: Parses the Figma API response on-the-fly, emitting `Node`s to the
+    /// iterator consumer without waiting for the full response to download. This is
+    /// useful as file node responses can be very large (e.g., >500MB).
+    pub fn get_file_nodes_stream(
         &self,
         access_token: &str,
         file_key: &str,
-        query: GetFileNodesQueryParameters,
-    ) -> Result<impl Iterator<Item = std::result::Result<Node, NodeStreamError>>>
-    {
-        debug!(target: "Figma API", "get_file_nodes called for: {file_key}");
+        query: GetFileNodesStreamQueryParameters,
+    ) -> Result<impl Iterator<Item = std::result::Result<Node, NodeStreamError>>> {
+        debug!(target: "Figma API", "get_file_nodes_stream called for: {file_key}");
         let mut request = self
             .client
             .get(format!(
@@ -79,8 +82,41 @@ impl FigmaApi {
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
         let reader = request.call()?.into_body().into_reader();
-        debug!(target: "Figma API", "get_file_nodes done for: {file_key}");
+        debug!(target: "Figma API", "get_file_nodes_stream done for: {file_key}");
         Ok(NodeStream::from(reader))
+    }
+
+    /// Gets selected Figma nodes and returns their structure.
+    ///
+    /// The `ScannedNodeDto` returned by this method has a minimal set of fields
+    /// and should be used only for file structure scanning purposes.
+    pub fn get_file_nodes_scan(
+        &self,
+        access_token: &str,
+        file_key: &str,
+        query: GetFileNodesScanQueryParameters,
+    ) -> Result<GetFileNodesScanResponse> {
+        debug!(target: "Figma API", "get_file_nodes_scan called for: {file_key}");
+        let mut request = self
+            .client
+            .get(format!(
+                "{base_url}/v1/files/{file_key}/nodes",
+                base_url = Self::BASE_URL,
+            ))
+            .header(Self::X_FIGMA_TOKEN, access_token);
+        // region: queries
+        set_query_if_needed!(arr: request, "ids" => &query.ids);
+        set_query_if_needed!(num: request, "depth" => &query.depth);
+        set_query_if_needed!(txt: request, "version" => &query.version);
+        // endregion: queries
+        let response = request
+            .call()?
+            .body_mut()
+            .with_config()
+            .limit(mb(1024))
+            .read_json::<GetFileNodesScanResponse>()?;
+        debug!(target: "Figma API", "get_file_nodes_scan done for: {file_key}");
+        Ok(response)
     }
 
     pub fn get_image(
@@ -135,17 +171,54 @@ impl FigmaApi {
     }
 }
 
-// region: GET file nodes
+// region: GET file nodes stream
 
 #[derive(Default)]
-pub struct GetFileNodesQueryParameters<'a> {
+pub struct GetFileNodesStreamQueryParameters<'a> {
     pub ids: Option<&'a [String]>,
     pub depth: Option<i32>,
     pub geometry: Option<&'a str>,
     pub version: Option<&'a str>,
 }
 
-// endregion: GET file nodes
+// region: GET file nodes stream
+
+// region: GET file nodes scan
+
+#[derive(Default)]
+pub struct GetFileNodesScanQueryParameters<'a> {
+    pub ids: Option<&'a [String]>,
+    pub depth: Option<i32>,
+    pub version: Option<&'a str>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GetFileNodesScanResponse {
+    pub nodes: HashMap<String, IdentifiedNodeDto>,
+}
+
+#[derive(Debug, Deserialize)]
+
+pub struct IdentifiedNodeDto {
+    pub document: ScannedNodeDto,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ScannedNodeDto {
+    pub id: String,
+    pub name: String,
+    #[serde(default = "yes")]
+    pub visible: bool,
+    #[serde(default)]
+    pub children: Vec<ScannedNodeDto>,
+    pub r#type: String,
+}
+
+fn yes() -> bool {
+    true
+}
+
+// endregion: GET file nodes scan
 
 // region: GET image
 

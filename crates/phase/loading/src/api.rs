@@ -41,8 +41,23 @@ pub struct LoadedFigFile {
 pub struct RemoteSource {
     pub id: RemoteId,
     pub file_key: String,
-    pub container_node_ids: Vec<String>,
+    pub container_node_ids: NodeIdList,
     pub access_token: String,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum NodeIdList {
+    Plain(Vec<String>),
+    IdToTag(BTreeMap<String, String>),
+}
+
+impl NodeIdList {
+    pub fn to_string_id_list(&self) -> Vec<String> {
+        match self {
+            Self::Plain(ids) => ids.to_owned(),
+            Self::IdToTag(table) => table.keys().cloned().collect(),
+        }
+    }
 }
 
 pub type RemoteId = String;
@@ -55,13 +70,19 @@ impl Display for RemoteSource {
 
 impl Debug for RemoteSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "@{}/{}/[{}]",
-            self.id,
-            self.file_key,
-            self.container_node_ids.join(", ")
-        )
+        write!(f, "@{}/{}/[", self.id, self.file_key)?;
+        match &self.container_node_ids {
+            NodeIdList::Plain(ids) => write!(f, "{}", ids.join(","))?,
+            NodeIdList::IdToTag(table) => {
+                for (idx, (id, tag)) in table.iter().enumerate() {
+                    if idx > 0 {
+                        write!(f, ",")?;
+                    }
+                    write!(f, "{}=>{}", id, tag)?;
+                }
+            }
+        }
+        write!(f, "]")
     }
 }
 
