@@ -121,7 +121,7 @@ fn codegen_path_node(w: &mut xmlwriter::XmlWriter, path: PathNode) -> Result<()>
 
     codegen_commands(w, &commands);
     if let Some(Color::SolidColor(rgb)) = &fill_color {
-        w.write_attribute("android:fillColor", &format!("{}", rgb.to_hex_string()));
+        w.write_attribute("android:fillColor", &hex_argb(rgb));
     }
     if let FillType::EvenOdd = fill_type {
         // non-default
@@ -131,7 +131,7 @@ fn codegen_path_node(w: &mut xmlwriter::XmlWriter, path: PathNode) -> Result<()>
         w.write_attribute("android:fillAlpha", &format!("{}", alpha));
     }
     if let Some(Color::SolidColor(rgb)) = &stroke.color {
-        w.write_attribute("android:strokeColor", &format!("{}", rgb.to_hex_string()));
+        w.write_attribute("android:strokeColor", &hex_argb(rgb));
     }
     match stroke.cap {
         Cap::Butt => (), // default
@@ -255,5 +255,9 @@ fn hex_argb(color: &colorsys::Rgb) -> String {
     let r = (color.red().round()) as u8;
     let g = (color.green().round()) as u8;
     let b = (color.blue().round()) as u8;
-    format!("#{a:02x}{r:02x}{g:02x}{b:02x}")
+    if a == 255 {
+        format!("#{r:02X}{g:02X}{b:02X}").to_ascii_uppercase()
+    } else {
+        format!("#{a:02X}{r:02X}{g:02X}{b:02X}").to_ascii_uppercase()
+    }
 }
