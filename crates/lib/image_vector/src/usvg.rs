@@ -4,7 +4,7 @@ use crate::{
     Translation,
 };
 use colorsys::Rgb;
-use log::debug;
+use log::warn;
 use std::fmt::Display;
 use usvg::{Fill, Tree};
 
@@ -88,9 +88,9 @@ impl TryFrom<&usvg::Group> for Node {
         let mut scale_y = (kx.powi(2) + sy.powi(2)).sqrt();
 
         // Check if we have a reflection (flip)
+        // Stupid designer cannot just draw what they need
         let det = sx * sy - kx * ky;
         if det < 0.0 {
-            debug!("FUCK designer for this FLIPPED group node!");
             // Determine which axis to negate
             if sx > sy {
                 scale_y = -scale_y;
@@ -221,8 +221,10 @@ impl From<&usvg::LinearGradient> for LinearGradient {
 
 impl From<&usvg::RadialGradient> for RadialGradient {
     fn from(value: &usvg::RadialGradient) -> Self {
-        debug!("radius: {:?}", &value.r());
-        debug!("transform: {:?}", &value.transform());
+        // for those designers who are retarded
+        if value.transform().kx != 0.0 && value.transform().kx != value.transform().ky {
+            warn!(target: "ImageVector", "Android image vector doesn't support elliptic radial gradients, falling back to a circular gradient");
+        }
         RadialGradient {
             gradient_radius: value.r().get() * value.transform().ky,
             center_x: value.transform().tx,
