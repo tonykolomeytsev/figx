@@ -5,7 +5,7 @@ use crate::{
 };
 use colorsys::Rgb;
 use log::warn;
-use std::fmt::Display;
+use std::{f32::consts::PI, fmt::Display};
 use usvg::{Fill, Tree};
 
 pub type Result<T> = std::result::Result<T, FromUsvgError>;
@@ -84,21 +84,16 @@ impl TryFrom<&usvg::Group> for Node {
             tx,
             ty,
         } = group.transform();
-        let mut scale_x = (sx.powi(2) + ky.powi(2)).sqrt();
+        let scale_x = (sx.powi(2) + ky.powi(2)).sqrt();
         let mut scale_y = (kx.powi(2) + sy.powi(2)).sqrt();
+        let rotation = ky.atan2(sx);
 
         // Check if we have a reflection (flip)
         // Stupid designer cannot just draw what they need
         let det = sx * sy - kx * ky;
         if det < 0.0 {
-            // Determine which axis to negate
-            if sx > sy {
-                scale_y = -scale_y;
-            } else {
-                scale_x = -scale_x;
-            }
+            scale_y = -scale_y;
         }
-        let rotation = ky.atan2(sx);
         let translate_x = tx;
         let translate_y = ty;
 
