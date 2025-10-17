@@ -1,5 +1,10 @@
 # Unreleased
 
+# 0.8.6
+
+- Fixed bug with negative scale values in SVG (axis flipping)
+- Added support for single clip-path inside group
+
 # 0.8.5
 
 - Added support for linear and radial gradient in `android-drawable` profile.
