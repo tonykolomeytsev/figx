@@ -1,5 +1,9 @@
 # Unreleased
 
+# 0.8.5
+
+- Added support for linear and radial gradient in `android-drawable` profile.
+
 # 0.8.4
 
 - Added experimental syntax for `.figtree.toml`, allowing for the tagging of `container_node_ids` values for further use in the scan output.
