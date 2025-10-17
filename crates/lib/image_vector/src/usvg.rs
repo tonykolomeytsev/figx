@@ -5,7 +5,7 @@ use crate::{
 };
 use colorsys::Rgb;
 use log::warn;
-use std::{f32::consts::PI, fmt::Display};
+use std::fmt::Display;
 use usvg::{Fill, Tree};
 
 pub type Result<T> = std::result::Result<T, FromUsvgError>;
