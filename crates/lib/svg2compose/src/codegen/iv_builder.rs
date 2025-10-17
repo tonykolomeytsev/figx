@@ -82,6 +82,7 @@ fn codegen_group_node(n: GroupNode, color_mappings: &[ColorMapping]) -> Result<C
         pivot,
         translation,
         scale,
+        clip_path_data: _,
     } = n;
     let code = CodeBlock::builder()
         .add_statement("group(")

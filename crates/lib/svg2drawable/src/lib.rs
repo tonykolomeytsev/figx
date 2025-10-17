@@ -77,6 +77,7 @@ fn codegen_group_node(w: &mut xmlwriter::XmlWriter, group: GroupNode) -> Result<
         pivot,
         translation,
         scale,
+        clip_path_data,
     } = group;
     w.start_element("group");
     if let Some(name) = name {
@@ -98,6 +99,12 @@ fn codegen_group_node(w: &mut xmlwriter::XmlWriter, group: GroupNode) -> Result<
     }
     if translation.y != 0.0 {
         w.write_attribute("android:translateY", &format!("{}", translation.y));
+    }
+
+    if let Some(clip_path_data) = clip_path_data {
+        w.start_element("clip-path");
+        codegen_commands(w, &clip_path_data);
+        w.end_element();
     }
 
     for node in nodes {

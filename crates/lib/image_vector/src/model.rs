@@ -19,6 +19,7 @@ pub struct GroupNode {
     pub pivot: Translation,
     pub translation: Translation,
     pub scale: Scale,
+    pub clip_path_data: Option<Vec<Command>>,
 }
 
 pub struct PathNode {

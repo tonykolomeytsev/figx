@@ -98,10 +98,20 @@ impl TryFrom<&usvg::Group> for Node {
                 scale_x = -scale_x;
             }
         }
-
         let rotation = ky.atan2(sx);
         let translate_x = tx;
         let translate_y = ty;
+
+        // region: mask
+        let mut clip_path_data = None;
+        if let Some(mask) = group.mask() {
+            for node in mask.root().children().iter().take(1) {
+                if let usvg::Node::Path(p) = node {
+                    clip_path_data = Some(p.data().segments().map(Into::into).collect::<Vec<_>>())
+                }
+            }
+        }
+        // endregion: mask
 
         let group = GroupNode {
             name: match group.id() {
@@ -123,6 +133,7 @@ impl TryFrom<&usvg::Group> for Node {
                 x: scale_x,
                 y: scale_y,
             },
+            clip_path_data,
         };
         Ok(Self::Group(group))
     }
