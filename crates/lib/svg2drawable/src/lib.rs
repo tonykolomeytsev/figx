@@ -84,8 +84,12 @@ fn codegen_group_node(w: &mut xmlwriter::XmlWriter, group: GroupNode) -> Result<
         w.write_attribute("android:name", &name);
     }
     if rotate != 0.0 {
-        w.write_attribute("android:rotation", &format!("{rotate}"));
+        w.write_attribute("android:rotation", &format!("{}", rotate.to_degrees()));
+    }
+    if pivot.x != 0.0 {
         w.write_attribute("android:pivotX", &format!("{}", pivot.x));
+    }
+    if pivot.y != 0.0 {
         w.write_attribute("android:pivotY", &format!("{}", pivot.y));
     }
     if scale.x != 1.0 {
