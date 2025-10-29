@@ -3,7 +3,7 @@ members = ["app"]
 resolver = "2"
 
 [workspace.package]
-version = "0.8.6"
+version = "0.8.7"
 rust-version = "1.87.0"
 edition = "2024"
 
@@ -54,7 +54,7 @@ serde_json = "1.0"
 bincode = "2.0"
 toml-span = "0.5"
 json-event-parser = "0.2.2"
-xmlwriter = "0.1.0"
+xmlwriter = { git = "https://github.com/tonykolomeytsev/xmlwriter.git" }
 
 # CLI and Terminal
 clap = { version = "4.5", features = ["derive"] }
