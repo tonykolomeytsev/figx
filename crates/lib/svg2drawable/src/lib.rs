@@ -138,7 +138,7 @@ fn codegen_path_node(w: &mut xmlwriter::XmlWriter<Vec<u8>>, path: PathNode) -> R
 
     codegen_commands(w, &commands)?;
     if let Some(Color::SolidColor(rgb)) = &fill_color {
-        w.write_attribute("android:fillColor", &hex_argb(rgb))?;
+        w.write_attribute("android:fillColor", &hex_argb(rgb, false))?;
     }
     if let FillType::EvenOdd = fill_type {
         // non-default
@@ -148,7 +148,7 @@ fn codegen_path_node(w: &mut xmlwriter::XmlWriter<Vec<u8>>, path: PathNode) -> R
         w.write_attribute("android:fillAlpha", &format!("{}", alpha))?;
     }
     if let Some(Color::SolidColor(rgb)) = &stroke.color {
-        w.write_attribute("android:strokeColor", &hex_argb(rgb))?;
+        w.write_attribute("android:strokeColor", &hex_argb(rgb, false))?;
     }
     match stroke.cap {
         Cap::Butt => (), // default
@@ -234,7 +234,7 @@ fn codegen_linear_gradient(
         w.start_element("item")?;
         w.set_attribute_indent(Indent::None);
         w.write_attribute("android:offset", &format!("{}", stop.offset))?;
-        w.write_attribute("android:color", &hex_argb(&stop.color))?;
+        w.write_attribute("android:color", &hex_argb(&stop.color, true))?;
         w.set_attribute_indent(ATTRIBUTE_INDENT);
         w.end_element()?;
     }
@@ -263,7 +263,7 @@ fn codegen_radial_gradient(
         w.start_element("item")?;
         w.set_attribute_indent(Indent::None);
         w.write_attribute("android:offset", &format!("{}", stop.offset))?;
-        w.write_attribute("android:color", &hex_argb(&stop.color))?;
+        w.write_attribute("android:color", &hex_argb(&stop.color, true))?;
         w.set_attribute_indent(ATTRIBUTE_INDENT);
         w.end_element()?;
     }
@@ -286,12 +286,12 @@ fn has_gradients(node: &Node) -> bool {
     }
 }
 
-fn hex_argb(color: &colorsys::Rgb) -> String {
+fn hex_argb(color: &colorsys::Rgb, always_alpha: bool) -> String {
     let a = (color.alpha() * 255.0).round() as u8;
     let r = (color.red().round()) as u8;
     let g = (color.green().round()) as u8;
     let b = (color.blue().round()) as u8;
-    if a == 255 {
+    if a == 255 && !always_alpha {
         format!("#{r:02X}{g:02X}{b:02X}").to_ascii_uppercase()
     } else {
         format!("#{a:02X}{r:02X}{g:02X}{b:02X}").to_ascii_uppercase()
