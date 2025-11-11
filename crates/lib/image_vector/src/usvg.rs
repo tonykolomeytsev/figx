@@ -232,7 +232,7 @@ impl From<&usvg::RadialGradient> for RadialGradient {
             warn!(target: "ImageVector", "Android image vector doesn't support elliptic radial gradients, falling back to a circular gradient");
         }
         RadialGradient {
-            gradient_radius: value.r().get() * value.transform().ky,
+            gradient_radius: (value.r().get() * value.transform().ky).abs(),
             center_x: value.transform().tx,
             center_y: value.transform().ty,
             stops: value
