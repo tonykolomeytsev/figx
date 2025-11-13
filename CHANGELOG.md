@@ -1,5 +1,13 @@
 # Unreleased
 
+# 0.8.7 - 0.8.8
+
+- Maximum three decimal places for pathData in Android Drawable
+- Warning if pathData length is greater than 0x7FFF (~32K)
+- More compact output in android XML, fewer line breaks
+- The alpha component of a color is now always printed in gradient colors in android XML
+- Android XML gradientRadius can no longer be negative for radial gradients
+
 # 0.8.6
 
 - Fixed bug with negative scale values in SVG (axis flipping)
