@@ -3,6 +3,7 @@ use lib_image_vector::{
     Cap, Color, Command, FillType, GroupNode, ImageVector, Join, LinearGradient, Node, PathNode,
     Point, RadialGradient,
 };
+use log::warn;
 use xmlwriter::Indent;
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -190,28 +191,55 @@ fn codegen_commands(w: &mut xmlwriter::XmlWriter<Vec<u8>>, commands: &[Command])
     for command in commands {
         match command {
             Command::MoveTo(Point { x, y }) => {
-                path_data.push_str(&format!("M{},{}", x, y));
+                path_data.push_str(&format!("M{},{}", fmt3(x), fmt3(y)));
             }
             Command::LineTo(Point { x, y }) => {
-                path_data.push_str(&format!("L{},{}", x, y));
+                path_data.push_str(&format!("L{},{}", fmt3(x), fmt3(y)));
             }
             Command::CurveTo(
                 Point { x: x1, y: y1 },
                 Point { x: x2, y: y2 },
                 Point { x: x3, y: y3 },
             ) => {
-                path_data.push_str(&format!("C{},{} {},{} {},{}", x1, y1, x2, y2, x3, y3));
+                path_data.push_str(&format!(
+                    "C{},{} {},{} {},{}",
+                    fmt3(x1),
+                    fmt3(y1),
+                    fmt3(x2),
+                    fmt3(y2),
+                    fmt3(x3),
+                    fmt3(y3)
+                ));
             }
             Command::QuadraticBezierTo(Point { x: x1, y: y1 }, Point { x: x2, y: y2 }) => {
-                path_data.push_str(&format!("Q{},{} {},{}", x1, y1, x2, y2));
+                path_data.push_str(&format!(
+                    "Q{},{} {},{}",
+                    fmt3(x1),
+                    fmt3(y1),
+                    fmt3(x2),
+                    fmt3(y2)
+                ));
             }
             Command::Close => {
                 path_data.push('Z');
             }
         }
     }
+    // https://medium.com/@avideveloper07/android-the-string-too-large-to-encode-using-utf-8-solved-dacc046f7730
+    if path_data.len() > 0x7FFF {
+        // TODO: publish issue to the report
+        warn!(
+            "Too lange pathData ({}), maximum allowed is 32767",
+            path_data.len()
+        );
+    }
     w.write_attribute("android:pathData", &path_data)?;
     Ok(())
+}
+
+/// Format a float without trailing zeros (3 decimal places)
+fn fmt3(x: &f32) -> f32 {
+    (x * 1000.0).round() / 1000.0
 }
 
 fn codegen_linear_gradient(
