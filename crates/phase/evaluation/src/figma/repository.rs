@@ -16,9 +16,6 @@ use std::time::Duration;
 use ureq::Error::Io;
 use ureq::Error::StatusCode;
 
-static RATE_LIMIT_NOTIFICATION: LazyLock<()> = LazyLock::new(
-    || warn!(target: "FigmaRepository", "REST API rate limit has been hit. Subsequent requests will be throttled."),
-);
 static FIGMA_500_NOTIFICATION: LazyLock<()> = LazyLock::new(
     || warn!(target: "FigmaRepository", "It looks like we DDoSed the Figma REST API — slowing down a bit..."),
 );
@@ -125,6 +122,7 @@ impl FigmaRepository {
             .get(&batch_key)
             .expect("Value always exists");
         let no_requested_node_attempts = Arc::new(AtomicUsize::new(0));
+
         let response = retry_with_index(Fixed::from_millis(1000).map(jitter), |attempt| {
             if attempt > 1 {
                 debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
@@ -143,23 +141,28 @@ impl FigmaRepository {
                     }
                 }
                 Ok(result) => OperationResult::Ok(result.to_owned()),
-                Err(e) => match &e.0 {
-                    StatusCode(429) => {
-                        debug!(target: "FigmaRepository", "rate limit encountered");
-                        let _ = &*RATE_LIMIT_NOTIFICATION;
-                        OperationResult::Retry(Error::ExportImage(e.to_string()))
+                Err(e) => match e {
+                    lib_figma_fluent::Error::RateLimit {
+                        retry_after_sec,
+                        figma_plan_tier,
+                        figma_limit_type,
+                    } => {
+                        warn!(target: "RateLimit", "{retry_after_sec}s, {figma_plan_tier}, {figma_limit_type}");
+                        OperationResult::Err(Error::ExportImage(e.to_string()))
                     }
-                    StatusCode(500..=599) => {
-                        debug!(target: "FigmaRepository", "figma server error: {e}");
-                        let _ = &*FIGMA_500_NOTIFICATION;
-                        OperationResult::Retry(Error::ExportImage(e.to_string()))
-                    }
-                    Io(err) if matches!(err.kind(), std::io::ErrorKind::UnexpectedEof) => {
-                        debug!(target: "FigmaRepository", "figma disconnected: {e}");
-                        let _ = &*FIGMA_500_NOTIFICATION;
-                        OperationResult::Retry(Error::ExportImage(e.to_string()))
-                    }
-                    _ => OperationResult::Err(Error::ExportImage(e.to_string())),
+                    lib_figma_fluent::Error::Ureq(e) => match &e {
+                        StatusCode(500..=599) => {
+                            debug!(target: "FigmaRepository", "figma server error: {e}");
+                            let _ = &*FIGMA_500_NOTIFICATION;
+                            OperationResult::Retry(Error::ExportImage(e.to_string()))
+                        }
+                        Io(err) if matches!(err.kind(), std::io::ErrorKind::UnexpectedEof) => {
+                            debug!(target: "FigmaRepository", "figma disconnected: {e}");
+                            let _ = &*FIGMA_500_NOTIFICATION;
+                            OperationResult::Retry(Error::ExportImage(e.to_string()))
+                        }
+                        _ => OperationResult::Err(Error::ExportImage(e.to_string())),
+                    },
                 },
             }
         });
@@ -217,18 +220,25 @@ impl FigmaRepository {
         let response = retry_with_index(Fixed::from_millis(250).map(jitter), |_| {
             match self.api.download_resource(&remote.access_token, url) {
                 Ok(value) => OperationResult::Ok(value),
-                Err(e) => match &e.0 {
-                    StatusCode(500..=599) => {
-                        debug!(target: "FigmaRepository", "figma server error: {e}");
-                        let _ = &*FIGMA_500_NOTIFICATION;
-                        OperationResult::Retry(Error::ExportImage(e.to_string()))
-                    }
-                    Io(err) if matches!(err.kind(), std::io::ErrorKind::UnexpectedEof) => {
-                        debug!(target: "FigmaRepository", "figma disconnected: {e}");
-                        let _ = &*FIGMA_500_NOTIFICATION;
-                        OperationResult::Retry(Error::ExportImage(e.to_string()))
-                    }
-                    _ => OperationResult::Err(Error::ExportImage(e.to_string())),
+                Err(e) => match &e {
+                    lib_figma_fluent::Error::RateLimit {
+                        retry_after_sec: _,
+                        figma_plan_tier: _,
+                        figma_limit_type: _,
+                    } => OperationResult::Retry(Error::ExportImage(e.to_string())),
+                    lib_figma_fluent::Error::Ureq(e) => match e {
+                        StatusCode(500..=599) => {
+                            debug!(target: "FigmaRepository", "figma server error: {e}");
+                            let _ = &*FIGMA_500_NOTIFICATION;
+                            OperationResult::Retry(Error::ExportImage(e.to_string()))
+                        }
+                        Io(err) if matches!(err.kind(), std::io::ErrorKind::UnexpectedEof) => {
+                            debug!(target: "FigmaRepository", "figma disconnected: {e}");
+                            let _ = &*FIGMA_500_NOTIFICATION;
+                            OperationResult::Retry(Error::ExportImage(e.to_string()))
+                        }
+                        _ => OperationResult::Err(Error::ExportImage(e.to_string())),
+                    },
                 },
             }
         });

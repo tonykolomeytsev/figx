@@ -333,17 +333,23 @@ fn handle_evaluation_error(err: phase_evaluation::Error) {
         ),
         FigmaApiNetwork(err) => {
             use ureq::Error::*;
-            match err.0 {
-                StatusCode(code) if code == 403 => eprintln!(
-                    "{err_label} while requesting Figma API: invalid access token",
-                    err_label = "error:".red().bold(),
-                ),
-                StatusCode(code) if code == 429 => eprintln!(
-                    "{err_label} too many requests to Figma API",
-                    err_label = "error:".red().bold(),
-                ),
-                err => eprintln!(
-                    "{err_label} while requesting Figma API: {err}",
+            match err {
+                lib_figma_fluent::Error::Ureq(err) => match err {
+                    StatusCode(code) if code == 403 => eprintln!(
+                        "{err_label} while requesting Figma API: invalid access token",
+                        err_label = "error:".red().bold(),
+                    ),
+                    err => eprintln!(
+                        "{err_label} while requesting Figma API: {err}",
+                        err_label = "error:".red().bold(),
+                    ),
+                },
+                lib_figma_fluent::Error::RateLimit {
+                    retry_after_sec,
+                    figma_plan_tier,
+                    figma_limit_type,
+                } => eprintln!(
+                    "{err_label} too many requests Figma API: retry={retry_after_sec}s, tier={figma_plan_tier}, type={figma_limit_type}",
                     err_label = "error:".red().bold(),
                 ),
             }

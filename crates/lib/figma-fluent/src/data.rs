@@ -6,6 +6,7 @@ use bytes::Bytes;
 use log::debug;
 use serde::Deserialize;
 use std::{collections::HashMap, sync::Arc, time::Duration};
+use ureq::http::StatusCode;
 
 #[derive(Clone)]
 pub struct FigmaApi {
@@ -20,6 +21,7 @@ impl Default for FigmaApi {
                     .timeout_connect(Some(Duration::from_secs(15)))
                     .max_idle_connections(10)
                     .max_idle_connections_per_host(3)
+                    .http_status_as_error(false) // handling manually
                     .build()
                     .into(),
             ),
@@ -81,7 +83,41 @@ impl FigmaApi {
         set_query_if_needed!(txt: request, "geometry" => &query.geometry);
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
-        let reader = request.call()?.into_body().into_reader();
+
+        // region: handling rate limits
+        let response = request.call()?;
+        if response.status() == StatusCode::TOO_MANY_REQUESTS {
+            let retry_after_sec = response
+                .headers()
+                .get("Retry-After")
+                .and_then(|val| val.to_str().ok())
+                .and_then(|val| val.parse().ok())
+                .unwrap_or(5);
+            let figma_plan_tier = response
+                .headers()
+                .get("X-Figma-Plan-Tier")
+                .and_then(|val| val.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+            let figma_limit_type = response
+                .headers()
+                .get("X-Figma-Rate-Limit-Type")
+                .and_then(|val| val.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+
+            return Err(crate::Error::RateLimit {
+                retry_after_sec,
+                figma_plan_tier,
+                figma_limit_type,
+            });
+        }
+        if !response.status().is_success() {
+            return Err(ureq::Error::StatusCode(response.status().as_u16()).into());
+        }
+        // endregion: handling rate limits
+
+        let reader = response.into_body().into_reader();
         debug!(target: "Figma API", "get_file_nodes_stream done for: {file_key}");
         Ok(NodeStream::from(reader))
     }
@@ -109,8 +145,41 @@ impl FigmaApi {
         set_query_if_needed!(num: request, "depth" => &query.depth);
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
-        let response = request
-            .call()?
+
+        // region: handling rate limits
+        let mut response = request.call()?;
+        if response.status() == StatusCode::TOO_MANY_REQUESTS {
+            let retry_after_sec = response
+                .headers()
+                .get("Retry-After")
+                .and_then(|val| val.to_str().ok())
+                .and_then(|val| val.parse().ok())
+                .unwrap_or(5);
+            let figma_plan_tier = response
+                .headers()
+                .get("X-Figma-Plan-Tier")
+                .and_then(|val| val.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+            let figma_limit_type = response
+                .headers()
+                .get("X-Figma-Rate-Limit-Type")
+                .and_then(|val| val.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+
+            return Err(crate::Error::RateLimit {
+                retry_after_sec,
+                figma_plan_tier,
+                figma_limit_type,
+            });
+        }
+        if !response.status().is_success() {
+            return Err(ureq::Error::StatusCode(response.status().as_u16()).into());
+        }
+        // endregion: handling rate limits
+
+        let response = response
             .body_mut()
             .with_config()
             .limit(mb(1024))
@@ -144,8 +213,41 @@ impl FigmaApi {
         set_query_if_needed!(bln: request, "use_absolute_bounds" => &query.use_absolute_bounds);
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
-        let response = request
-            .call()?
+
+        // region: handling rate limits
+        let mut response = request.call()?;
+        if response.status() == StatusCode::TOO_MANY_REQUESTS {
+            let retry_after_sec = response
+                .headers()
+                .get("Retry-After")
+                .and_then(|val| val.to_str().ok())
+                .and_then(|val| val.parse().ok())
+                .unwrap_or(5);
+            let figma_plan_tier = response
+                .headers()
+                .get("X-Figma-Plan-Tier")
+                .and_then(|val| val.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+            let figma_limit_type = response
+                .headers()
+                .get("X-Figma-Rate-Limit-Type")
+                .and_then(|val| val.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+
+            return Err(crate::Error::RateLimit {
+                retry_after_sec,
+                figma_plan_tier,
+                figma_limit_type,
+            });
+        }
+        if !response.status().is_success() {
+            return Err(ureq::Error::StatusCode(response.status().as_u16()).into());
+        }
+        // endregion: handling rate limits
+
+        let response = response
             .body_mut()
             .with_config()
             .limit(mb(50))
