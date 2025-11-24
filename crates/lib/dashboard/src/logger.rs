@@ -77,7 +77,7 @@ pub fn init_log_impl(verbosity: u8) {
         .is_ok();
     log::set_max_level(match (verbosity, running_on_ci, force_debug_logging) {
         (_, _, true) => log::LevelFilter::Debug,
-        (_, true, _) => log::LevelFilter::Info,
+        (0, true, _) | (1, true, _) => log::LevelFilter::Info,
         (0, _, _) => log::LevelFilter::Warn,
         (1, _, _) => log::LevelFilter::Info,
         (2, _, _) => log::LevelFilter::Debug,
