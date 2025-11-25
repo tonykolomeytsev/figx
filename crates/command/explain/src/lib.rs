@@ -116,24 +116,16 @@ fn png_resource_tree(res: &Resource, p: &PngProfile) -> Node {
     for t in targets {
         let mut child_nodes = Vec::with_capacity(4);
         let scale = t.scale.unwrap_or(*p.scale);
-        if p.legacy_loader {
-            child_nodes.push(node!(
-                format!("📤 Export PNG from remote {}", attrs.remote),
-                [
-                    ("node", t.figma_name().to_string()),
-                    ("scale", scale.to_string())
-                ]
-            ));
-        } else {
-            child_nodes.push(node!(
-                format!("📤 Export SVG from remote {}", attrs.remote),
-                [("node", t.figma_name().to_string())]
-            ));
-            child_nodes.push(node!(
-                "🎨 Render PNG locally",
-                [("scale", scale.to_string())]
-            ));
-        }
+
+        child_nodes.push(node!(
+            format!("📤 Export SVG from remote {}", attrs.remote),
+            [("node", t.figma_name().to_string())]
+        ));
+        child_nodes.push(node!(
+            "🎨 Render PNG locally",
+            [("scale", scale.to_string())]
+        ));
+
         child_nodes.push(node!(
             "💾 Write to file",
             [("output", format!("{}.png", t.output_name()))]
@@ -236,24 +228,16 @@ fn webp_resource_tree(res: &Resource, p: &WebpProfile) -> Node {
     for t in targets {
         let mut child_nodes = Vec::with_capacity(4);
         let scale = t.scale.unwrap_or(*p.scale);
-        if p.legacy_loader {
-            child_nodes.push(node!(
-                format!("📤 Export PNG from remote {}", attrs.remote),
-                [
-                    ("node", t.figma_name().to_string()),
-                    ("scale", scale.to_string())
-                ]
-            ));
-        } else {
-            child_nodes.push(node!(
-                format!("📤 Export SVG from remote {}", attrs.remote),
-                [("node", t.figma_name().to_string())]
-            ));
-            child_nodes.push(node!(
-                "🎨 Render PNG locally",
-                [("scale", scale.to_string())]
-            ));
-        }
+
+        child_nodes.push(node!(
+            format!("📤 Export SVG from remote {}", attrs.remote),
+            [("node", t.figma_name().to_string())]
+        ));
+        child_nodes.push(node!(
+            "🎨 Render PNG locally",
+            [("scale", scale.to_string())]
+        ));
+
         child_nodes.push(node!(
             "✨ Transform PNG to WEBP",
             [("quality", p.quality.to_string())]
@@ -339,24 +323,16 @@ fn android_webp_resource_tree(res: &Resource, p: &AndroidWebpProfile) -> Node {
                 let variant_name = target.id.as_ref().expect("always present");
                 let scale = target.scale.expect("always present");
                 let mut child_nodes = Vec::with_capacity(4);
-                if p.legacy_loader {
-                    child_nodes.push(node!(
-                        format!("📤 Export PNG from remote {}", attrs.remote),
-                        [
-                            ("node", target.figma_name().to_string()),
-                            ("scale", scale.to_string())
-                        ]
-                    ));
-                } else {
-                    child_nodes.push(node!(
-                        format!("📤 Export SVG from remote {}", attrs.remote),
-                        [("node", target.figma_name().to_string())]
-                    ));
-                    child_nodes.push(node!(
-                        "🎨 Render PNG locally",
-                        [("scale", scale.to_string())]
-                    ));
-                }
+
+                child_nodes.push(node!(
+                    format!("📤 Export SVG from remote {}", attrs.remote),
+                    [("node", target.figma_name().to_string())]
+                ));
+                child_nodes.push(node!(
+                    "🎨 Render PNG locally",
+                    [("scale", scale.to_string())]
+                ));
+
                 child_nodes.push(node!(
                     "✨ Transform PNG to WEBP",
                     [("quality", p.quality.to_string())]

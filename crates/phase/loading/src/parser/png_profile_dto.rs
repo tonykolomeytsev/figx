@@ -9,7 +9,6 @@ pub(crate) struct PngProfileDto {
     pub scale: Option<ExportScale>,
     pub output_dir: Option<PathBuf>,
     pub variants: Option<VariantsDto>,
-    pub legacy_loader: Option<bool>,
 }
 
 impl CanBeExtendedBy<Self> for PngProfileDto {
@@ -32,7 +31,6 @@ impl CanBeExtendedBy<Self> for PngProfileDto {
                 (None, Some(this)) => Some(this.clone()),
                 _ => None,
             },
-            legacy_loader: another.legacy_loader.or(self.legacy_loader),
         }
     }
 }
@@ -44,7 +42,7 @@ pub(crate) struct PngProfileDtoContext<'a> {
 mod de {
     use super::*;
     use crate::ParseWithContext;
-    use crate::parser::util::{validate_remote_id};
+    use crate::parser::util::validate_remote_id;
     use toml_span::de_helpers::TableHelper;
 
     impl<'de> ParseWithContext<'de> for PngProfileDto {
@@ -60,7 +58,6 @@ mod de {
             let scale = th.optional::<ExportScale>("scale");
             let output_dir = th.optional::<String>("output_dir").map(PathBuf::from);
             let variants = th.optional::<VariantsDto>("variants");
-            let legacy_loader = th.optional::<bool>("legacy_loader");
             th.finalize(None)?;
             // endregion: extract
 
@@ -73,7 +70,6 @@ mod de {
                 scale,
                 output_dir,
                 variants,
-                legacy_loader,
             })
         }
     }
@@ -85,7 +81,7 @@ mod test {
 
     use super::*;
     use crate::{ParseWithContext, variant_dto};
-    use ordermap::{ordermap, OrderMap};
+    use ordermap::{OrderMap, ordermap};
     use toml_span::Span;
     use unindent::unindent;
 
@@ -99,7 +95,6 @@ mod test {
         variants.small = { output_name = "{base}Small", figma_name = "{base} / small", scale = 1.0 }
         variants.big = { output_name = "{base}Big", figma_name = "{base} / big", scale = 2.0 }
         variants.use = ["small", "big"]
-        legacy_loader = false
         "#;
         let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
         let expected_dto = PngProfileDto {
@@ -114,7 +109,6 @@ mod test {
                 }),
                 use_variants: Some(vec!["small".to_string(), "big".to_string()]),
             }),
-            legacy_loader: Some(false),
         };
 
         // When
@@ -139,7 +133,6 @@ mod test {
             scale: None,
             output_dir: None,
             variants: None,
-            legacy_loader: None,
         };
 
         // When
@@ -227,7 +220,6 @@ mod test {
                 all_variants: Some(OrderMap::new()),
                 use_variants: None,
             }),
-            legacy_loader: Some(false),
         };
         let second = PngProfileDto {
             remote_id: None,
@@ -237,7 +229,6 @@ mod test {
                 all_variants: None,
                 use_variants: Some(Vec::new()),
             }),
-            legacy_loader: None,
         };
 
         // When
@@ -253,7 +244,6 @@ mod test {
                     all_variants: Some(OrderMap::new()),
                     use_variants: Some(Vec::new()),
                 }),
-                legacy_loader: Some(false),
             },
             third,
         );

@@ -1,18 +1,16 @@
 use crate::{
-    EvalContext, Result, Target,
+    EXPORTED_IMAGE_TAG, EvalContext, Result, Target,
     actions::{
         render_svg_to_png::{RenderSvgToPngArgs, render_svg_to_png},
         validation::ensure_is_vector_node,
     },
     figma::NodeMetadata,
 };
-use log::{debug, info};
+use lib_cache::CacheKey;
+use log::{debug, info, warn};
 use phase_loading::PngProfile;
 
-use super::{
-    GetRemoteImageArgs, get_remote_image,
-    materialize::{MaterializeArgs, materialize},
-};
+use super::materialize::{MaterializeArgs, materialize};
 
 pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
     let ImportPngArgs {
@@ -25,48 +23,31 @@ pub fn import_png(ctx: &EvalContext, args: ImportPngArgs) -> Result<()> {
     let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "png: {}", target.attrs.label.name);
-    let png = if profile.legacy_loader {
-        let png = get_remote_image(
-            ctx,
-            GetRemoteImageArgs {
-                label: &target.attrs.label,
-                remote: &target.attrs.remote,
-                node,
-                format: "png",
-                scale,
-                variant_name: &variant_name,
-            },
-        )?;
-        if ctx.eval_args.fetch {
-            return Ok(());
-        }
-        png
-    } else {
-        ensure_is_vector_node(&node, node_name, &target.attrs.label, true);
-        let svg = get_remote_image(
-            ctx,
-            GetRemoteImageArgs {
-                label: &target.attrs.label,
-                remote: &target.attrs.remote,
-                node: &node,
-                format: "svg",
-                scale: 1.0,       // always the same yes
-                variant_name: "", // no variant yes
-            },
-        )?;
-        if ctx.eval_args.fetch {
-            return Ok(());
-        }
-        render_svg_to_png(
-            ctx,
-            RenderSvgToPngArgs {
-                label: &target.attrs.label,
-                variant_name: &target.id.clone().unwrap_or_default(),
-                svg: &svg,
-                zoom: if scale != 1.0 { Some(scale) } else { None },
-            },
-        )?
+
+    ensure_is_vector_node(&node, node_name, &target.attrs.label, true);
+    let image_cache_key = CacheKey::builder()
+        .set_tag(EXPORTED_IMAGE_TAG)
+        .write_str(&target.attrs.remote.file_key)
+        .write_str(target.export_format())
+        .write_str(&node.id)
+        .write_u64(node.hash)
+        .build();
+    let Some(svg) = ctx.cache.get_bytes(&image_cache_key)? else {
+        warn!(target: "Importing", "internal: no image found by cache key");
+        return Ok(());
     };
+    if ctx.eval_args.fetch {
+        return Ok(());
+    }
+    let png = render_svg_to_png(
+        ctx,
+        RenderSvgToPngArgs {
+            label: &target.attrs.label,
+            variant_name: &variant_name,
+            svg: &svg,
+            zoom: if scale != 1.0 { Some(scale) } else { None },
+        },
+    )?;
 
     let variant = target
         .id

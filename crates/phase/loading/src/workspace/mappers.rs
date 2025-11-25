@@ -28,7 +28,6 @@ impl CanBeExtendedBy<PngProfileDto> for PngProfile {
                 (None, Some(domain)) => Some(domain.clone()),
                 _ => None,
             },
-            legacy_loader: another.legacy_loader.unwrap_or(self.legacy_loader),
         }
     }
 }
@@ -100,7 +99,6 @@ impl CanBeExtendedBy<WebpProfileDto> for WebpProfile {
                 (None, Some(domain)) => Some(domain.clone()),
                 _ => None,
             },
-            legacy_loader: another.legacy_loader.unwrap_or(self.legacy_loader),
         }
     }
 }
@@ -168,7 +166,6 @@ impl CanBeExtendedBy<AndroidWebpProfileDto> for AndroidWebpProfile {
                 .map(|set| set.iter().cloned().map(Into::into).collect())
                 .unwrap_or_else(|| self.scales.clone()),
             night: another.night.clone().or_else(|| self.night.clone()),
-            legacy_loader: another.legacy_loader.unwrap_or(self.legacy_loader),
         }
     }
 }

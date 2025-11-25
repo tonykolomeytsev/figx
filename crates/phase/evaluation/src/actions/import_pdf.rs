@@ -1,9 +1,7 @@
-use super::{
-    GetRemoteImageArgs, get_remote_image,
-    materialize::{MaterializeArgs, materialize},
-};
-use crate::{EvalContext, Result, Target, figma::NodeMetadata};
-use log::{debug, info};
+use super::materialize::{MaterializeArgs, materialize};
+use crate::{EXPORTED_IMAGE_TAG, EvalContext, Result, Target, figma::NodeMetadata};
+use lib_cache::CacheKey;
+use log::{debug, info, warn};
 use phase_loading::PdfProfile;
 
 pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
@@ -12,20 +10,19 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
         target,
         profile,
     } = args;
-    let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "pdf: {}", target.attrs.label.name);
-    let pdf = &get_remote_image(
-        ctx,
-        GetRemoteImageArgs {
-            label: &target.attrs.label,
-            remote: &target.attrs.remote,
-            node,
-            format: "pdf",
-            scale: 1.0,
-            variant_name: &variant_name,
-        },
-    )?;
+    let image_cache_key = CacheKey::builder()
+        .set_tag(EXPORTED_IMAGE_TAG)
+        .write_str(&target.attrs.remote.file_key)
+        .write_str(target.export_format())
+        .write_str(&node.id)
+        .write_u64(node.hash)
+        .build();
+    let Some(pdf) = ctx.cache.get_bytes(&image_cache_key)? else {
+        warn!(target: "Importing", "internal: no image found by cache key");
+        return Ok(());
+    };
     if ctx.eval_args.fetch {
         return Ok(());
     }
@@ -42,7 +39,7 @@ pub fn import_pdf(ctx: &EvalContext, args: ImportPdfArgs) -> Result<()> {
             output_dir: &target.attrs.package_dir.join(&profile.output_dir),
             file_name: target.output_name(),
             file_extension: "pdf",
-            bytes: pdf,
+            bytes: &pdf,
         },
         || info!(target: "Writing", "`{label}`{variant} to file"),
     )?;

@@ -75,12 +75,6 @@ impl From<retry::Error<Error>> for Error {
     }
 }
 
-impl From<lib_figma_fluent::NodeStreamError> for Error {
-    fn from(value: lib_figma_fluent::NodeStreamError) -> Self {
-        Self::ExportImage(value.0)
-    }
-}
-
 impl<'a> From<&Target<'a>> for Error {
     fn from(value: &Target<'a>) -> Self {
         Self::FindNode {

@@ -1134,6 +1134,7 @@ dependencies = [
  "json-event-parser",
  "log",
  "serde",
+ "serde_json",
  "ureq",
  "xxhash-rust",
 ]

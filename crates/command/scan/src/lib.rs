@@ -7,7 +7,7 @@ use std::{
 };
 
 pub use error::*;
-use lib_figma_fluent::{FigmaApi, GetFileNodesScanQueryParameters, ScannedNodeDto};
+use lib_figma_fluent::{FigmaApi, GetFileNodesQueryParameters, ScannedNodeDto};
 use lib_label::LabelPattern;
 use log::{info, warn};
 use phase_loading::{NodeIdList, load_workspace};
@@ -37,10 +37,10 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
         writer.write(b"version = 1\n\n")?;
 
         let api = FigmaApi::default();
-        let response = api.get_file_nodes_scan(
+        let response = api.get_file_nodes(
             &remote.access_token,
             &remote.file_key,
-            GetFileNodesScanQueryParameters {
+            GetFileNodesQueryParameters {
                 ids: Some(&remote.container_node_ids.to_string_id_list()),
                 ..Default::default()
             },

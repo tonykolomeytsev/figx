@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 ureq.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 bytes.workspace = true
 xxhash-rust.workspace = true
 log.workspace = true

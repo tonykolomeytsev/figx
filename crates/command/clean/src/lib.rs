@@ -1,6 +1,6 @@
 mod error;
 pub use error::*;
-use phase_evaluation::{figma::FigmaRepository, setup_cache};
+use phase_evaluation::{DOWNLOADED_IMAGE_TAG, EXPORTED_IMAGE_TAG, REMOTE_SOURCE_TAG, setup_cache};
 use phase_loading::load_invocation_context;
 
 pub struct FeatureCleanOptions {
@@ -19,9 +19,7 @@ pub fn clean(opts: FeatureCleanOptions) -> Result<()> {
             let _ = cache.retain(|tag| {
                 matches!(
                     tag,
-                    FigmaRepository::REMOTE_SOURCE_TAG
-                        | FigmaRepository::DOWNLOADED_IMAGE_TAG
-                        | FigmaRepository::EXPORTED_IMAGE_TAG
+                    REMOTE_SOURCE_TAG | DOWNLOADED_IMAGE_TAG | EXPORTED_IMAGE_TAG
                 )
             });
         }

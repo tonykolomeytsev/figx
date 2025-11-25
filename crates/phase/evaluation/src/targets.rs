@@ -24,6 +24,13 @@ impl<'a> Target<'a> {
             .as_deref()
             .unwrap_or_else(|| self.attrs.label.name.as_ref())
     }
+
+    pub fn export_format(&self) -> &str {
+        match self.profile {
+            Profile::Pdf(_) => "pdf",
+            _ => "svg",
+        }
+    }
 }
 
 pub fn targets_from_resource(res: &Resource) -> Vec<Target> {

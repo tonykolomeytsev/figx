@@ -1,12 +1,13 @@
-use crate::{
-    Node, Result,
-    node_stream::{NodeStream, NodeStreamError},
-};
+use crate::{RateLimitError, Result};
 use bytes::Bytes;
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
+use serde_json::Value;
 use std::{collections::HashMap, sync::Arc, time::Duration};
-use ureq::http::StatusCode;
+use ureq::{
+    Body,
+    http::{Response, StatusCode},
+};
 
 #[derive(Clone)]
 pub struct FigmaApi {
@@ -21,7 +22,7 @@ impl Default for FigmaApi {
                     .timeout_connect(Some(Duration::from_secs(15)))
                     .max_idle_connections(10)
                     .max_idle_connections_per_host(3)
-                    .http_status_as_error(false) // handling manually
+                    .http_status_as_error(false)
                     .build()
                     .into(),
             ),
@@ -60,16 +61,17 @@ impl FigmaApi {
     const X_FIGMA_TOKEN: &str = "X-FIGMA-TOKEN";
     const BASE_URL: &str = "https://api.figma.com";
 
-    /// Streaming: Parses the Figma API response on-the-fly, emitting `Node`s to the
-    /// iterator consumer without waiting for the full response to download. This is
-    /// useful as file node responses can be very large (e.g., >500MB).
-    pub fn get_file_nodes_stream(
+    /// Gets selected Figma nodes and returns their structure.
+    ///
+    /// The `ScannedNodeDto` returned by this method has a minimal set of fields
+    /// and should be used only for file structure scanning purposes.
+    pub fn get_file_nodes(
         &self,
         access_token: &str,
         file_key: &str,
-        query: GetFileNodesStreamQueryParameters,
-    ) -> Result<impl Iterator<Item = std::result::Result<Node, NodeStreamError>>> {
-        debug!(target: "Figma API", "get_file_nodes_stream called for: {file_key}");
+        query: GetFileNodesQueryParameters,
+    ) -> Result<GetFileNodesResponse> {
+        debug!(target: "Figma API", "get_file_nodes called for: {file_key}");
         let mut request = self
             .client
             .get(format!(
@@ -84,106 +86,13 @@ impl FigmaApi {
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
 
-        // region: handling rate limits
-        let response = request.call()?;
-        if response.status() == StatusCode::TOO_MANY_REQUESTS {
-            let retry_after_sec = response
-                .headers()
-                .get("Retry-After")
-                .and_then(|val| val.to_str().ok())
-                .and_then(|val| val.parse().ok())
-                .unwrap_or(5);
-            let figma_plan_tier = response
-                .headers()
-                .get("X-Figma-Plan-Tier")
-                .and_then(|val| val.to_str().ok())
-                .unwrap_or("")
-                .to_string();
-            let figma_limit_type = response
-                .headers()
-                .get("X-Figma-Rate-Limit-Type")
-                .and_then(|val| val.to_str().ok())
-                .unwrap_or("")
-                .to_string();
-
-            return Err(crate::Error::RateLimit {
-                retry_after_sec,
-                figma_plan_tier,
-                figma_limit_type,
-            });
-        }
-        if !response.status().is_success() {
-            return Err(ureq::Error::StatusCode(response.status().as_u16()).into());
-        }
-        // endregion: handling rate limits
-
-        let reader = response.into_body().into_reader();
-        debug!(target: "Figma API", "get_file_nodes_stream done for: {file_key}");
-        Ok(NodeStream::from(reader))
-    }
-
-    /// Gets selected Figma nodes and returns their structure.
-    ///
-    /// The `ScannedNodeDto` returned by this method has a minimal set of fields
-    /// and should be used only for file structure scanning purposes.
-    pub fn get_file_nodes_scan(
-        &self,
-        access_token: &str,
-        file_key: &str,
-        query: GetFileNodesScanQueryParameters,
-    ) -> Result<GetFileNodesScanResponse> {
-        debug!(target: "Figma API", "get_file_nodes_scan called for: {file_key}");
-        let mut request = self
-            .client
-            .get(format!(
-                "{base_url}/v1/files/{file_key}/nodes",
-                base_url = Self::BASE_URL,
-            ))
-            .header(Self::X_FIGMA_TOKEN, access_token);
-        // region: queries
-        set_query_if_needed!(arr: request, "ids" => &query.ids);
-        set_query_if_needed!(num: request, "depth" => &query.depth);
-        set_query_if_needed!(txt: request, "version" => &query.version);
-        // endregion: queries
-
-        // region: handling rate limits
         let mut response = request.call()?;
-        if response.status() == StatusCode::TOO_MANY_REQUESTS {
-            let retry_after_sec = response
-                .headers()
-                .get("Retry-After")
-                .and_then(|val| val.to_str().ok())
-                .and_then(|val| val.parse().ok())
-                .unwrap_or(5);
-            let figma_plan_tier = response
-                .headers()
-                .get("X-Figma-Plan-Tier")
-                .and_then(|val| val.to_str().ok())
-                .unwrap_or("")
-                .to_string();
-            let figma_limit_type = response
-                .headers()
-                .get("X-Figma-Rate-Limit-Type")
-                .and_then(|val| val.to_str().ok())
-                .unwrap_or("")
-                .to_string();
-
-            return Err(crate::Error::RateLimit {
-                retry_after_sec,
-                figma_plan_tier,
-                figma_limit_type,
-            });
-        }
-        if !response.status().is_success() {
-            return Err(ureq::Error::StatusCode(response.status().as_u16()).into());
-        }
-        // endregion: handling rate limits
-
+        handle_http_errors(&response)?;
         let response = response
             .body_mut()
             .with_config()
-            .limit(mb(1024))
-            .read_json::<GetFileNodesScanResponse>()?;
+            .limit(mb(2048))
+            .read_json::<GetFileNodesResponse>()?;
         debug!(target: "Figma API", "get_file_nodes_scan done for: {file_key}");
         Ok(response)
     }
@@ -214,43 +123,12 @@ impl FigmaApi {
         set_query_if_needed!(txt: request, "version" => &query.version);
         // endregion: queries
 
-        // region: handling rate limits
         let mut response = request.call()?;
-        if response.status() == StatusCode::TOO_MANY_REQUESTS {
-            let retry_after_sec = response
-                .headers()
-                .get("Retry-After")
-                .and_then(|val| val.to_str().ok())
-                .and_then(|val| val.parse().ok())
-                .unwrap_or(5);
-            let figma_plan_tier = response
-                .headers()
-                .get("X-Figma-Plan-Tier")
-                .and_then(|val| val.to_str().ok())
-                .unwrap_or("")
-                .to_string();
-            let figma_limit_type = response
-                .headers()
-                .get("X-Figma-Rate-Limit-Type")
-                .and_then(|val| val.to_str().ok())
-                .unwrap_or("")
-                .to_string();
-
-            return Err(crate::Error::RateLimit {
-                retry_after_sec,
-                figma_plan_tier,
-                figma_limit_type,
-            });
-        }
-        if !response.status().is_success() {
-            return Err(ureq::Error::StatusCode(response.status().as_u16()).into());
-        }
-        // endregion: handling rate limits
-
+        handle_http_errors(&response)?;
         let response = response
             .body_mut()
             .with_config()
-            .limit(mb(50))
+            .limit(mb(100))
             .read_json::<GetImageResponse>()?;
         debug!(target: "Figma API", "get_image done for: {file_key}/{:?}", query.ids);
         Ok(response)
@@ -262,8 +140,9 @@ impl FigmaApi {
             .client
             .get(url)
             .header(Self::X_FIGMA_TOKEN, access_token);
-        let buf = request
-            .call()?
+        let mut response = request.call()?;
+        handle_http_errors(&response)?;
+        let buf = response
             .body_mut()
             .with_config()
             .limit(mb(50))
@@ -273,51 +152,140 @@ impl FigmaApi {
     }
 }
 
-// region: GET file nodes stream
+// region: Http error handling
+
+fn handle_http_errors(response: &Response<Body>) -> Result<()> {
+    if response.status() == StatusCode::TOO_MANY_REQUESTS {
+        let retry_after_sec = response
+            .headers()
+            .get("Retry-After")
+            .and_then(|val| val.to_str().ok())
+            .and_then(|val| val.parse::<u32>().ok())
+            .unwrap_or(5);
+        let figma_plan_tier = response
+            .headers()
+            .get("X-Figma-Plan-Tier")
+            .and_then(|val| val.to_str().ok())
+            .unwrap_or("")
+            .to_string();
+        let figma_limit_type = response
+            .headers()
+            .get("X-Figma-Rate-Limit-Type")
+            .and_then(|val| val.to_str().ok())
+            .unwrap_or("")
+            .to_string();
+
+        return Err(RateLimitError {
+            retry_after_sec,
+            figma_plan_tier,
+            figma_limit_type,
+        }
+        .into());
+    }
+    if !response.status().is_success() {
+        return Err(ureq::Error::StatusCode(response.status().as_u16()).into());
+    }
+    Ok(())
+}
+
+// endregion: Http error handling
+
+// region: GET file nodes scan
 
 #[derive(Default)]
-pub struct GetFileNodesStreamQueryParameters<'a> {
+pub struct GetFileNodesQueryParameters<'a> {
     pub ids: Option<&'a [String]>,
     pub depth: Option<i32>,
     pub geometry: Option<&'a str>,
     pub version: Option<&'a str>,
 }
 
-// region: GET file nodes stream
-
-// region: GET file nodes scan
-
-#[derive(Default)]
-pub struct GetFileNodesScanQueryParameters<'a> {
-    pub ids: Option<&'a [String]>,
-    pub depth: Option<i32>,
-    pub version: Option<&'a str>,
+#[derive(Debug, Deserialize)]
+pub struct GetFileNodesResponse {
+    pub nodes: HashMap<String, DocumentNodeDto>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GetFileNodesScanResponse {
-    pub nodes: HashMap<String, IdentifiedNodeDto>,
-}
-
-#[derive(Debug, Deserialize)]
-
-pub struct IdentifiedNodeDto {
+pub struct DocumentNodeDto {
     pub document: ScannedNodeDto,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct ScannedNodeDto {
+    pub r#type: String,
     pub id: String,
     pub name: String,
-    #[serde(default = "yes")]
     pub visible: bool,
-    #[serde(default)]
     pub children: Vec<ScannedNodeDto>,
+    pub fills: Vec<PaintDto>,
+    pub hash: u64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PaintDto {
     pub r#type: String,
 }
 
-fn yes() -> bool {
-    true
+impl<'de> Deserialize<'de> for ScannedNodeDto {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let mut json_value = Value::deserialize(deserializer)?;
+
+        let hash = {
+            let mut hasher = xxhash_rust::xxh64::Xxh64::new(42);
+            hasher.update(json_value.to_string().as_bytes());
+            hasher.digest()
+        };
+
+        let obj = json_value
+            .as_object_mut()
+            .ok_or_else(|| serde::de::Error::custom("Expected JSON object"))?;
+
+        let r#type = obj
+            .get("type")
+            .and_then(|value| value.as_str())
+            .map(String::from)
+            .ok_or_else(|| serde::de::Error::missing_field("type"))?;
+
+        let id = obj
+            .get("id")
+            .and_then(|value| value.as_str())
+            .map(String::from)
+            .ok_or_else(|| serde::de::Error::missing_field("id"))?;
+
+        let name = obj
+            .get("name")
+            .and_then(|value| value.as_str())
+            .map(String::from)
+            .ok_or_else(|| serde::de::Error::missing_field("name"))?;
+
+        let visible = obj
+            .remove("visible")
+            .and_then(|value| Value::as_bool(&value))
+            .unwrap_or(true);
+
+        let children = obj
+            .remove("children")
+            .map(|v| serde_json::from_value(v).map_err(serde::de::Error::custom))
+            .unwrap_or(Ok(Vec::new()))?;
+
+        let fills = obj
+            .remove("fills")
+            .map(|v| serde_json::from_value(v).map_err(serde::de::Error::custom))
+            .unwrap_or(Ok(Vec::new()))?;
+
+        Ok(ScannedNodeDto {
+            r#type,
+            id,
+            name,
+            visible,
+            children,
+            fills,
+            hash,
+        })
+    }
 }
 
 // endregion: GET file nodes scan

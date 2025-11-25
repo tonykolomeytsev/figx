@@ -1,13 +1,13 @@
-use super::{GetRemoteImageArgs, get_remote_image};
 use crate::{
-    EvalContext, Result, Target,
+    EXPORTED_IMAGE_TAG, EvalContext, Result, Target,
     actions::{
         materialize::{MaterializeArgs, materialize},
         validation::ensure_is_vector_node,
     },
     figma::NodeMetadata,
 };
-use log::{debug, info};
+use lib_cache::CacheKey;
+use log::{debug, info, warn};
 use phase_loading::SvgProfile;
 
 pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
@@ -17,21 +17,20 @@ pub fn import_svg(ctx: &EvalContext, args: ImportSvgArgs) -> Result<()> {
         profile,
     } = args;
     let node_name = target.figma_name();
-    let variant_name = target.id.clone().unwrap_or_default();
 
     debug!(target: "Import", "svg: {}", target.attrs.label.name);
     ensure_is_vector_node(&node, node_name, &target.attrs.label, false);
-    let svg = get_remote_image(
-        ctx,
-        GetRemoteImageArgs {
-            label: &target.attrs.label,
-            remote: &target.attrs.remote,
-            node,
-            format: "svg",
-            scale: 1.0,
-            variant_name: &variant_name,
-        },
-    )?;
+    let image_cache_key = CacheKey::builder()
+        .set_tag(EXPORTED_IMAGE_TAG)
+        .write_str(&target.attrs.remote.file_key)
+        .write_str(target.export_format())
+        .write_str(&node.id)
+        .write_u64(node.hash)
+        .build();
+    let Some(svg) = ctx.cache.get_bytes(&image_cache_key)? else {
+        warn!(target: "Importing", "internal: no image found by cache key");
+        return Ok(());
+    };
     if ctx.eval_args.fetch {
         return Ok(());
     }

@@ -13,7 +13,6 @@ pub(crate) struct AndroidWebpProfileDto {
     pub quality: Option<WebpQuality>,
     pub densities: Option<BTreeSet<AndroidDensityDto>>,
     pub night: Option<SingleNamePattern>,
-    pub legacy_loader: Option<bool>,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -47,7 +46,6 @@ impl CanBeExtendedBy<Self> for AndroidWebpProfileDto {
                 .or(self.densities.as_ref())
                 .cloned(),
             night: another.night.as_ref().or(self.night.as_ref()).cloned(),
-            legacy_loader: another.legacy_loader.or(self.legacy_loader),
         }
     }
 }
@@ -79,7 +77,6 @@ mod de {
                 .optional::<Vec<AndroidDensityDto>>("densities")
                 .map(|vec| vec.into_iter().collect::<BTreeSet<_>>());
             let night = th.optional("night");
-            let legacy_loader = th.optional::<bool>("legacy_loader");
             th.finalize(None)?;
             // endregion: extract
 
@@ -93,7 +90,6 @@ mod de {
                 quality,
                 densities,
                 night,
-                legacy_loader,
             })
         }
     }
@@ -131,7 +127,6 @@ mod test {
         quality = 100
         densities = ["ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
         night = "{base} / dark"
-        legacy_loader = false
         "#;
         let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
         let expected_dto = AndroidWebpProfileDto {
@@ -147,7 +142,6 @@ mod test {
                 )
             },
             night: Some(SingleNamePattern("{base} / dark".to_string())),
-            legacy_loader: Some(false),
         };
 
         // When
@@ -173,7 +167,6 @@ mod test {
             quality: None,
             densities: None,
             night: None,
-            legacy_loader: None,
         };
 
         // When

@@ -1,16 +1,17 @@
+use crate::EXPORTED_IMAGE_TAG;
 use crate::EvalContext;
 use crate::Result;
 use crate::Target;
 use crate::actions::ConvertSvgToVectorDrawableArgs;
-use crate::actions::GetRemoteImageArgs;
 use crate::actions::convert_svg_to_vector_drawable;
-use crate::actions::get_remote_image;
 use crate::actions::materialize::MaterializeArgs;
 use crate::actions::materialize::materialize;
 use crate::actions::validation::ensure_is_vector_node;
 use crate::figma::NodeMetadata;
+use lib_cache::CacheKey;
 use log::debug;
 use log::info;
+use log::warn;
 use phase_loading::AndroidDrawableProfile;
 
 pub fn import_android_drawable(ctx: &EvalContext, args: ImportAndroidDrawableArgs) -> Result<()> {
@@ -24,17 +25,17 @@ pub fn import_android_drawable(ctx: &EvalContext, args: ImportAndroidDrawableArg
 
     debug!(target: "Import", "android-drawable: {}", target.attrs.label.name);
     ensure_is_vector_node(&node, node_name, &target.attrs.label, true);
-    let svg = get_remote_image(
-        ctx,
-        GetRemoteImageArgs {
-            label: &target.attrs.label,
-            remote: &target.attrs.remote,
-            node,
-            format: "svg",
-            scale: 1.0, // always the same yes
-            variant_name: &variant_name,
-        },
-    )?;
+    let image_cache_key = CacheKey::builder()
+        .set_tag(EXPORTED_IMAGE_TAG)
+        .write_str(&target.attrs.remote.file_key)
+        .write_str(target.export_format())
+        .write_str(&node.id)
+        .write_u64(node.hash)
+        .build();
+    let Some(svg) = ctx.cache.get_bytes(&image_cache_key)? else {
+        warn!(target: "Importing", "internal: no image found by cache key");
+        return Ok(());
+    };
     if ctx.eval_args.fetch {
         return Ok(());
     }

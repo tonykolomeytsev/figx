@@ -70,6 +70,7 @@ impl std::fmt::Debug for CacheKey {
     }
 }
 
+#[derive(Clone)]
 pub struct CacheKeyBuilder {
     hasher: xxhash_rust::xxh64::Xxh64,
     tag: u8,

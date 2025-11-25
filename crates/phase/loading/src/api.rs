@@ -131,7 +131,6 @@ pub struct PngProfile {
     pub scale: ExportScale,
     pub output_dir: PathBuf,
     pub variants: Option<ResourceVariants>,
-    pub legacy_loader: bool,
 }
 
 impl Default for PngProfile {
@@ -141,7 +140,6 @@ impl Default for PngProfile {
             scale: ExportScale::default(),
             output_dir: PathBuf::new(),
             variants: None,
-            legacy_loader: false,
         }
     }
 }
@@ -199,7 +197,6 @@ pub struct WebpProfile {
     pub quality: WebpQuality,
     pub output_dir: PathBuf,
     pub variants: Option<ResourceVariants>,
-    pub legacy_loader: bool,
 }
 
 impl Default for WebpProfile {
@@ -210,7 +207,6 @@ impl Default for WebpProfile {
             quality: WebpQuality::default(),
             output_dir: PathBuf::new(),
             variants: None,
-            legacy_loader: false,
         }
     }
 }
@@ -276,7 +272,6 @@ pub struct AndroidWebpProfile {
     pub quality: WebpQuality,
     pub scales: Vec<AndroidDensity>,
     pub night: Option<SingleNamePattern>,
-    pub legacy_loader: bool,
 }
 
 impl Default for AndroidWebpProfile {
@@ -288,7 +283,6 @@ impl Default for AndroidWebpProfile {
             quality: WebpQuality::default(),
             scales: vec![MDPI, HDPI, XHDPI, XXHDPI, XXXHDPI],
             night: None,
-            legacy_loader: false,
         }
     }
 }

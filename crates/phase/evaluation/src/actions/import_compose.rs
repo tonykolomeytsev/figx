@@ -1,15 +1,13 @@
-use super::{
-    GetRemoteImageArgs, get_remote_image,
-    materialize::{MaterializeArgs, materialize},
-};
+use super::materialize::{MaterializeArgs, materialize};
 use crate::{
-    EvalContext, Result, Target,
+    EXPORTED_IMAGE_TAG, EvalContext, Result, Target,
     actions::{
         convert_svg_to_compose::{ConvertSvgToComposeArgs, convert_svg_to_compose},
         validation::ensure_is_vector_node,
     },
     figma::NodeMetadata,
 };
+use lib_cache::CacheKey;
 use log::{debug, info, warn};
 use phase_loading::ComposeProfile;
 use std::path::{Path, PathBuf};
@@ -32,17 +30,17 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
     }
 
     ensure_is_vector_node(&node, node_name, &target.attrs.label, false);
-    let svg = &get_remote_image(
-        ctx,
-        GetRemoteImageArgs {
-            label: &target.attrs.label,
-            remote: &target.attrs.remote,
-            node,
-            format: "svg",
-            scale: 1.0,
-            variant_name: &variant_name,
-        },
-    )?;
+    let image_cache_key = CacheKey::builder()
+        .set_tag(EXPORTED_IMAGE_TAG)
+        .write_str(&target.attrs.remote.file_key)
+        .write_str(target.export_format())
+        .write_str(&node.id)
+        .write_u64(node.hash)
+        .build();
+    let Some(svg) = ctx.cache.get_bytes(&image_cache_key)? else {
+        warn!(target: "Importing", "internal: no image found by cache key");
+        return Ok(());
+    };
     if ctx.eval_args.fetch {
         return Ok(());
     }
@@ -59,7 +57,7 @@ pub fn import_compose(ctx: &EvalContext, args: ImportComposeArgs) -> Result<()> 
             kotlin_explicit_api: profile.kotlin_explicit_api,
             extension_target: &profile.extension_target,
             file_suppress_lint: &profile.file_suppress_lint,
-            svg,
+            svg: &svg,
             color_mappings: &profile.color_mappings,
             preview: &profile.preview,
             composable_get: profile.composable_get,

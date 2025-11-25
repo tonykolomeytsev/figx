@@ -32,8 +32,10 @@ pub fn render_svg_to_png(ctx: &EvalContext, args: RenderSvgToPngArgs) -> Result<
     );
     let tree = Tree::from_data(args.svg, &Default::default()).map_err(|e| {
         Error::RenderSvg(format!(
-            "invalid svg `{}` {}: {e}",
-            args.label, args.variant_name
+            "invalid svg `{}` {}: {e}\n{}",
+            args.label,
+            args.variant_name,
+            String::from_utf8_lossy(args.svg)
         ))
     })?;
     let png = render_svg(&tree, args.zoom)

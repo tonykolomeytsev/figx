@@ -1,5 +1,5 @@
 use super::{Batched, Batcher, NodeMetadata};
-use crate::{Error, Result};
+use crate::{Error, Result, Target};
 use dashmap::DashMap;
 use key_mutex::KeyMutex;
 use lib_cache::{Cache, CacheKey};
@@ -9,6 +9,7 @@ use phase_loading::RemoteSource;
 use retry::delay::Fixed;
 use retry::retry_with_index;
 use retry::{OperationResult, delay::jitter};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -65,11 +66,8 @@ impl FigmaRepository {
     pub fn export(
         &self,
         remote: &Arc<RemoteSource>,
-        node: &NodeMetadata,
-        format: &str,
-        scale: f32,
-        on_export_start: impl FnOnce(),
-        on_cache_hit: impl FnOnce(),
+        index: &HashMap<String, NodeMetadata>,
+        resources: &HashMap<String, Vec<Target>>,
     ) -> Result<DownloadUrl> {
         // construct unique cache key
         let cache_key = CacheKey::builder()
@@ -150,7 +148,7 @@ impl FigmaRepository {
                         warn!(target: "RateLimit", "{retry_after_sec}s, {figma_plan_tier}, {figma_limit_type}");
                         OperationResult::Err(Error::ExportImage(e.to_string()))
                     }
-                    lib_figma_fluent::Error::Ureq(e) => match &e {
+                    lib_figma_fluent::Error::Http(e) => match &e {
                         StatusCode(500..=599) => {
                             debug!(target: "FigmaRepository", "figma server error: {e}");
                             let _ = &*FIGMA_500_NOTIFICATION;
@@ -226,7 +224,7 @@ impl FigmaRepository {
                         figma_plan_tier: _,
                         figma_limit_type: _,
                     } => OperationResult::Retry(Error::ExportImage(e.to_string())),
-                    lib_figma_fluent::Error::Ureq(e) => match e {
+                    lib_figma_fluent::Error::Http(e) => match e {
                         StatusCode(500..=599) => {
                             debug!(target: "FigmaRepository", "figma server error: {e}");
                             let _ = &*FIGMA_500_NOTIFICATION;
