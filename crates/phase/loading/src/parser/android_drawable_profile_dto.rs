@@ -7,6 +7,7 @@ pub(crate) struct AndroidDrawableProfileDto {
     pub remote_id: Option<String>,
     pub android_res_dir: Option<PathBuf>,
     pub night: Option<SingleNamePattern>,
+    pub auto_mirrored: Option<bool>,
 }
 
 impl CanBeExtendedBy<Self> for AndroidDrawableProfileDto {
@@ -23,6 +24,7 @@ impl CanBeExtendedBy<Self> for AndroidDrawableProfileDto {
                 .or(self.android_res_dir.as_ref())
                 .cloned(),
             night: another.night.as_ref().or(self.night.as_ref()).cloned(),
+            auto_mirrored: another.auto_mirrored.or(self.auto_mirrored),
         }
     }
 }
@@ -49,6 +51,7 @@ mod de {
             let remote_id = th.optional_s::<String>("remote");
             let android_res_dir = th.optional::<String>("android_res_dir").map(PathBuf::from);
             let night = th.optional("night");
+            let auto_mirrored = th.optional("auto_mirrored");
             th.finalize(None)?;
             // endregion: extract
 
@@ -60,6 +63,7 @@ mod de {
                 remote_id,
                 android_res_dir,
                 night,
+                auto_mirrored,
             })
         }
     }
@@ -81,12 +85,14 @@ mod test {
         remote = "figma"
         android_res_dir = "src/main/res"
         night = "{base} / dark"
+        auto_mirrored = false
         "#;
         let declared_remote_ids: HashSet<_> = ["figma".to_string()].into_iter().collect();
         let expected_dto = AndroidDrawableProfileDto {
             remote_id: Some("figma".to_string()),
             android_res_dir: Some(PathBuf::from("src/main/res")),
             night: Some(SingleNamePattern("{base} / dark".to_string())),
+            auto_mirrored: Some(false),
         };
 
         // When
@@ -110,6 +116,7 @@ mod test {
             remote_id: None,
             android_res_dir: None,
             night: None,
+            auto_mirrored: None,
         };
 
         // When

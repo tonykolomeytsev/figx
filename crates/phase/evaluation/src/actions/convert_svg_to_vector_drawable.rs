@@ -35,6 +35,7 @@ pub fn convert_svg_to_vector_drawable(
         args.svg,
         SvgToDrawableOptions {
             xml_declaration: false,
+            auto_mirrored: args.auto_mirrored,
         },
     )
     .map_err(|err| {
@@ -52,5 +53,6 @@ pub fn convert_svg_to_vector_drawable(
 pub struct ConvertSvgToVectorDrawableArgs<'a> {
     pub label: &'a Label,
     pub variant_name: &'a str,
+    pub auto_mirrored: bool,
     pub svg: &'a [u8],
 }

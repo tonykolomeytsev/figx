@@ -45,6 +45,7 @@ pub fn import_android_drawable(ctx: &EvalContext, args: ImportAndroidDrawableArg
             svg: &svg,
             label: &target.attrs.label,
             variant_name: &variant_name,
+            auto_mirrored: profile.auto_mirrored,
         },
     )?;
 

@@ -313,6 +313,7 @@ pub struct AndroidDrawableProfile {
     pub remote_id: RemoteId,
     pub android_res_dir: PathBuf,
     pub night: Option<SingleNamePattern>,
+    pub auto_mirrored: bool,
 }
 
 impl Default for AndroidDrawableProfile {
@@ -321,6 +322,7 @@ impl Default for AndroidDrawableProfile {
             remote_id: String::new(),
             android_res_dir: PathBuf::from("src/main/res"),
             night: None,
+            auto_mirrored: false,
         }
     }
 }

@@ -187,6 +187,7 @@ impl CanBeExtendedBy<AndroidDrawableProfileDto> for AndroidDrawableProfile {
                 .unwrap_or(&self.android_res_dir)
                 .clone(),
             night: another.night.clone().or_else(|| self.night.clone()),
+            auto_mirrored: another.auto_mirrored.unwrap_or(self.auto_mirrored),
         }
     }
 }

@@ -14,6 +14,7 @@ const ATTRIBUTE_INDENT: Indent = Indent::Spaces(4);
 pub struct SvgToDrawableOptions {
     /// Add `<?xml version="1.0" encoding="UTF-8"?>` declaration to the XML output
     pub xml_declaration: bool,
+    pub auto_mirrored: bool,
 }
 
 pub fn transform_svg_to_drawable(svg: &[u8], options: SvgToDrawableOptions) -> Result<Vec<u8>> {
@@ -59,6 +60,10 @@ fn codegen_xml(iv: ImageVector, options: SvgToDrawableOptions) -> Result<String>
     w.write_attribute("android:width", &format!("{}dp", width))?;
     w.write_attribute("android:viewportWidth", &format!("{}", viewport_width))?;
     w.write_attribute("android:viewportHeight", &format!("{}", viewport_height))?;
+
+    if options.auto_mirrored {
+        w.write_attribute("android:autoMirrored", "true")?;
+    }
 
     for node in nodes {
         codegen_node(&mut w, node)?;
