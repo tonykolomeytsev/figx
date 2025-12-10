@@ -104,7 +104,7 @@ impl FigmaRepository {
             // Build batcher outside DashMap lock
             let new_batcher = Batcher::new(
                 100,
-                Duration::from_millis(1000),
+                Duration::from_millis(2000),
                 BatchedApi {
                     api: self.api.clone(),
                     remote: remote.clone(),
@@ -134,7 +134,7 @@ impl FigmaRepository {
                     let err = Error::ExportImage(format!(
                         "response has no requested node '{node_name}' with id '{node_id}'",
                     ));
-                    if no_requested_node_attempts.load(Ordering::SeqCst) < 5 {
+                    if no_requested_node_attempts.load(Ordering::SeqCst) < 10 {
                         OperationResult::Retry(err)
                     } else {
                         OperationResult::Err(err)
