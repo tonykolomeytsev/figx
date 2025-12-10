@@ -61,6 +61,7 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
             };
 
             let scanned_nodes = extract_metadata(&dto.document.children);
+            let metadata_dict = &dto.components;
 
             for node in scanned_nodes {
                 writer.write(b"[[node]]\n")?;
@@ -68,6 +69,12 @@ pub fn scan(opts: FeatureScanOptions) -> Result<()> {
                 writer.write_fmt(format_args!("name = \"{}\"\n", node.name))?;
                 if let Some(tag) = &container_node_tag {
                     writer.write_fmt(format_args!("tag = \"{tag}\"\n"))?;
+                }
+                if let Some(metadata) = &metadata_dict.get(&node.id) {
+                    let description = &metadata.description;
+                    if !metadata.description.is_empty() {
+                        writer.write_fmt(format_args!("description = '''{description}'''\n"))?;
+                    }
                 }
                 writer.write(b"\n")?;
             }

@@ -5,7 +5,11 @@ use crate::{
 use bytes::Bytes;
 use log::debug;
 use serde::Deserialize;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
+    time::Duration,
+};
 use ureq::http::StatusCode;
 
 #[derive(Clone)]
@@ -296,13 +300,15 @@ pub struct GetFileNodesScanQueryParameters<'a> {
 
 #[derive(Debug, Deserialize)]
 pub struct GetFileNodesScanResponse {
-    pub nodes: HashMap<String, IdentifiedNodeDto>,
+    pub nodes: HashMap<String, RootNodeDto>,
 }
 
 #[derive(Debug, Deserialize)]
 
-pub struct IdentifiedNodeDto {
+pub struct RootNodeDto {
     pub document: ScannedNodeDto,
+    /// COMPONENT Node ID => Metadata
+    pub components: BTreeMap<String, ScannedComponentMetadata>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -314,6 +320,13 @@ pub struct ScannedNodeDto {
     #[serde(default)]
     pub children: Vec<ScannedNodeDto>,
     pub r#type: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ScannedComponentMetadata {
+    pub name: String,
+    #[serde(default)]
+    pub description: String,
 }
 
 fn yes() -> bool {
