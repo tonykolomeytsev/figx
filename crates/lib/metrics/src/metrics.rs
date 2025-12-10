@@ -34,7 +34,7 @@ pub struct DurationRecorder<'a> {
 }
 
 impl Duration {
-    pub fn record(&self) -> DurationRecorder {
+    pub fn record(&self) -> DurationRecorder<'_> {
         DurationRecorder {
             parent: self,
             start: Instant::now(),

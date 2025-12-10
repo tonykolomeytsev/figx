@@ -26,7 +26,7 @@ impl<'a> Target<'a> {
     }
 }
 
-pub fn targets_from_resource(res: &Resource) -> Vec<Target> {
+pub fn targets_from_resource(res: &Resource) -> Vec<Target<'_>> {
     use phase_loading::Profile::*;
     let variants = match res.profile.as_ref() {
         Png(p) => p.variants.as_ref(),

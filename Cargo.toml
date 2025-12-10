@@ -3,8 +3,8 @@ members = ["app"]
 resolver = "2"
 
 [workspace.package]
-version = "0.9.0"
-rust-version = "1.87.0"
+version = "0.8.9"
+rust-version = "1.90.0"
 edition = "2024"
 
 [profile.release]
