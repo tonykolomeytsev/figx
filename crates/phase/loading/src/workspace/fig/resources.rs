@@ -52,6 +52,9 @@ impl CanBeExtendedBy<ProfileDto> for Profile {
             (Webp(domain), ProfileDto::Webp(dto)) => Webp(domain.extend(dto)),
             (Compose(domain), ProfileDto::Compose(dto)) => Compose(domain.extend(dto)),
             (AndroidWebp(domain), ProfileDto::AndroidWebp(dto)) => AndroidWebp(domain.extend(dto)),
+            (AndroidDrawable(domain), ProfileDto::AndroidDrawable(dto)) => {
+                AndroidDrawable(domain.extend(dto))
+            }
             _ => panic!(
                 "Inconsistent internal parser state. Cannot merge dto and domain profiles of different types"
             ),
