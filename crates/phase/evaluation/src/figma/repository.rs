@@ -123,7 +123,7 @@ impl FigmaRepository {
             .expect("Value always exists");
         let no_requested_node_attempts = Arc::new(AtomicUsize::new(0));
 
-        let response = retry_with_index(Fixed::from_millis(1000).map(jitter), |attempt| {
+        let response = retry_with_index(Fixed::from_millis(5000).map(jitter), |attempt| {
             if attempt > 1 {
                 debug!(target: "FigmaRepository" ,"retrying request: attempt #{}", attempt - 1);
             };
@@ -134,7 +134,7 @@ impl FigmaRepository {
                     let err = Error::ExportImage(format!(
                         "response has no requested node '{node_name}' with id '{node_id}'",
                     ));
-                    if no_requested_node_attempts.load(Ordering::SeqCst) < 3 {
+                    if no_requested_node_attempts.load(Ordering::SeqCst) < 5 {
                         OperationResult::Retry(err)
                     } else {
                         OperationResult::Err(err)
