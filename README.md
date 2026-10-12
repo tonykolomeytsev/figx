@@ -43,7 +43,7 @@ FigX comes with built-in import profiles for various formats, enabling immediate
 
 ## Secure Local Token Storage
 
-On **macOS** and **Windows**, you can securely store your access token using the system keychain. And `figx` will automatically retrieve the token from secure storage when needed.
+You can securely store your access token using the system keychain. And `figx` will automatically retrieve the token from secure storage when needed.
 
 For more details, see the documentation: [**FIGX / Concepts / Remotes**](https://tonykolomeytsev.github.io/figx/user_guide/2.1.2-remotes.html).
 

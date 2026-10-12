@@ -108,4 +108,7 @@ xxhash-rust = { version = "0.8", features = ["xxh64"] }
 keyring = { version = "3.6.2", features = [
     "apple-native",
     "windows-native",
+    "async-secret-service",
+    "async-io",
+    "crypto-rust",
 ], default-features = false }
