@@ -1,5 +1,7 @@
 # Unreleased
 
+- Added Linux support for secure token storage via the Secret Service
+
 # 0.8.7 - 0.8.8
 
 - Maximum three decimal places for pathData in Android Drawable
